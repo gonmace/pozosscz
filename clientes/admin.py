@@ -42,10 +42,10 @@ class ClienteAdmin(ImportExportModelAdmin):
         'lon',
         'user',
         'format_created_at',
-        'format_updated_at'
+        'updated_at'
     )
     list_editable = (
-        'status', 'service', 'name', 'tel1', 'cod'
+        'status', 'service', 'name', 'tel1', 'cod', 'updated_at'
     )
     list_display_links = ('id', )
 

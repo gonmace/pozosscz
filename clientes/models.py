@@ -43,11 +43,16 @@ class Cliente(models.Model):
         "usuario", max_length=10, choices=USUARIO_CHOICES, default='ADM'
     )
     created_at = models.DateTimeField("creado", auto_now_add=True)
-    updated_at = models.DateTimeField("actualizado", auto_now=True)
+    updated_at = models.DateField("actualizado",blank=True, null=True)
+
+    def save(self, *args, **kwargs):
+        if not self.updated_at:  # Si updated_at no tiene valor
+            self.updated_at = self.created_at
+        super().save(*args, **kwargs)  # Llamar al método save de la clase base
 
     class Meta:
         verbose_name = "Cliente"
         verbose_name_plural = "Cientes"
 
     def __str__(self):
-        return self.tel1
+        return self.tel1 if self.tel1 else '--------'
