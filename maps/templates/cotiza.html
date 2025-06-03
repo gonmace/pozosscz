@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'maps/maps.css' %}">
+{% endblock %}
+
+{% block content %}
+<main class="w-full">
+    {% include 'components/header.html' with class_nav='max-w-7xl w-4/5 text-black fixed left-1/2 transform -translate-x-1/2 z-[10000] rounded-2xl bg-clip-padding backdrop-filter backdrop-blur-sm bg-opacity-10 border border-gray-100' %}
+    <div id="map" class="h-screen">
+      <div id="overlay" class="invisible z-[10000] absolute inset-0 bg-black/50 flex items-center justify-center">
+        <span class="loading loading-spinner text-secondary"></span>
+      </div>
+    </div>
+
+    <!-- You can open the modal using ID.showModal() method -->
+    <dialog id="precios" class="modal">
+      <div class="modal-box">
+        <form method="dialog">
+          <button id="modalPrecioClose" class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+            >✕</button>
+        
+          <h3 class="font-bold text-lg">Cotización</h3>
+          <hr />
+          <p class="py-4 text-center"></p>
+          <div class="flex justify-end">
+            <button id="confirmar" class="btn btn-accent"
+              >Confirmar</button>
+          </div>
+        </form>
+      </div>
+    </dialog>
+{% endblock %}
+
+{% block js %}
+<script type="module" src="{% static 'maps/maps.js' %}"></script>
+{% endblock %}

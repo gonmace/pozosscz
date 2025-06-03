@@ -1,0 +1,82 @@
+@import "tailwindcss";
+@import "tailwindcss-animated";
+
+@source "../../../**/*.{html,py,js}";
+@source "../../main/src/index-main.ts";
+
+@theme {
+  --color-precio300: "#ffff00",
+  --color-precio350: "#fba657",
+  --color-precio400: "#4ade80",
+  --color-precio450: "#52b551",
+  --color-precio500: "#ff0000",
+  --color-precio600: "#00ffff",
+  --color-precio700: "#50dbff",
+  --color-precio800: "#5eb9fc",
+  --color-precio900: "#6199ee",
+  --color-precio1000: "#808080",
+  --color-precioNegro: "black",
+}
+@plugin "daisyui";
+@plugin "daisyui/theme" {
+  name: "dark";
+  default: true;
+  prefersdark: true;
+  color-scheme: "dark";
+  --color-base-100: oklch(25.33% 0.016 252.42);
+  --color-base-200: oklch(23.26% 0.014 253.1);
+  --color-base-300: oklch(21.15% 0.012 254.09);
+  --color-base-content: oklch(97.807% 0.029 256.847);
+  --color-primary: #1f8e43;
+  --color-primary-content: oklch(96% 0.018 272.314);
+  --color-secondary: #FF4444;
+  --color-secondary-content: oklch(94% 0.028 342.258);
+  --color-accent: #52b551;
+  --color-accent-content: oklch(98% 0.003 247.858);
+  --color-neutral: #333333;
+  --color-neutral-content: oklch(92% 0.004 286.32);
+  --color-info: oklch(74% 0.16 232.661);
+  --color-info-content: #fff;
+  --color-success: oklch(76% 0.177 163.223);
+  --color-success-content: #fff;
+  --color-warning: oklch(82% 0.189 84.429);
+  --color-warning-content: #000;
+  --color-error: oklch(71% 0.194 13.428);
+  --color-error-content: #fff;
+}
+
+
+@layer base {
+  body {
+    font-family: "Nunito Variable", sans-serif;
+  }
+}
+
+@layer components {
+  .centrear-w-absolute {
+    @apply left-1/2 transform -translate-x-1/2;
+  }
+  .centrearXY {
+    @apply top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2;
+  }
+  .sombra {
+    -webkit-filter: drop-shadow(3px 3px 2px rgba(0, 0, 0, 0.7));
+    filter: drop-shadow(3px 3px 2px rgba(0, 0, 0, 0.7));
+  }
+  .clientes {
+    @apply p-6 mx-auto flex flex-col text-center items-center;
+  }
+  
+  .item {
+    @apply text-accent inline-flex items-center h-20 w-20 justify-center mb-5 flex-shrink-0;
+  }
+  .navbar {
+    transition: background-color 0.4s ease;
+  }
+  .scrolled {
+    @apply md:bg-primary
+  }
+  .puntos {
+    @apply ml-2 inline-block border-black border-2 w-4 h-4 text-center rounded-full;
+  }
+}

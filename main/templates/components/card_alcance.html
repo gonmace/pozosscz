@@ -1,0 +1,16 @@
+{% load static inline_svg  %}
+
+<div class="mx-auto flex flex-col text-center w-full md:w-3/12">
+    <div class="sombra w-20 h-20 p-4 mx-auto inline-flex text-white items-center justify-center rounded-full bg-accent mb-5 flex-shrink-0">
+        {% inline_svg_from_media svg.url %}
+    </div>
+    <div>
+        <h2 class="text-xl lg:text-2xl mb-3 text-black">
+            {{ titulo }}
+        </h2>
+        <h3 class="text-gray-600 leading-relaxed text-lg sm:text-lg lg:text-xl ">
+            {{ descripcion }}
+        </h3>
+    </div>
+        <div class="mx-auto w-16 h-1 rounded-full bg-primary mt-4 mb-7"></div>
+</div>  

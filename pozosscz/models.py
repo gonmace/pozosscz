@@ -53,6 +53,7 @@ class AreasFactor(models.Model):
     name = models.CharField("Nombre área", max_length=50)
     factor = models.FloatField("Factor", default=1)
     polygon = models.JSONField()
+    is_main = models.BooleanField("Principal", default=False)
     my_order = models.PositiveIntegerField(
         default=0,
         blank=False,
@@ -62,8 +63,16 @@ class AreasFactor(models.Model):
     def __str__(self):
         return self.name
 
+    def save(self, *args, **kwargs):
+        if self.is_main:
+            # Ensure no other record is marked as main
+            AreasFactor.objects.exclude(pk=self.pk).update(is_main=False)
+        super().save(*args, **kwargs)
+
     class Meta:
         ordering = ['my_order']
+        verbose_name = "Área y Factor"
+        verbose_name_plural = "Áreas y Factores"
 
 
 def default_img_alt():

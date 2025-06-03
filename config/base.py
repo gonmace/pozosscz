@@ -21,12 +21,19 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'corsheaders',
     'import_export',
+    'tailwind',
+    'theme',
 
     'main',
     'pozosscz',
     'clientes',
     'formcontacto',
+    'maps',
 ]
+
+TAILWIND_APP_NAME = 'theme'
+
+TAILWIND_CSS_PATH = 'css/tailwind.css'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -53,6 +60,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'main.context_processors.menu_data',
             ],
         },
     },
@@ -104,6 +112,10 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
+]
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

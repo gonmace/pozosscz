@@ -1,0 +1,51 @@
+from django import template
+from django.conf import settings
+from django.utils.safestring import mark_safe
+import os
+
+register = template.Library()
+
+@register.simple_tag
+def inline_svg_from_media(media_url_path):
+    """
+    Incluye el contenido de un archivo SVG ubicado en MEDIA_ROOT, a partir de una URL como /media/archivo.svg.
+    """
+    media_url = settings.MEDIA_URL.rstrip("/")
+    if media_url_path.startswith(media_url):
+        relative_path = media_url_path[len(media_url):].lstrip("/")
+    else:
+        # Asume que es una ruta relativa ya válida
+        relative_path = media_url_path.lstrip("/")
+
+    full_path = os.path.join(settings.MEDIA_ROOT, relative_path)
+
+    if os.path.exists(full_path) and full_path.endswith(".svg"):
+        try:
+            with open(full_path, "r", encoding="utf-8") as f:
+                return mark_safe(f.read())
+        except Exception as e:
+            return f"<!-- Error al leer SVG: {e} -->"
+
+    return f"<!-- SVG no encontrado: {relative_path} -->"
+
+@register.simple_tag
+def inline_svg_from_static(static_path):
+    """
+    Incluye el contenido de un archivo SVG ubicado en STATIC_ROOT, a partir de una ruta relativa como 'icons/archivo.svg'.
+    """
+    # Asegurarse que la ruta no comience con /static/
+    if static_path.startswith(settings.STATIC_URL):
+        relative_path = static_path[len(settings.STATIC_URL):].lstrip("/")
+    else:
+        relative_path = static_path.lstrip("/")
+
+    full_path = os.path.join(settings.STATIC_ROOT, relative_path)
+
+    if os.path.exists(full_path) and full_path.endswith(".svg"):
+        try:
+            with open(full_path, "r", encoding="utf-8") as f:
+                return mark_safe(f.read())
+        except Exception as e:
+            return f"<!-- Error al leer SVG: {e} -->"
+
+    return f"<!-- SVG no encontrado: {relative_path} -->"

@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'maps/maps_admin.css' %}">
+{% endblock %}
+
+{% block content %}
+<main class="w-full">
+    {% include 'components/simple_header.html' with class_nav='w-fit ml-12 text-black fixed z-[10000] rounded-2xl bg-clip-padding backdrop-filter backdrop-blur-sm bg-opacity-20 border border-gray-100' %}
+    <div id="map" class="h-screen">
+      <div id="overlay" class="invisible z-[10000] absolute inset-0 bg-black/50 flex items-center justify-center">
+        <span class="loading loading-spinner text-secondary"></span>
+      </div>
+    </div>
+
+    <div class="mx-1 sm:mx-2 sm:w-60">
+        <div class="my-6 text-center">
+          <input
+            id="URLwhatsapp"
+            type="text"
+            placeholder="Whatsapp"
+            class="input input-bordered input-md input-success"
+          />
+          <button id="putMarker" class="my-2 btn btn-primary !text-white">
+            UBICAR GOOGLE MAPS
+          </button>
+          <hr class="divide-y divide-white mb-6" />
+        </div>
+
+        <!-- Campo de entrada para coordenadas del polígono -->
+        <form
+          id="savePolygon"
+          action="/api/v1/areasfactor/"
+          method="POST"
+        >
+          <div class="input-container text-center">
+            <textarea
+              id="polygon-coordinates"
+              name="polygon"
+              placeholder="Ingrese las coordenadas"
+              class="textarea textarea-bordered w-full h-24"></textarea>
+            <button
+              type="button"
+              id="submit-coordinates"
+              class="btn btn-sm btn-accent !text-white mt-1"
+            >
+              Dibujar Polígono
+            </button>
+            <div class="mt-4 flex">
+              <input
+                type="text"
+                id="name"
+                name="name"
+                placeholder="Zona"
+                class="input input-sm input-bordered w-full mr-2"
+              />
+              <input
+                type="text"
+                id="factor"
+                name="factor"
+                placeholder="Factor"
+                class="input input-sm input-bordered w-full"
+              />
+            </div>
+            <button
+              type="submit"
+              id="add-area"
+              class="btn btn-md btn-secondary !text-white mt-2">
+              Agregar Zona a Base de Datos
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal Precio-->
+    <div
+      id="modalPrecio"
+      class="invisible bg-white rounded-lg absolute centrear-w-absolute top-2 z-[1000] sombra">
+      
+      <!-- Modal header -->
+      <div id="modal-header" class="flex justify-end cursor-move">
+        <button
+          id="xModal"
+          type="button"
+          class="btn btn-sm btn-circle btn-ghost"
+        >
+          ✕
+        </button>
+      </div>
+      <!-- Modal body -->
+      <table
+        id="tPrecios"
+        class="table-auto font-light text-xs text-center mx-6"
+      >
+        <thead class="bg-gray-300">
+          <tr>
+            <th class="px-6">Origen</th>
+            <th class="px-2">Dist(km)</th>
+            <th class="px-2">T.(min)</th>
+          </tr>
+        </thead>
+        <tbody id="tbValores" class="bg-gray-100"> </tbody>
+
+        <thead class="bg-gray-300">
+          <tr>
+            <th class="px-6"></th>
+            <th class="px-2">Precio Dist.</th>
+            <th class="px-2">Precio T.</th>
+          </tr>
+        </thead>
+        <tbody id="tbPrecios" class="bg-gray-100"> </tbody>
+
+        <thead class="bg-gray-300">
+          <tr>
+            <th class="px-6"></th>
+            <th class="px-2">Menor Dist.</th>
+            <th class="px-2">Factor</th>
+          </tr>
+        </thead>
+        <tbody id="tbMenor" class="bg-gray-100"> </tbody>
+
+        <thead class="bg-gray-300">
+          <tr>
+            <th class="px-6">Ajuste</th>
+            <th class="px-2">Precio Sugerido</th>
+            <th class="px-2">Precio Facturado</th>
+          </tr>
+        </thead>
+        <tbody id="tbFinal" class="bg-gray-100"> </tbody>
+      </table>
+
+      <div class="max-w-xs p-4">
+        <div class="flex flex-row h-max">
+          <div class="w-1/2 mx-auto mt-1 mr-1 text-center">
+            <label class="input input-bordered input-sm flex mb-2 mr-3">
+              <input
+                id="formName"
+                type="text"
+                class="grow"
+                placeholder="Nombre"
+              />
+            </label>
+
+            <label class="input input-bordered input-sm flex mb-2 mr-3 ">
+              <input
+                id="formPhone"
+                type="text"
+                class="grow"
+                placeholder="Teléfono"
+              />
+            </label>
+
+            <label class="input input-bordered input-sm flex mr-3">
+              <input
+                id="formCost"
+                type="text"
+                class="grow"
+                placeholder="Precio"
+              />
+            </label>
+          </div>
+          
+          <div class="my-auto text-xs">
+            <div>Precio Base: <span id="p_base">PRECIO BASE</span> Bs.</div>
+            <div>Precio Km: <span id="p_km">PRECIO KM BASE</span> Bs/km.</div>
+            <div>Precio Tiempo: <span id="p_tiempo">PRECIO TIEMPO</span> Bs/min.</div>
+          </div>
+        </div>
+        <button id="saveData" class="btn btn-accent btn-sm !text-white mt-2 w-full">Guardar Datos</button>
+      </div>
+
+      <!-- Precio para limpieza de un pozo y cámara séptica de tipo vivienda.</h4> -->
+    </div>
+  </main>
+{% endblock %}
+
+{% block js %}
+<script type="module" src="{% static 'maps/maps_admin.js' %}"></script>
+<script type="module" src="{% static 'maps/leaflet.Control.Center.js' %}"></script>
+{% endblock %}

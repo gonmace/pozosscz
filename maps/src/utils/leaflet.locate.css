@@ -1,0 +1,59 @@
+.leaflet-control-locate {
+  border: 2px solid rgba(0,0,0,0.2);
+  background-clip: padding-box;
+}
+
+.leaflet-control-locate a {
+  background-color: #fff;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  color: black;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.leaflet-control-locate.active a {
+  background-color: #c8f7c5;
+}
+
+.leaflet-control-locate.following a {
+  background-color: #fc8428;
+}
+
+/* Opción 1: Usando una imagen SVG incrustada */
+.leaflet-control-locate-custom {
+  width: 22px;
+  height: 22px;
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="black"><path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3A8.994 8.994 0 0 0 13 3.06V1h-2v2.06A8.994 8.994 0 0 0 3.06 11H1v2h2.06A8.994 8.994 0 0 0 11 20.94V23h2v-2.06A8.994 8.994 0 0 0 20.94 13H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg>');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.leaflet-control-locate-loading {
+  width: 22px;
+  height: 22px;
+  border: 2px solid rgba(0,0,0,0.2);
+  border-top-color: black;
+  border-radius: 50%;
+  animation: leaflet-control-locate-spin 1s linear infinite;
+}
+
+@keyframes leaflet-control-locate-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Opción 2: Para usar con una imagen personalizada */
+.custom-locate-icon {
+  width: 22px;
+  height: 22px;
+  background-image: url('/static/img/locate-icon.png'); /* Reemplaza con la ruta a tu imagen */
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+} 

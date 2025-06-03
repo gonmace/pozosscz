@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% load static %}
+
+
+{% block css %}
+
+{% endblock %}
+
+{% block body_class %}bg-gradient-to-b from-primary via-white to-primary{% endblock %}
+
+{% block content %}
+<main class="max-w-7xl mx-auto">
+    <!-- Header -->
+    <nav class="max-w-7xl w-full fixed z-50 rounded-2xl left-1/2 transform -translate-x-1/2">
+        {% include 'components/header.html' with class_nav='' %}
+    </nav>
+
+    <!-- Banner -->
+    {% include 'components/Banner.html' %}
+
+    <section class="mt-10">
+        <div class="text-center py-10">
+            <p class="text-lg lg:text-xl mb-3">
+                ¿aún no nos conoces?
+            </p>
+            <h1 id="titulo" class="text-2xl sm:text-3xl lg:text-4xl text-gray-900 mb-4">Limpieza de pozos sépticos Santa Cruz</h1>
+            <p class="text-lg lg:text-xl leading-relaxed xl:w-2/4 lg:w-3/4 mx-auto text-gray-600">
+                Somos querendones de nuestra tierra... La queremos verde y con el "suelo" más puro de América.
+            </p>
+        </div>
+
+        <div class="flex flex-wrap gap-1 md:flex-row">
+            <!-- Card Alcance -->
+            {% for alcance in alcances %}
+                {% include 'components/card_alcance.html' with titulo=alcance.titulo descripcion=alcance.descripcion svg=alcance.img_svg %}
+            {% endfor %}            
+        </div>
+    </section>
+
+    <section class="mt-10">
+        <p class="text-center text-base sm:text-lg lg:text-xl mb-3 text-black">
+            ¿A quienes atendemos?
+        </p>
+        <div class="flex flex-wrap-reverse">
+            <!-- Cards A Quienes -->
+            {% for tipo_cliente in tipos_clientes %}
+                {% include 'components/tipo_clientes.html' with nombre=tipo_cliente.nombre svg=tipo_cliente.img_svg %}
+            {% endfor %}
+            
+        </div>
+    </section>
+
+
+</main>
+
+<!-- Footer -->
+{% include 'components/footer.html' %}
+
+{% endblock content %}
+{% block js %}
+<script type="text/javascript">
+    const banner_img = "{{ banner.img.url }}";
+    const banner_svg = "{{ banner.svg.url }}";
+    const banner_alt = "{{ banner.img_alt }}";
+</script>
+<script src="{% static 'js/main.js' %}"></script>
+
+{% endblock %}

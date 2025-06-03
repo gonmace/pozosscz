@@ -8,6 +8,7 @@ from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('main.urls')),
+    path('', include('maps.urls')),
     path('', include('clientes.urls')),
     path('', include('pozosscz.urls')),
     path('api/v1/formcontacto', include('formcontacto.urls')),
