@@ -1,4 +1,4 @@
-// vite.config.maps.js
+// vite.config.maps-admin.js
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { defineConfig } from 'vite';
@@ -12,7 +12,7 @@ export default defineConfig({
     minify: true,
     rollupOptions: {
       input: {
-        maps: './index-maps.ts',
+        maps_admin: './index-maps-admin.ts',
       },
       output: {
         entryFileNames: '[name].js',

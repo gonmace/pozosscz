@@ -1,83 +1,29 @@
 {% load static inline_svg %}
 
-<nav id="navbar" class="navbar {{ class_nav }} transition-all duration-1000">
+<nav id="navbar" class="flex justify-between items-center {{ class_nav }} transition-all duration-1000 py-1 h-9 mt-2">
+  <ul class="menu menu-horizontal px-1 uppercase min-h-0">
+    <li>
+      <a href="/" class="flex items-center p-1">
+        <div class="w-4 h-4">
+          {% inline_svg_from_static 'icons/home.svg' %}
+        </div>
+      </a>
+    </li>
+  </ul>
 
-
-  <div class="navbar-start hidden md:flex">
-    <ul class="menu menu-horizontal px-1 uppercase">
-      <li>
-        <a href="/">
-          <div class="w-5 h-5">
-            {% inline_svg_from_static 'icons/home.svg' %}
-          </div>
-        </a>
-      </li>
-
-    </ul>
-  </div>
-
-  <div class="navbar-start">
-    <div class="dropdown w-0">
-      <div tabindex="0" role="button" class="btn btn-ghost md:invisible">
-        <svg
-          class="ml-auto h-5 w-5 sombra"
-          fill="currentColor"
-          viewBox="0 0 24 24"
-          stroke="currentColor">
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M4 6h16M4 12h8m-8 6h16" />
-        </svg>
+  {% if is_authenticated %}
+    <a href="#" id="logout-link-desktop" class="flex items-center p-1">
+      <div class="w-4 h-4">
+        {% inline_svg_from_static 'icons/logout.svg' %}
       </div>
-      <ul
-        tabindex="0"
-        class="menu menu-lg dropdown-content bg-primary rounded-box z-[1] mt-3 w-48 p-2 shadow mr-1 right-0 text-white">
-        {% for item in menu_data %}
-          {% if is_authenticated or not item.protected %}
-            <li>
-              <a href="{{ item.link }}" class="flex justify-between">
-                {{ item.name }}
-                <div class="w-5 h-5">
-                  {% inline_svg_from_static 'icons/'|add:item.icon|add:'.svg' %}
-                </div>
-              </a>
-            </li>
-          {% endif %}
-        {% endfor %}
-        <li>
-          {% if is_authenticated %}
-            <a href="#" id="logout-link" class="logout-link flex justify-between">
-              <div class="w-5 h-5 ">
-                {% inline_svg_from_static 'icons/logout.svg' %}
-              </div>
-            </a>
-          {% else %}
-            <a href="#" class="flex justify-between">
-              <div class="w-5 h-5 ">
-                {% inline_svg_from_static 'icons/login.svg' %}
-              </div>
-            </a>
-          {% endif %}
-        </li>
-      </ul>
-    </div>
-
-    {% if is_authenticated %}
-      <a href="#" id="logout-link-desktop" class="hidden md:flex flex-row w-20 justify-around">
-        <div class="w-5 h-5 ">
-          {% inline_svg_from_static 'icons/logout.svg' %}
-        </div>
-      </a>
-    {% else %}
-      <a href="#" class="hidden md:flex flex-row w-20 justify-around">
-        <div class="w-5 h-5 ">
-          {% inline_svg_from_static 'icons/login.svg' %}
-        </div>
-      </a>
-    {% endif %}
-  </div>
+    </a>
+  {% else %}
+    <a href="#" class="flex items-center p-1">
+      <div class="w-4 h-4">
+        {% inline_svg_from_static 'icons/login.svg' %}
+      </div>
+    </a>
+  {% endif %}
 </nav>
 
 <script>

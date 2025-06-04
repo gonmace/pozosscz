@@ -1,12 +1,10 @@
 import { Map, tileLayer, Marker, control, polyline, Path } from "leaflet"; 
 import "./utils/leaflet.Control.Center";
-// import L from "leaflet";
 import { LocateControl } from "leaflet.locatecontrol";
 import type {
   LeafletMouseEvent,
   LocationEvent,
-  ErrorEvent,
-  Control,
+  ErrorEvent
 } from "leaflet";
 import {
   iconRed,
@@ -18,12 +16,6 @@ import "leaflet/dist/leaflet.css";
 import "../src/utils/leaflet.Control.Center.css";
 import "leaflet.locatecontrol/dist/L.Control.Locate.min.css";
 import "./utils/leaflet.locate.css";
-
-// Importar Font Awesome desde CDN
-const fontAwesome = document.createElement('link');
-fontAwesome.rel = 'stylesheet';
-fontAwesome.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css';
-document.head.appendChild(fontAwesome);
 
 let marker: Marker;
 let paths: Path[] = [];

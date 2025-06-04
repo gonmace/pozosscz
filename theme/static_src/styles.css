@@ -1,22 +1,23 @@
 @import "tailwindcss";
+@theme {
+  --color-precio300: #ffff00;
+  --color-precio350: #fba657;
+  --color-precio400: #4ade80;
+  --color-precio450: #52b551;
+  --color-precio500: #ff0000;
+  --color-precio600: #00ffff;
+  --color-precio700: #50dbff;
+  --color-precio800: #5eb9fc;
+  --color-precio900: #6199ee;
+  --color-precio1000: #808080;
+  --color-precioNegro: black;
+}
 @import "tailwindcss-animated";
 
-@source "../../../**/*.{html,py,js}";
-@source "../../main/src/index-main.ts";
+@source "../../../**/*.{html,py,js,ts}";
+/* @source "../../main/src/index-main.ts";
+@source "../../maps/src/index-maps-admin.ts"; */
 
-@theme {
-  --color-precio300: "#ffff00",
-  --color-precio350: "#fba657",
-  --color-precio400: "#4ade80",
-  --color-precio450: "#52b551",
-  --color-precio500: "#ff0000",
-  --color-precio600: "#00ffff",
-  --color-precio700: "#50dbff",
-  --color-precio800: "#5eb9fc",
-  --color-precio900: "#6199ee",
-  --color-precio1000: "#808080",
-  --color-precioNegro: "black",
-}
 @plugin "daisyui";
 @plugin "daisyui/theme" {
   name: "dark";

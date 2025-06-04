@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "vite build --watch",
-    "build:admin": "vite build -c vite.config.admin.js --watch"
+    "build:admin": "vite build -c vite.config.maps-admin.js --watch"
   },
   "keywords": [],
   "author": "",

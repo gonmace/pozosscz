@@ -6,13 +6,15 @@
 {% endblock %}
 
 {% block content %}
-<main class="w-full">
-    {% include 'components/simple_header.html' with class_nav='w-fit ml-12 text-black fixed z-[10000] rounded-2xl bg-clip-padding backdrop-filter backdrop-blur-sm bg-opacity-20 border border-gray-100' %}
-    <div id="map" class="h-screen">
-      <div id="overlay" class="invisible z-[10000] absolute inset-0 bg-black/50 flex items-center justify-center">
-        <span class="loading loading-spinner text-secondary"></span>
+<main class="w-full relative">
+    {% include 'components/simple_header.html' with class_nav='w-fit ml-12 text-black fixed z-[10000] rounded-sm bg-white border border-gray-500' %}
+    <div class="flex flex-col sm:flex-row">
+      <div id="map" class="h-screen w-full">
+    
+        <div id="overlay" class="invisible z-[10000] absolute inset-0 bg-black/50 flex items-center justify-center">
+          <span class="loading loading-spinner text-secondary"></span>
+        </div>
       </div>
-    </div>
 
     <div class="mx-1 sm:mx-2 sm:w-60">
         <div class="my-6 text-center">
@@ -22,7 +24,7 @@
             placeholder="Whatsapp"
             class="input input-bordered input-md input-success"
           />
-          <button id="putMarker" class="my-2 btn btn-primary !text-white">
+          <button id="putMarker" class="my-2 btn btn-primary">
             UBICAR GOOGLE MAPS
           </button>
           <hr class="divide-y divide-white mb-6" />
@@ -43,7 +45,7 @@
             <button
               type="button"
               id="submit-coordinates"
-              class="btn btn-sm btn-accent !text-white mt-1"
+              class="btn btn-sm btn-accent mt-1"
             >
               Dibujar Polígono
             </button>
@@ -66,7 +68,7 @@
             <button
               type="submit"
               id="add-area"
-              class="btn btn-md btn-secondary !text-white mt-2">
+              class="btn btn-secondary mt-2">
               Agregar Zona a Base de Datos
             </button>
           </div>
@@ -173,10 +175,10 @@
 
       <!-- Precio para limpieza de un pozo y cámara séptica de tipo vivienda.</h4> -->
     </div>
+    </div>
   </main>
 {% endblock %}
 
 {% block js %}
 <script type="module" src="{% static 'maps/maps_admin.js' %}"></script>
-<script type="module" src="{% static 'maps/leaflet.Control.Center.js' %}"></script>
 {% endblock %}
