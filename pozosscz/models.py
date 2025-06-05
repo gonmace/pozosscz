@@ -82,7 +82,9 @@ class BaseCamion(models.Model):
     name = models.CharField("Nombre", max_length=50)
     coordinates = models.JSONField()
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     available = models.BooleanField(default=True)
+    deleted = models.BooleanField(default=False)
 
     def __str__(self):
         return self.name

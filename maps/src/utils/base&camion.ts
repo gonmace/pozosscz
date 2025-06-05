@@ -1,5 +1,3 @@
-
-
 // Helper function to extract coordinates from different formats
 export function extractCoordinates(input: string): [number, number] | null {
     try {
@@ -40,6 +38,32 @@ export function extractCoordinates(input: string): [number, number] | null {
       body: JSON.stringify({
         name: name,
         coordinates: coordinates
+      })
+    });
+    return response.json();
+  }
+
+  export async function updateTruckMarkers(camionId: string, checked: boolean) {
+    const response = await fetch(`/api/v1/basecamion/${camionId}/`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        available: checked
+      })
+    });
+    return response.json();
+  }
+
+  export async function deleteTruckMarker(camionId: string) {
+    const response = await fetch(`/api/v1/basecamion/${camionId}/`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        deleted: true
       })
     });
     return response.json();

@@ -40,13 +40,16 @@ import "leaflet.markercluster.layersupport";
 import { LocateControl } from "leaflet.locatecontrol";
 import "./utils/leaflet.locate.css";
 import { cotizando } from "./utils/cotizando.ts";
-import { extractCoordinates, guardarBaseCamion } from "./utils/base&camion.ts";
+import { deleteTruckMarker, extractCoordinates, guardarBaseCamion, updateTruckMarkers } from "./utils/base&camion.ts";
 
 let marker: Marker;
 let markerCamion: Marker;
 let paths: Path[] = [];
 const colorPath = ["red", "green", "orange", "cyan"];
 const overlay = document.getElementById("overlay") as HTMLDivElement;
+
+// Store truck markers with their IDs
+const truckMarkers: Record<string, Marker> = {};
 
 const colores = [
   "#B0B0B0",
@@ -243,9 +246,95 @@ GuardarBaseMarker.addEventListener("click", async () => {
   }
 });
 
+// Manejar clicks en los botones locate-camion
+document.querySelectorAll('.locate-camion').forEach((button) => {
+  button.addEventListener('click', (e) => {
+    const row = (e.target as HTMLElement).closest('tr');
+    if (row) {
+      const coordsInput = row.querySelector('.camion-coords') as HTMLInputElement;
+      if (coordsInput && coordsInput.value) {
+        try {
+          const coords = JSON.parse(coordsInput.value) as [number, number];
+          map.flyTo(coords, 13);
+        } catch (error) {
+          console.error('Error parsing coordinates:', error);
+        }
+      }
+    }
+  });
+});
 
+document.querySelectorAll('.checkbox-camion').forEach((checkbox) => {
+  checkbox.addEventListener('change', (e) => {
+    const row = (e.target as HTMLElement).closest('tr');
+    if (row) {
+      const checkbox = row.querySelector('.checkbox-camion') as HTMLInputElement;
+      if (checkbox) {
+        const camionId = checkbox.dataset.camionId || '';
+        const checked = checkbox.checked;
+        try {
+          updateTruckMarkers(camionId, checked);
+        } catch (error) {
+          createToast(
+            "camion",
+            "map",
+            "Hubo un error al actualizar el camion",
+            "top",
+            "error"
+          );
+        }
+        // Update marker visibility
+        const marker = truckMarkers[camionId];
+        if (marker) {
+          if (checked) {
+            marker.addTo(map);
+          } else {
+            marker.removeFrom(map);
+          }
+        }
+      }
+    }
+  });
+});
 
-
+document.querySelectorAll('.delete-camion').forEach((button) => {
+  button.addEventListener('click', async (e) => {
+    const row = (e.target as HTMLElement).closest('tr');
+    if (row) {
+      const camionId = row.querySelector('.camion-id') as HTMLInputElement;
+      const camionName = row.querySelector('td')?.textContent || 'este camión';
+      
+      if (camionId && camionId.value) {
+        // Show confirmation toast
+        const confirmDelete = confirm(`¿Está seguro que desea eliminar ${camionName}?`);
+        
+        if (confirmDelete) {
+          try {
+            await deleteTruckMarker(camionId.value);
+            createToast(
+              "camion",
+              "map",
+              "Camion eliminado exitosamente",
+              "top",
+              "success"
+            );
+            setTimeout(() => {
+              location.reload();
+            }, 2500);
+          } catch (error) {
+            createToast(
+              "camion",
+              "map",
+              "Hubo un error al eliminar el camion",
+              "top",
+              "error"
+            );
+          }
+        }
+      }
+    }
+  });
+});
 
 
 // Funcion para ubicar el marcador en el mapa
@@ -565,9 +654,6 @@ async function initializeAreas() {
       g.addTo(map);
     });
 
-    // Añadir los polígonos al mapa
-    polygonLayers.forEach((layer) => layer.layer.addTo(map));
-
     var baseTree = {
       label: "<strong>Capas Base</strong>",
       children: [
@@ -663,3 +749,36 @@ async function initializeAreas() {
 
 // Inicializar las áreas cuando se carga el mapa
 initializeAreas();
+
+// Function to load all truck markers
+function loadTruckMarkers() {
+  document.querySelectorAll('.camion-coords').forEach((coordsInput) => {
+    if (coordsInput instanceof HTMLInputElement && coordsInput.value) {
+      try {
+        const coords = JSON.parse(coordsInput.value) as [number, number];
+        const row = coordsInput.closest('tr');
+        if (row) {
+          const checkbox = row.querySelector('.checkbox-camion') as HTMLInputElement;
+          const camionId = checkbox?.dataset.camionId;
+          if (camionId) {
+            const marker = new Marker(coords, {
+              icon: iconCamion
+            });
+            if (checkbox.checked) {
+              marker.addTo(map);
+            }
+            truckMarkers[camionId] = marker;
+          }
+        }
+      } catch (error) {
+        console.error('Error loading truck marker:', error);
+      }
+    }
+  });
+}
+
+// Call loadTruckMarkers after map initialization
+map.whenReady(() => {
+  loadTruckMarkers();
+});
+

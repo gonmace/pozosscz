@@ -42,4 +42,5 @@ class BannerAdmin(admin.ModelAdmin):
 
 @admin.register(BaseCamion)
 class BaseCamionAdmin(admin.ModelAdmin):
-    list_display = ('name', 'coordinates', 'created_at', 'available')
+    list_display = ('name', 'available', 'deleted', 'coordinates', 'created_at', 'updated_at')
+    list_editable = ('available', 'deleted')

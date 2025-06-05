@@ -16,7 +16,7 @@
         </div>
       </div>
 
-    <div class="mx-1 sm:mx-2 sm:w-60">
+    <div class="mx-1 sm:mx-2 sm:w-60 h-screen overflow-y-auto">
         <div class="my-2 text-center">
           <input
             id="URLwhatsapp"
@@ -29,6 +29,100 @@
           </button>
           <hr class="divide-y"/>
         </div>
+
+        <!-- Colocar Base / Camion -->
+        <div class="text-center">
+          Base / Camion
+        </div>
+        <div class="join">
+          <div>
+            <label class="input input-info input-sm validator join-item">
+              <input id="coordinates" type="text" placeholder="Lat, Lon" required />
+            </label>
+            <div class="validator-hint hidden">Coordenadas inválidas</div>
+          </div>
+
+          <button id="BaseMarker" class="btn btn-neutral btn-sm join-item p-0 sombra">
+            <svg width="27" height="27" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+              <!-- Círculo central (vehículo) -->
+              <circle cx="50" cy="50" r="10" fill="#007BFF" />
+            
+              <!-- Anillo pulsante 1 -->
+              <circle cx="50" cy="50" r="10" fill="none" stroke="#007BFF" stroke-width="2">
+                <animate attributeName="r" from="10" to="50" dur="1.8s" repeatCount="indefinite" />
+                <animate attributeName="opacity" from="1" to="0" dur="1.8s" repeatCount="indefinite" />
+              </circle>
+            
+              <!-- Anillo pulsante 2 (desfasado para efecto continuo) -->
+              <circle cx="50" cy="50" r="10" fill="none" stroke="#007BFF" stroke-width="2">
+                <animate attributeName="r" from="10" to="50" begin="0.9s" dur="1.8s" repeatCount="indefinite" />
+                <animate attributeName="opacity" from="1" to="0" begin="0.9s" dur="1.8s" repeatCount="indefinite" />
+              </circle>
+            </svg>
+          </button>
+        </div>
+
+        <div class="join mt-1">
+          <div>
+            <label class="input input-secondary input-sm validator join-item">
+              <input id="nameCamion" type="text" placeholder="Nombre" required />
+            </label>
+            <div class="validator-hint hidden">Nombre inválido</div>
+          </div>
+        <button id="GuardarBaseMarker" class="btn btn-secondary btn-sm join-item p-1">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="#fff">
+            <path d="M17 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a1 1 0 0 0 1-1V7l-3-4zM12 19a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm3-10H5V5h10v4z"/>
+          </svg>            
+        </button>
+        </div>
+        
+        <!-- Lista de Bases/Camiones -->
+        <div class="mt-1">
+          <div id="listaCamiones">
+            <table class="table table-xs table-compact w-full">
+              <thead>
+                <tr class="bg-base-200">
+                  <th class="!p-1 text-xs">Nombre</th>
+                  <th class="!p-1 text-center text-xs">Disp.</th>
+                  <th class="!p-1 text-center text-xs"></th>
+                  <th class="!p-1 text-center text-xs"></th>
+                </tr>
+              </thead>
+              <tbody class="text-xs">
+                {% for camion in basecamiones %}
+                <tr class="hover:bg-base-200">
+                  <td class="!p-1">{{ camion.name }}</td>
+                  <td class="!p-1 text-center">
+                    <input type="checkbox" class="toggle toggle-success toggle-xs checkbox-camion" 
+                           {% if camion.available %}checked{% endif %}
+                           data-camion-id="{{ camion.id }}" />
+                  </td>
+                  <td class="!p-1 text-center">
+                    <input type="hidden" class="camion-coords" value="{{ camion.coordinates }}">
+                    <input type="hidden" class="camion-id" value="{{ camion.id }}">
+                    <button class="btn btn-xs btn-info btn-square h-4 min-h-4 w-4 p-0 locate-camion">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                        <circle cx="12" cy="10" r="3"></circle>
+                      </svg>
+                    </button>
+                  </td>
+                  <td class="!p-1 text-center">
+                    <button class="btn btn-xs btn-error btn-square h-4 min-h-4 w-4 p-0 delete-camion">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 6h18"></path>
+                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                      </svg>
+                    </button>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <hr class="divide-y my-2"/>
 
         <!-- Campo de entrada para coordenadas del polígono -->
         <form
@@ -73,53 +167,8 @@
             </button>
           </div>
         </form>
-        <hr class="divide-y my-2"/>
-        <!-- Colocar Base / Camion -->
 
-        Colocar Base / Camion
-        <div class="join">
-          <div>
-            <label class="input input-info input-sm validator join-item">
-              <input id="coordinates" type="text" placeholder="Lat, Lon" required />
-            </label>
-            <div class="validator-hint hidden">Coordenadas inválidas</div>
-          </div>
 
-          <button id="BaseMarker" class="btn btn-neutral btn-sm join-item p-0 sombra">
-            <svg width="27" height="27" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-              <!-- Círculo central (vehículo) -->
-              <circle cx="50" cy="50" r="10" fill="#007BFF" />
-            
-              <!-- Anillo pulsante 1 -->
-              <circle cx="50" cy="50" r="10" fill="none" stroke="#007BFF" stroke-width="2">
-                <animate attributeName="r" from="10" to="50" dur="1.8s" repeatCount="indefinite" />
-                <animate attributeName="opacity" from="1" to="0" dur="1.8s" repeatCount="indefinite" />
-              </circle>
-            
-              <!-- Anillo pulsante 2 (desfasado para efecto continuo) -->
-              <circle cx="50" cy="50" r="10" fill="none" stroke="#007BFF" stroke-width="2">
-                <animate attributeName="r" from="10" to="50" begin="0.9s" dur="1.8s" repeatCount="indefinite" />
-                <animate attributeName="opacity" from="1" to="0" begin="0.9s" dur="1.8s" repeatCount="indefinite" />
-              </circle>
-            </svg>
-          </button>
-        </div>
-
-        <div class="join mt-1">
-          <div>
-            <label class="input input-secondary input-sm validator join-item">
-              <input id="nameCamion" type="text" placeholder="Nombre" required />
-            </label>
-            <div class="validator-hint hidden">Nombre inválido</div>
-          </div>
-        <button id="GuardarBaseMarker" class="btn btn-secondary btn-sm join-item p-1">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="#fff">
-            <path d="M17 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a1 1 0 0 0 1-1V7l-3-4zM12 19a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm3-10H5V5h10v4z"/>
-          </svg>            
-        </button>
-        </div>
-
-        <hr class="divide-y my-2"/>
       </div>
     </div>
 

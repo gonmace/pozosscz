@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from pozosscz.models import AreasFactor, PreciosPozosSCZ, DatosGenerales
+from pozosscz.models import AreasFactor, BaseCamion, PreciosPozosSCZ, DatosGenerales
 from clientes.models import Cliente
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -85,7 +85,8 @@ def cotiza(request):
     return render(request, 'cotiza.html')
 
 def mapa(request):
-    return render(request, 'mapa.html')
+    basecamiones = BaseCamion.objects.filter(deleted=False)
+    return render(request, 'mapa.html', {'basecamiones': basecamiones})
 
 class ContratarAPIView(APIView):
     permission_classes = [AllowAny]
