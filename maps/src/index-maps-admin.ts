@@ -198,8 +198,17 @@ BaseMarker.addEventListener("click", () => {
 GuardarBaseMarker.disabled = true;
 GuardarBaseMarker.addEventListener("click", async () => {
   const nameInput = document.getElementById("nameCamion") as HTMLInputElement;
-  const coordinatesInput = document.getElementById("coordinates") as HTMLInputElement;
   const name = nameInput.value;
+  if (name.length < 3) {
+    createToast(
+      "name",
+      "map",
+      "El nombre debe tener al menos 3 caracteres",
+      "top",
+      "error"
+    );
+    return;
+  }
   try {
     if (coordinates) {
       await guardarBaseCamion(name, coordinates);
