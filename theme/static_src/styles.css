@@ -34,7 +34,7 @@
   --color-secondary-content: oklch(94% 0.028 342.258);
   --color-accent: #52b551;
   --color-accent-content: oklch(98% 0.003 247.858);
-  --color-neutral: #333333;
+  --color-neutral: #fff;
   --color-neutral-content: oklch(92% 0.004 286.32);
   --color-info: oklch(74% 0.16 232.661);
   --color-info-content: #fff;
@@ -78,6 +78,6 @@
     @apply md:bg-primary
   }
   .puntos {
-    @apply ml-2 inline-block border-black border-2 w-4 h-4 text-center rounded-full;
+    @apply ml-2 inline-block border-black border-1 w-4 h-4 text-center rounded-full;
   }
 }

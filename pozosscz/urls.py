@@ -1,20 +1,14 @@
 from django.urls import include, path
 from rest_framework import routers
 from pozosscz.views import (
-    # CustomAuthToken,
     PreciosPozosSCZViewSet,
-    # AlcanceViewSet,
-    BannerViewSet,
-    # AQuienViewSet,
-    AreasFactorViewSet
+    AreasFactorViewSet,
+    BaseCamionViewSet
 )
 from . import views
 
 router = routers.DefaultRouter()
-
-# router.register(r'alcance', AlcanceViewSet, 'alcance')
-router.register(r'banner', BannerViewSet, 'banner')
-# router.register(r'aquien', AQuienViewSet, 'aquien')
+router.register(r'basecamion', BaseCamionViewSet, 'basecamion')
 router.register(r'precios', PreciosPozosSCZViewSet, 'precios')
 router.register(r'areasfactor', AreasFactorViewSet, 'areasfactor')
 

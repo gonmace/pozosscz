@@ -2,12 +2,10 @@ from django.contrib import admin
 
 from solo.admin import SingletonModelAdmin
 from pozosscz.models import (
+    BaseCamion,
     PreciosPozosSCZ,
     DatosGenerales,
     AreasFactor,
-    Banner,
-    # Alcance,
-    # AQuien
 )
 from adminsortable2.admin import SortableAdminMixin
 
@@ -42,15 +40,6 @@ class BannerAdmin(admin.ModelAdmin):
     )
     list_editable = ('displayBanner',)
 
-
-admin.site.register(Banner, BannerAdmin)
-
-# class AlcanceAdmin(SortableAdminMixin, admin.ModelAdmin):
-#     list_display = ['orden', 'title', 'thumbnail_preview', 'display']
-#     list_editable = ('display', )
-# admin.site.register(Alcance, AlcanceAdmin)
-
-# class AQuienAdmin(SortableAdminMixin, admin.ModelAdmin):
-#     list_display = ['orden', 'title', 'thumbnail_preview', 'display']
-#     list_editable = ('display',)
-# admin.site.register(AQuien, AQuienAdmin)
+@admin.register(BaseCamion)
+class BaseCamionAdmin(admin.ModelAdmin):
+    list_display = ('name', 'coordinates', 'created_at', 'available')

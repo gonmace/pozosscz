@@ -11,6 +11,8 @@ import {
   locateOptions,
 } from "./utils/ObjectLeaflet";
 import "leaflet-control-custom";
+// Types for leaflet-control-custom
+import "./types/leaflet-control-custom.d.ts";
 
 import "leaflet/dist/leaflet.css";
 import "../src/utils/leaflet.Control.Center.css";

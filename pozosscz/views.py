@@ -1,18 +1,13 @@
 from rest_framework import viewsets
 from .models import (
-    # Alcance,
-    Banner,
-    # AQuien,
     PreciosPozosSCZ,
     AreasFactor,
-    # DatosGenerales
+    BaseCamion
 )
 from .serializers import (
     PreciosPozosSCZSerializer,
-    # AlcanceSerializer,
-    BannerSerializer,
-    # AQuienSerializer,
     AreasFactorSerializer,
+    BaseCamionSerializer
 )
 from django.http import Http404
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -30,41 +25,15 @@ class PreciosPozosSCZViewSet(viewsets.ModelViewSet):
     serializer_class = PreciosPozosSCZSerializer
     permission_classes = [AllowAny]
 
-
 class AreasFactorViewSet(viewsets.ModelViewSet):
     queryset = AreasFactor.objects.all()
     serializer_class = AreasFactorSerializer
     permission_classes = [AllowAny]
 
-# class AQuienViewSet(viewsets.ModelViewSet):
-#     queryset = AQuien.objects.filter(display=True)
-#     serializer_class = AlcanceSerializer
-
-
-class BannerViewSet(viewsets.ModelViewSet):
-    serializer_class = BannerSerializer
-
-    def get_queryset(self):
-        queryset = (
-            Banner.objects
-            .filter(displayBanner=True)
-            .order_by('id')
-            .first()
-        )
-        if queryset is None:
-            raise Http404("No Banner found with displayBanner=True")
-        return [queryset]  # Retorna una lista con el único objeto encontrado
-
-    def get_permissions(self):
-        if self.action in ['list', 'retrieve']:
-            # Ejemplo de métodos irrestrictos
-            return [AllowAny()]
-        return [IsAuthenticated()]
-
-# class AlcanceViewSet(viewsets.ModelViewSet):
-#     queryset = Alcance.objects.filter(display=True)
-#     serializer_class = AlcanceSerializer
-
+class BaseCamionViewSet(viewsets.ModelViewSet):
+    queryset = BaseCamion.objects.all()
+    serializer_class = BaseCamionSerializer
+    permission_classes = [AllowAny]
 
 class CustomAuthToken(ObtainAuthToken):
     def post(self, request, *args, **kwargs):

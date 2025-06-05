@@ -14,18 +14,13 @@ export const iconRed = new Icon({
 import "leaflet.locatecontrol"; // Import plugin
 // Añadir el control de localización al mapa usando control.locate con opciones
 export const locateOptions = {
-  keepCurrentZoomLevel: true,
+  keepCurrentZoomLevel: false,
   drawCircle: false,
   drawMarker: false,
   showPopup: false,
-  // Opción 1: Usando clases CSS personalizadas
+  flyTo: true,
   icon: 'leaflet-control-locate-custom',
   iconLoading: 'leaflet-control-locate-loading',
-  // Opción 2: Usando una imagen personalizada
-  /*
-  icon: 'custom-locate-icon',
-  iconElementTag: 'div',
-  */
   strings: {
     title: "Muestrame donde estoy",
     metersUnit: "meters",
@@ -34,3 +29,11 @@ export const locateOptions = {
     outsideMapBoundsMsg: "You seem to be outside the boundaries of the map",
   },
 };
+
+export const iconCamion = new Icon({
+  iconUrl: "/static/img/leaflet/marker-camion.svg",
+  iconRetinaUrl: "/static/img/leaflet/marker-camion.svg",
+  iconSize: [64, 64],
+  iconAnchor: [32, 32],
+  popupAnchor: [-3, -76],
+});

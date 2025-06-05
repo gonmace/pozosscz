@@ -1,9 +1,9 @@
-
 from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+from django.views.generic import RedirectView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -12,6 +12,7 @@ urlpatterns = [
     path('', include('clientes.urls')),
     path('', include('pozosscz.urls')),
     path('api/v1/formcontacto', include('formcontacto.urls')),
+    path('spritesheet.svg', RedirectView.as_view(url=settings.STATIC_URL + 'maps/spritesheet.svg', permanent=True)),
 ]
 
 if settings.DEBUG:

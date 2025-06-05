@@ -78,97 +78,11 @@ class AreasFactor(models.Model):
 def default_img_alt():
     return datetime.now().strftime('%d-%m-%Y')
 
-
-class Banner(models.Model):
-    svg = models.FileField(
-        help_text="svg 1200x600",
-        upload_to='banner/',
-        validators=[validate_file_extension], blank=True, null=True)
-    img = models.FileField(
-        help_text="svg 1200x600",
-        upload_to='banner/',
-        validators=[validate_file_extension], )
-    img_alt = models.CharField(
-        "alt",
-        default=default_img_alt,
-        max_length=50, blank=True)
-    displayWebp = models.BooleanField("Mostrar Webp", default=True)
-    displayBanner = models.BooleanField("Mostrar Banner", default=False)
-
-    class Meta:
-        verbose_name = "Banner"
-        verbose_name_plural = "Banner"
-        ordering = ['displayBanner']
-
-    @property
-    def thumbnail_svg(self):
-        if self.svg:
-            return mark_safe("""<img src="{}"
-                             style="background-color: white;"
-                             width="250" height="150"
-                             />""".format(self.svg.url))
-        return "No hay archivo svg"
-
-    @property
-    def thumbnail_img(self):
-        if self.img:
-            return mark_safe("""<img src="{}"
-                             width="250" height="150"
-                             />""".format(self.img.url))
-        return "No hay archivo webp"
+class BaseCamion(models.Model):
+    name = models.CharField("Nombre", max_length=50)
+    coordinates = models.JSONField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    available = models.BooleanField(default=True)
 
     def __str__(self):
-        return self.img_alt
-
-# class Alcance(models.Model): # Tabla con nombre Alcance
-#     title = models.CharField("titulo", default="", max_length=50)
-#     description = models.TextField(
-    # "contenido", max_length=250, default="", blank=True)
-#     svg = models.FileField(
-    # upload_to='icon/', validators=[validate_file_extension],
-    # default="", blank=True)
-#     display = models.BooleanField(default=False)
-#     orden = models.PositiveIntegerField(default=0)
-
-#     class Meta:
-#         verbose_name = "Alcance"
-#         verbose_name_plural = "Nuestro Alcance"
-#         ordering = ['orden']
-
-#     def __str__(self):
-#         return self.title
-
-#     @property
-#     def thumbnail_preview(self):
-#         if self.svg:
-# return mark_safe('<img src="{}" width="30" height="30" />'
-# .format(self.svg.url))
-#         return ""
-
-
-# class AQuien(models.Model):
-#     title = models.CharField("cliente", default="", max_length=50)
-#     svg = models.FileField(
-    # upload_to='icon/',
-    # validators=[validate_file_extension_svg], default="", blank=True)
-#     display = models.BooleanField(default=True)
-#     orden = models.PositiveIntegerField(
-#         default=0,
-#         blank=False,
-#         null=False,
-#         )
-
-#     class Meta:
-#         verbose_name = "A quien?"
-#         verbose_name_plural = "A quienes?"
-#         ordering = ['orden']
-
-#     def __str__(self):
-#         return self.title
-
-#     @property
-#     def thumbnail_preview(self):
-#         if self.svg:
-#             return mark_safe(
-    # '<img src="{}" width="30" height="30" />'.format(self.svg.url))
-#         return ""
+        return self.name
