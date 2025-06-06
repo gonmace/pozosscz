@@ -17,6 +17,7 @@ import {
   LatLng,
   Layer,
   markerClusterGroup,
+  polyline,
 } from "leaflet";
 import "./utils/leaflet.Control.Center";
 import { iconCamion, iconRed, locateOptions } from "./utils/ObjectLeaflet";
@@ -45,7 +46,7 @@ import { deleteTruckMarker, extractCoordinates, guardarBaseCamion, updateTruckMa
 let marker: Marker;
 let markerCamion: Marker;
 let paths: Path[] = [];
-const colorPath = ["red", "green", "orange", "cyan"];
+const colorPath = ["red", "green", "blue", "cyan"];
 const overlay = document.getElementById("overlay") as HTMLDivElement;
 
 // Store truck markers with their IDs
@@ -109,7 +110,26 @@ control
                 </button>
               </div>`,
     events: {
-      click: () => cotizando(marker),
+      click: async () => {
+        const data = await cotizando(marker)
+        console.log(data);
+        data.paths.forEach((path: any, index: number) => {
+          const ruta = polyline(path, {
+            color: colorPath[index % colorPath.length],
+            opacity: 0.95
+          }).addTo(map);
+          paths.push(ruta);  
+        });
+        data.path_saguapac.forEach((path: any) => {
+          const ruta = polyline(path, {
+            color: "black",
+            opacity: 0.35
+          }).addTo(map);
+          paths.push(ruta);
+        });
+
+
+      },
     },
   })
   .addTo(map);

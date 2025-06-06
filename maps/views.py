@@ -9,10 +9,14 @@ import math
 import requests
 from typing import Tuple, List, Dict, Any
 import random
+from .utils import calculate_route_metrics
+from asgiref.sync import async_to_sync
+
 
 # Service bases coordinates
 SAGUAPAC_BASE = (-17.74620847, -63.12672898, "saguapac")
 GARAJE_BASE = (-17.78595813, -63.12451243, "garaje")
+
 BASES = [SAGUAPAC_BASE, GARAJE_BASE]
 
 # Waypoints for route calculations
@@ -124,37 +128,6 @@ class ContratarAPIView(APIView):
             return WAYPOINT_TORNO
         return None
 
-    def calculate_route_metrics(self, lat: float, lon: float, bases: List[Tuple[float, float, str]], waypoint: Tuple[float, float] = None) -> Tuple[List[float], List[float], List[str], List[List[List[float]]]]:
-        """Calculate distances and times from service bases to target location."""
-        distances = []
-        times = []
-        origins = []
-        geometries = []
-        
-        for base_lat, base_lon, base_name in bases:
-            # Construct URL with waypoint if provided
-            url_parts = [f"{base_lon},{base_lat}"]
-            if waypoint:
-                url_parts.append(f"{waypoint[1]},{waypoint[0]}")
-            url_parts.append(f"{lon},{lat}")
-            
-            url = f"http://router.project-osrm.org/route/v1/driving/{';'.join(url_parts)}?overview=full&geometries=geojson"
-            
-            try:
-                response = requests.get(url)
-                if response.status_code == 200:
-                    data = response.json()
-                    if data["code"] == "Ok" and len(data["routes"]) > 0:
-                        route = data["routes"][0]
-                        distances.append(route["distance"] / 1000)  # Convert to km
-                        times.append(route["duration"] / 60 * 1.25)  # Convert to minutes and add 25% buffer
-                        origins.append(base_name)
-                        geometries.append(route["geometry"]["coordinates"])
-            except Exception as e:
-                print(f"Error calculating route: {e}")
-                
-        return distances, times, origins, geometries
-
     def post(self, request, *args, **kwargs):
         # Extract data from request
         try:
@@ -173,15 +146,42 @@ class ContratarAPIView(APIView):
                 {"error": "Location is outside service area"},
                 status=status.HTTP_400_BAD_REQUEST
             )
-
         # Calculate combined factor
         combined_factor = math.prod(factors)
 
         # Get waypoint if location is in special areas
         waypoint = self.get_waypoint_for_location(lat, lon)
-
-        # Calculate routes with waypoint if needed
-        distances, times, origins, geometries = self.calculate_route_metrics(lat, lon, BASES, waypoint)
+        
+        # Get basecamiones
+        basecamiones = BaseCamion.objects.filter(deleted=False, available=True)
+        if not basecamiones:
+            basecamiones = BASES
+        # Se iniverte coordenadas para el OSRM
+        
+        bases = [(base.coordinates[1], base.coordinates[0], base.name) for base in basecamiones]
+        
+        # Calcular rutas al cliente con punto intermedio si es necesario.
+        distances, times, origins, geometries = async_to_sync(calculate_route_metrics)(lat, lon, bases, waypoint)
+        
+        # Calcular ruta del cliente a SAGUAPAC
+        distance_saguapac, time_saguapac, origin_saguapac, geometry_saguapac = async_to_sync(calculate_route_metrics)(
+            SAGUAPAC_BASE[0], SAGUAPAC_BASE[1], [(lon, lat, "cliente")], waypoint)
+        
+        
+        return Response(
+            {
+                "distances": distances,
+                "times": times,
+                "origins": origins,
+                "paths": geometries,
+                "distance_saguapac": distance_saguapac,
+                "time_saguapac": time_saguapac,
+                "origin_saguapac": origin_saguapac,
+                "path_saguapac": geometry_saguapac
+            },
+            status=status.HTTP_200_OK
+        )
+        
         
         if not distances:
             return Response(

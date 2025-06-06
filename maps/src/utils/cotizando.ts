@@ -5,23 +5,46 @@
 import { Marker, Path } from "leaflet";
 
 interface RutasResult {
-    paths: Path[];
-    distancia: number[];
-    tiempo: number[];
-    origen: string[];
+    paths: Path[][];
+    distances: number[];
+    times: number[];
+    origins: string[];
+    path_saguapac: Path[][];
+    distance_saguapac: number[];
+    time_saguapac: number[];
+    origin_saguapac: string[];
   }
 
 export const cotizando = async (marker: Marker): Promise<RutasResult> => {
-    const colorPath = ['red', 'blue', 'green', 'cyan'];
-    const paths: Path[] = [];
-    const distancia: number[] = [];
-    const tiempo: number[] = [];
-    let origen: string[] = [];
-
-    return {
-        paths,
-        distancia,
-        tiempo,
-        origen
+    let data: RutasResult = {
+        paths: [],
+        distances: [],
+        times: [],
+        origins: [],
+        path_saguapac: [],
+        distance_saguapac: [],
+        time_saguapac: [],
+        origin_saguapac: []
     };
+
+    try {
+        const response = await fetch(`/api/v1/contratar/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                lat: marker.getLatLng().lat.toFixed(6),
+                lon: marker.getLatLng().lng.toFixed(6)
+            })
+        });
+        if (!response.ok) {
+            throw new Error('Failed to fetch routes');
+        }
+        data = await response.json();
+        
+    } catch (error) {
+        console.error('Error fetching routes:', error);
+    }
+    return data;
 }
