@@ -5,7 +5,7 @@ import {
   latLng,
 } from "leaflet";
 import type { Marker, CircleMarker } from "leaflet";
-import type { Clientes } from "../../types/types";
+import type { Clientes } from "../types/types";
 import 'leaflet.markercluster';
 
 let p300: any = [],

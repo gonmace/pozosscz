@@ -47,11 +47,18 @@ export interface Poligonos {
 }
 
 export interface Clientes {
-  id: number;
-  name: string;
-  phone: string;
-  coordinates: number[];
-  price: number;
-  status: string;
-  created_at: string;
+  id:         number;
+  tel1:       string;
+  tel2:       string;
+  name:       string;
+  address:    string;
+  cod:        string;
+  cost:       number;
+  service:    string;
+  lat:        number;
+  lon:        number;
+  status:     string;
+  user:       string;
+  created_at: Date;
+  updated_at: Date;
 }
