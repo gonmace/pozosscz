@@ -33,7 +33,7 @@ import type {
   LeafletEvent,
   Path,
 } from "leaflet";
-import type { Poligonos, Precios } from "./types/types";
+import type { DataPrice, Poligonos, RutasResult } from "./types/types";
 import { createToast } from "./utils/toast";
 import { fetchClients } from "./utils/getClients";
 import "leaflet.markercluster";
@@ -42,10 +42,12 @@ import { LocateControl } from "leaflet.locatecontrol";
 import "./utils/leaflet.locate.css";
 import { cotizando } from "./utils/cotizando.ts";
 import { deleteTruckMarker, extractCoordinates, guardarBaseCamion, updateTruckMarkers } from "./utils/base&camion.ts";
+import { modalPrecio } from "./utils/modalPrecio.ts";
 
 let marker: Marker;
 let markerCamion: Marker;
 let paths: Path[] = [];
+let dataPrice: DataPrice;
 const colorPath = ["red", "green", "blue", "cyan"];
 const overlay = document.getElementById("overlay") as HTMLDivElement;
 
@@ -101,6 +103,7 @@ URLwhatsapp.addEventListener("input", (e) => {
     : (putMarker.disabled = true);
 });
 
+
 control
   .custom({
     position: "topright",
@@ -111,24 +114,10 @@ control
               </div>`,
     events: {
       click: async () => {
-        const data = await cotizando(marker)
-        console.log(data);
-        data.paths.forEach((path: any, index: number) => {
-          const ruta = polyline(path, {
-            color: colorPath[index % colorPath.length],
-            opacity: 0.95
-          }).addTo(map);
-          paths.push(ruta);  
-        });
-        data.path_saguapac.forEach((path: any) => {
-          const ruta = polyline(path, {
-            color: "black",
-            opacity: 0.35
-          }).addTo(map);
-          paths.push(ruta);
-        });
-
-
+        overlay.classList.remove("invisible");
+        dataPrice = await cotizando(marker);
+        overlay.classList.add("invisible");
+        modalPrecio(dataPrice, colorPath, marker, map);
       },
     },
   })
@@ -666,6 +655,7 @@ async function initializeAreas() {
 
     var mcgLayerSupportGroup = markerClusterGroup.layerSupport(options);
     mcgLayerSupportGroup.addTo(map);
+    window.mcgLayerSupportGroup = mcgLayerSupportGroup;
 
     mcgLayerSupportGroup.checkIn(groupCot);
     mcgLayerSupportGroup.checkIn(groupEje);

@@ -1,6 +1,4 @@
 from django.db import models
-from .validators import validate_file_extension
-from django.utils.html import mark_safe
 from solo.models import SingletonModel
 from datetime import datetime
 
@@ -23,23 +21,68 @@ class DatosGenerales(SingletonModel):
 
 
 class PreciosPozosSCZ(SingletonModel):
-    p_km = models.FloatField(
-        "Precio km (Bs)", default=7, help_text="Considerar solo de ida"
+    precio_diesel = models.FloatField(
+        "Precio Diesel (Bs)",
+        default=3.76,
+        help_text="Precio del diesel en Bs/L"
     )
-    p_base = models.IntegerField(
-        "Precio minimo base (Bs)",
-        default=250,
-        help_text="Tarifa minima servicio"
+
+    def default_consumo_km():
+        return {"vacio": 4, "lleno": 3}
+
+    consumo_diesel_hr = models.FloatField(
+        "Consumo Diesel (L/Hr)",
+        default=12,
+        help_text="Consumo de diesel en L/Hr"
     )
-    p_tiempo = models.FloatField(
-        "Precio tiempo (Bs)",
+    consumo_diesel_km = models.JSONField(
+        "Consumo Diesel (Km/L)",
+        default=default_consumo_km,
+        help_text="Consumo de diesel en Km/L (camión vacío y lleno)"
+    )
+    tiempo_trabajo = models.FloatField(
+        "Tiempo de trabajo (min)",
+        default=30,
+        help_text="Tiempo de trabajo en min"
+    )
+    personal_camion = models.IntegerField(
+        "Personal %",
+        default=20,
+        help_text="Costo de personal en %"
+    )
+
+    factor_tiempo = models.FloatField(
+        "Factor tiempo (min)",
+        default=1.25,
+        help_text="Factor tiempo en min"
+    )
+    costo_saguapac_planta = models.IntegerField(
+        "Costo Saguapac Panta",
+        default=30,
+        help_text="Costo de Saguapac Tratamiento planta en Bs."
+    )
+    costo_mantenimiento = models.IntegerField(
+        "Costo Mantenimiento %",
+        default=20,
+        help_text="Costo de mantenimiento en Bs."
+    )
+    
+    utilidad_km = models.FloatField(
+        "Utilidad Km 50% de ida y 50% retorno",
         default=5,
-        help_text="Considerar el tiempo en llegar al lugar"
+        help_text="Utilidad en %"
     )
-    p_factor = models.FloatField(
-        "Factor de precio",
+    
+    utilidad_base = models.IntegerField(
+        "Utilidad base (Bs)",
+        default=160,
+        help_text="Utilidad base en Bs."
+    )
+    
+    costo_adicional_km_retorno = models.FloatField(
+        "Costo adicional Km > 20 km",
         default=1,
-        help_text="Factor precio"
+        help_text="Costo adicional en Bs/Km."
     )
 
     def __str__(self):

@@ -1,6 +1,6 @@
 import { Marker } from "leaflet";
 
-const urlPost = "http://127.0.0.1:8000/api/v1/clientes/";
+const urlPost = "/api/v1/clientes/";
 
 export async function postData(
   name: string,

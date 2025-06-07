@@ -167,6 +167,69 @@ class ContratarAPIView(APIView):
         distance_saguapac, time_saguapac, origin_saguapac, geometry_saguapac = async_to_sync(calculate_route_metrics)(
             SAGUAPAC_BASE[0], SAGUAPAC_BASE[1], [(lon, lat, "cliente")], waypoint)
         
+        # Find shortest route
+        min_index = distances.index(min(distances))
+
+        p = PreciosPozosSCZ.objects.first()
+        
+        # Costo de Ida
+        costo_ida_km = ((distances[min_index] / 1000) / p.consumo_diesel_km["vacio"]) * p.precio_diesel
+        print("costo_ida_km", costo_ida_km)
+        costo_ida_min = ((times[min_index] * p.factor_tiempo / 60 / 60) * p.consumo_diesel_hr) * p.precio_diesel
+        print("costo_ida_min", costo_ida_min)
+        costo_ida = max(costo_ida_km, costo_ida_min)
+        print("costo_ida", costo_ida)
+        
+        # Costo de Trabajo
+        costo_trabajo = p.tiempo_trabajo / 60 * p.consumo_diesel_hr * p.precio_diesel
+        print("costo_trabajo", costo_trabajo)
+        
+        # Costo de Retorno a Saguapac
+        costo_retorno_km = ((distance_saguapac[0] / 1000) / p.consumo_diesel_km["lleno"]) * p.precio_diesel
+        print("costo_retorno_km", costo_retorno_km)
+        costo_retorno_min = ((time_saguapac[0] * p.factor_tiempo / 60 / 60) * p.consumo_diesel_hr) * p.precio_diesel
+        print("costo_retorno_min", costo_retorno_min)
+        costo_retorno = max(costo_retorno_km, costo_retorno_min)
+        print("costo_retorno", costo_retorno)
+        
+        costo_adicional_km_retorno = 0
+        if (distance_saguapac[0] / 1000) > 20:
+            costo_adicional_km_retorno = (distance_saguapac[0] / 1000) * p.costo_adicional_km_retorno
+            print("costo_adicional_km_retorno", costo_adicional_km_retorno)
+        
+        # Costo de Mantenimiento
+        costo_mantenimiento = p.costo_mantenimiento / 100 * (costo_ida + costo_trabajo + costo_retorno + costo_adicional_km_retorno)
+        print("costo_mantenimiento", costo_mantenimiento)
+        
+        # Costo Tratamiento de Agua en Saguapac Panta
+        costo_saguapac_panta = p.costo_saguapac_planta
+        print("costo_saguapac_panta", costo_saguapac_panta)
+        
+        costo_total = costo_ida + costo_trabajo + costo_retorno + costo_mantenimiento + costo_saguapac_panta + costo_adicional_km_retorno
+        print("costo_total", costo_total)
+
+        utilidad_km_ida = (p.utilidad_km * 0.5) * distances[min_index] / 1000
+        print("utilidad_km_ida", utilidad_km_ida)
+        
+        utilidad_km_retorno = (p.utilidad_km * 0.5) * distance_saguapac[0] / 1000
+        print("utilidad_km_retorno", utilidad_km_retorno)
+        
+        utilidad_km = utilidad_km_ida + utilidad_km_retorno
+        print("utilidad_km", utilidad_km)
+        
+        utilidad_base = p.utilidad_base
+        print("utilidad_base", utilidad_base)
+        
+        print("Factor Zona", combined_factor)
+        
+        utilidad_total = (utilidad_km + utilidad_base) * combined_factor
+        print("utilidad_total", utilidad_total)
+        
+        chofer = (costo_total + utilidad_total) * (p.personal_camion / 100)
+        print("chofer", chofer)
+        
+        precio = (costo_total + utilidad_total + chofer)
+        print("precio", precio)
         
         return Response(
             {
@@ -177,7 +240,14 @@ class ContratarAPIView(APIView):
                 "distance_saguapac": distance_saguapac,
                 "time_saguapac": time_saguapac,
                 "origin_saguapac": origin_saguapac,
-                "path_saguapac": geometry_saguapac
+                "path_saguapac": geometry_saguapac,
+                
+                "origen": min_index,
+                "costo": costo_total,
+                "utilidad": utilidad_total,
+                "factor_zona": combined_factor,
+                "chofer": chofer,
+                "precio": precio,
             },
             status=status.HTTP_200_OK
         )

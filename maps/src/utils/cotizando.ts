@@ -1,30 +1,22 @@
-// import { polyline } from "leaflet";
-// import type { Marker, Path } from "leaflet";
-// import { fetchOSRM } from "../Map/fetchOSRM";
+import { Marker } from "leaflet";
+import { DataPrice } from "../types/types";
 
-import { Marker, Path } from "leaflet";
-
-interface RutasResult {
-    paths: Path[][];
-    distances: number[];
-    times: number[];
-    origins: string[];
-    path_saguapac: Path[][];
-    distance_saguapac: number[];
-    time_saguapac: number[];
-    origin_saguapac: string[];
-  }
-
-export const cotizando = async (marker: Marker): Promise<RutasResult> => {
-    let data: RutasResult = {
-        paths: [],
+export const cotizando = async (marker: Marker): Promise<DataPrice> => {
+    let data: DataPrice = {
         distances: [],
         times: [],
         origins: [],
-        path_saguapac: [],
+        paths: [],
         distance_saguapac: [],
         time_saguapac: [],
-        origin_saguapac: []
+        origin_saguapac: [],
+        path_saguapac: [],
+        costo: 0,
+        utilidad: 0,
+        factor_zona: 0,
+        chofer: 0,
+        precio: 0,
+        origen: 0,
     };
 
     try {
