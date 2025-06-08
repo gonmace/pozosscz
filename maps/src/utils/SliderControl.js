@@ -194,6 +194,11 @@ L.Control.SliderControl = L.Control.extend({
             }
         }
 
+        // Save range values to localStorage
+        localStorage.setItem('sliderRangeMin', min);
+        localStorage.setItem('sliderRangeMax', max);
+        console.log('Range values saved:', { min, max });
+
         // Update visual track
         const range = this.options.maxValue - this.options.minValue;
         const minPercent = ((min - this.options.minValue) / range) * 100;
