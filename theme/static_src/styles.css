@@ -15,6 +15,7 @@
 @import "tailwindcss-animated";
 
 @source "../../../**/*.{html,py,js,ts}";
+/* @source "../../../pozosscz/maps/src/utils/SliderControl.js"; */
 /* @source "../../main/src/index-main.ts";
 @source "../../maps/src/index-maps-admin.ts"; */
 
@@ -81,21 +82,4 @@
     @apply ml-2 inline-block border-black border-1 w-4 h-4 text-center rounded-full;
   }
 
-  .slider {
-    margin: 10px;
-    background: white;
-    padding: 10px;
-    border-radius: 4px;
-    box-shadow: 0 1px 5px rgba(0,0,0,0.65);
-  }
-  #leaflet-slider {
-    width: 200px;
-  }
-  #slider-timestamp {
-    background-color: white;
-    border-radius: 4px;
-    padding: 5px;
-    margin-top: 5px;
-    text-align: center;
-  }
 }

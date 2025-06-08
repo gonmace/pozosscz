@@ -1,19 +1,4 @@
-// Import jQuery
-import jQuery from 'jquery';
-
-// Declare types for TypeScript
-declare global {
-    interface Window {
-        $: typeof jQuery;
-        jQuery: typeof jQuery;
-    }
-}
-
-// Make jQuery available globally
-window.jQuery = jQuery;
-window.$ = jQuery;
-
-// Import other styles
+// Remove jQuery imports
 import "leaflet/dist/leaflet.css";
 import "leaflet.locatecontrol/dist/L.Control.Locate.min.css";
 import "../src/utils/leaflet.Control.Center.css";
@@ -62,8 +47,6 @@ import { deleteTruckMarker, extractCoordinates, guardarBaseCamion, updateTruckMa
 import { modalPrecio } from "./utils/modalPrecio.ts";
 
 import "./utils/SliderControl";
-
-
 
 let marker: Marker;
 let markerCamion: Marker;
@@ -129,7 +112,7 @@ URLwhatsapp.addEventListener("input", (e) => {
 
 control
   .custom({
-    position: "topright",
+    position: "bottomright",
     content: `<div class="ml-18">
                 <button id="cotiza" class="btn btn-secondary btn-sm sombra">
                   COTIZA
@@ -372,10 +355,12 @@ document.querySelectorAll('.delete-camion').forEach((button) => {
 // Funcion para ubicar el marcador en el mapa
 function onMapClick(e: LeafletMouseEvent) {
   
-  // Obtener el elemento nav
+  // Obtener el elemento nav y el contenedor del slider
   const navElement = document.querySelector("nav");
-  // Verificar si el clic ocurrió fuera del nav
-  if (navElement && !navElement.contains(e.originalEvent.target as Node)) {
+  const sliderContainer = document.querySelector(".leaflet-top.leaflet-right");
+  // Verificar si el clic ocurrió fuera del nav y del slider
+  if (navElement && !navElement.contains(e.originalEvent.target as Node) &&
+      sliderContainer && !sliderContainer.contains(e.originalEvent.target as Node)) {
     if (marker) {
       map.removeLayer(marker);
     } else {
@@ -769,34 +754,29 @@ async function initializeAreas() {
       })
       .addTo(map);
 
-    // Obtener todos los layers de una forma más eficiente
+    // SLIDER
     const grupoEjecutados = groupEje.flatMap(group => group.getLayers());
     const grupoCotizados = groupCot.flatMap(group => group.getLayers());
     const allLayers = [...grupoEjecutados, ...grupoCotizados];
 
-    // Esperar a que jQuery UI se cargue
-    jqueryUIScript.onload = () => {
+    let lg = new LayerGroup(allLayers);
 
-      let lg = new LayerGroup(allLayers);
+    const sliderControl = control.sliderControl({
+      position: "topright",
+      layer: lg,
+      timeAttribute: 'time',
+      isEpoch: false,
+      startTimeIdx: 0,
+      timeStrLength: 19,
+      maxValue: -1,
+      minValue: 0,
+      showAllOnStart: true,
+      alwaysShowDate: true,
+      range: true
+    });
 
-      const sliderControl = control.sliderControl({
-        position: "topright",
-        layer: lg,
-        timeAttribute: 'time',
-        isEpoch: false,
-        startTimeIdx: 0,
-        timeStrLength: 19,
-        maxValue: -1,
-        minValue: 0,
-        showAllOnStart: true,
-        alwaysShowDate: true,
-        range: true
-      });
-
-      map.addControl(sliderControl);
-      sliderControl.startSlider();
-      
-    }
+    map.addControl(sliderControl);
+    sliderControl.startSlider();
 
   } catch (error) {
     console.error("Error al obtener las áreas:", error);
@@ -806,48 +786,9 @@ async function initializeAreas() {
 // Inicializar las áreas cuando se carga el mapa
 initializeAreas();
 
-// // Function to load all truck markers
-// function loadTruckMarkers() {
-//   document.querySelectorAll('.camion-coords').forEach((coordsInput) => {
-//     if (coordsInput instanceof HTMLInputElement && coordsInput.value) {
-//       try {
-//         const coords = JSON.parse(coordsInput.value) as [number, number];
-//         const row = coordsInput.closest('tr');
-//         if (row) {
-//           const checkbox = row.querySelector('.checkbox-camion') as HTMLInputElement;
-//           const camionId = checkbox?.dataset.camionId;
-//           if (camionId) {
-//             const marker = new Marker(coords, {
-//               icon: iconCamion
-//             });
-//             if (checkbox.checked) {
-//               marker.addTo(map);
-//             }
-//             truckMarkers[camionId] = marker;
-//           }
-//         }
-//       } catch (error) {
-//         console.error('Error loading truck marker:', error);
-//       }
-//     }
-//   });
-// }
 
 // Call loadTruckMarkers after map initialization
 map.whenReady(() => {
   // loadTruckMarkers();
 });
-
-// Load jQuery UI script from CDN and initialize slider when ready
-const jqueryUIScript = document.createElement('script');
-jqueryUIScript.src = 'https://code.jquery.com/ui/1.13.2/jquery-ui.min.js';
-jqueryUIScript.integrity = 'sha256-lSjKY0/srUM9BE3dPm+c4fBo1dky2v27Gdjm2uoZaL0=';
-jqueryUIScript.crossOrigin = 'anonymous';
-
-// Load jQuery UI styles from CDN
-const jqueryUIStyles = document.createElement('link');
-jqueryUIStyles.rel = 'stylesheet';
-jqueryUIStyles.href = 'https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.min.css';
-document.head.appendChild(jqueryUIStyles);
-document.head.appendChild(jqueryUIScript);
 
