@@ -7,7 +7,6 @@ import "leaflet.control.layers.tree/L.Control.Layers.Tree.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 
 import {
-  layerGroup,
   Map,
   tileLayer,
   Marker,
@@ -20,7 +19,6 @@ import {
   Layer,
   markerClusterGroup,
   LayerGroup,
-  Polyline,
 } from "leaflet";
 import "./utils/leaflet.Control.Center";
 import { iconCamion, iconRed, locateOptions } from "./utils/ObjectLeaflet";
@@ -781,14 +779,41 @@ async function initializeAreas() {
   } catch (error) {
     console.error("Error al obtener las áreas:", error);
   }
+
+  
 }
 
 // Inicializar las áreas cuando se carga el mapa
 initializeAreas();
-
+function loadTruckMarkers() {
+  document.querySelectorAll('.camion-coords').forEach((coordsInput) => {
+    if (coordsInput instanceof HTMLInputElement && coordsInput.value) {
+      try {
+        const coords = JSON.parse(coordsInput.value) as [number, number];
+        const row = coordsInput.closest('tr');
+        if (row) {
+          const checkbox = row.querySelector('.checkbox-camion') as HTMLInputElement;
+          const camionId = checkbox?.dataset.camionId;
+          if (camionId) {
+            const marker = new Marker(coords, {
+              icon: iconCamion
+            });
+            if (checkbox.checked) {
+              marker.addTo(map);
+            }
+            truckMarkers[camionId] = marker;
+          }
+        }
+      } catch (error) {
+        console.error('Error loading truck marker:', error);
+      }
+    }
+  });
+}
 
 // Call loadTruckMarkers after map initialization
 map.whenReady(() => {
-  // loadTruckMarkers();
+  loadTruckMarkers();
 });
+
 
