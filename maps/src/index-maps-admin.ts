@@ -80,6 +80,23 @@ const map = new Map("map", {
   zoomControl: false,
 });
 
+// Restore map view from localStorage if available
+const savedView = localStorage.getItem('mapView');
+if (savedView) {
+  const { center, zoom } = JSON.parse(savedView);
+  map.setView(center, zoom);
+}
+
+// Save map view to localStorage when it changes
+map.on('moveend', () => {
+  const center = map.getCenter();
+  const zoom = map.getZoom();
+  localStorage.setItem('mapView', JSON.stringify({
+    center: [center.lat, center.lng],
+    zoom
+  }));
+});
+
 const osm = tileLayer("https://{s}.tile.osm.org/{z}/{x}/{y}.png", {
   maxZoom: 19,
   attribution:
