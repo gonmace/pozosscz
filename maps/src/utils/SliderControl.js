@@ -197,7 +197,6 @@ L.Control.SliderControl = L.Control.extend({
         // Save range values to localStorage
         localStorage.setItem('sliderRangeMin', min);
         localStorage.setItem('sliderRangeMax', max);
-        console.log('Range values saved:', { min, max });
 
         // Update visual track
         const range = this.options.maxValue - this.options.minValue;
@@ -271,12 +270,39 @@ L.Control.SliderControl = L.Control.extend({
         this._rangeMax.min = this.options.minValue;
         this._rangeMax.max = this.options.maxValue;
 
-        if(this.options.showAllOnStart) {
-            this._rangeMin.value = this.options.minValue;
-            this._rangeMax.value = this.options.maxValue;
+        // Try to get saved values from localStorage
+        const savedMin = localStorage.getItem('sliderRangeMin');
+        const savedMax = localStorage.getItem('sliderRangeMax');
+
+        if(savedMin !== null && savedMax !== null) {
+            // Use saved values if they exist and are within valid range
+            const minValue = parseInt(savedMin);
+            const maxValue = parseInt(savedMax);
+            
+            if (minValue >= this.options.minValue && 
+                maxValue <= this.options.maxValue && 
+                maxValue - minValue >= this.options.minGap) {
+                this._rangeMin.value = minValue;
+                this._rangeMax.value = maxValue;
+            } else {
+                // If saved values are invalid, use default values
+                if(this.options.showAllOnStart) {
+                    this._rangeMin.value = this.options.minValue;
+                    this._rangeMax.value = this.options.maxValue;
+                } else {
+                    this._rangeMin.value = this.options.minValue;
+                    this._rangeMax.value = Math.floor((this.options.maxValue - this.options.minValue) / 2);
+                }
+            }
         } else {
-            this._rangeMin.value = this.options.minValue;
-            this._rangeMax.value = Math.floor((this.options.maxValue - this.options.minValue) / 2);
+            // If no saved values exist, use default values
+            if(this.options.showAllOnStart) {
+                this._rangeMin.value = this.options.minValue;
+                this._rangeMax.value = this.options.maxValue;
+            } else {
+                this._rangeMin.value = this.options.minValue;
+                this._rangeMax.value = Math.floor((this.options.maxValue - this.options.minValue) / 2);
+            }
         }
 
         // Bind event handlers
