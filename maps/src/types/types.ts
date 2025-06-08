@@ -1,11 +1,11 @@
 import { Path } from "leaflet";
-import { MarkerClusterGroup } from "leaflet.markercluster/dist/leaflet.markercluster";
+// import { MarkerClusterGroup } from "leaflet.markercluster/dist/leaflet.markercluster";
 
-declare global {
-  interface Window {
-    mcgLayerSupportGroup: MarkerClusterGroup;
-  }
-}
+// declare global {
+//   interface Window {
+//     mcgLayerSupportGroup: MarkerClusterGroup;
+//   }
+// }
 
 export interface MenuItem {
   name: string;

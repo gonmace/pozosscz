@@ -29,7 +29,6 @@ class ClienteResource(resources.ModelResource):
 @admin.register(Cliente)
 class ClienteAdmin(ImportExportModelAdmin):
     resource_class = ClienteResource
-    # readonly_fields = ('created_at','updated_at')
     list_display = (
         'id',
         'name',
@@ -41,25 +40,17 @@ class ClienteAdmin(ImportExportModelAdmin):
         'lat',
         'lon',
         'user',
-        'format_created_at',
-        'updated_at'
+        'format_created_at'
     )
     list_editable = (
-        'status', 'service', 'name', 'tel1', 'cod', 'updated_at'
+        'status', 'service', 'name', 'tel1', 'cod', 
     )
     list_display_links = ('id', )
 
     def format_created_at(self, obj):
         return obj.created_at.strftime('%d-%m-%Y, %H:%M')
 
-    format_created_at.admin_order_field = 'created_at'
     format_created_at.short_description = 'Creado'
-
-    def format_updated_at(self, obj):
-        return obj.updated_at.strftime('%d-%m-%Y, %H:%M')
-
-    format_updated_at.admin_order_field = 'updated_at'
-    format_updated_at.short_description = 'Actualizado'
 
     formfield_overrides = {
         models.CharField: {'widget': TextInput(attrs={'size': '8'})},

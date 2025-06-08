@@ -42,13 +42,7 @@ class Cliente(models.Model):
     user = models.CharField(
         "usuario", max_length=10, choices=USUARIO_CHOICES, default='ADM'
     )
-    created_at = models.DateTimeField("creado", auto_now_add=True)
-    updated_at = models.DateField("actualizado",blank=True, null=True)
-
-    def save(self, *args, **kwargs):
-        if not self.updated_at:  # Si updated_at no tiene valor
-            self.updated_at = self.created_at
-        super().save(*args, **kwargs)  # Llamar al método save de la clase base
+    created_at = models.DateTimeField("creado", auto_now=True)
 
     class Meta:
         verbose_name = "Cliente"

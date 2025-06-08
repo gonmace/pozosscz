@@ -21,5 +21,24 @@ export default defineConfig({
         format: 'es'
       }
     }
+  },
+  resolve: {
+    alias: {
+      'jquery': path.resolve(__dirname, 'node_modules/jquery/dist/jquery.js'),
+    }
+  },
+  optimizeDeps: {
+    include: ['jquery', 'jquery-ui-dist']
+  },
+  define: {
+    'window.jQuery': 'jQuery',
+    'window.$': 'jQuery'
+  },
+  css: {
+    preprocessorOptions: {
+      scss: {
+        additionalData: `@import "jquery-ui/themes/base/all.css";`
+      }
+    }
   }
 });

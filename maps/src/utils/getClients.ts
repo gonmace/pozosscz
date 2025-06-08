@@ -1,12 +1,24 @@
-
 import {
   layerGroup,
   circleMarker,
   latLng,
+  Marker,
+  MarkerOptions,
+  CircleMarkerOptions
 } from "leaflet";
-import type { Marker, CircleMarker } from "leaflet";
+import type { CircleMarker, LayerGroup } from "leaflet";
 import type { Clientes } from "../types/types";
 import 'leaflet.markercluster';
+
+// Extend MarkerOptions and CircleMarkerOptions to include time
+declare module 'leaflet' {
+  interface MarkerOptions {
+    time?: string;
+  }
+  interface CircleMarkerOptions {
+    time?: string;
+  }
+}
 
 let p300: any = [],
   p350: any = [],
@@ -21,7 +33,7 @@ let p300: any = [],
   pNegro: any = [];
 
 const colors = ['#ffff00', '#fba657', '#4ade80', '#52b551', '#ff0000', '#00ffff', '#50dbff', '#5eb9fc', '#6199ee', '#808080', 'black'];
-const urlGet = 'http://localhost:8000/api/v1/clientes/';
+const urlGet = '/api/v1/clientes/';
 
 let group300 = layerGroup(),
   group350 = layerGroup(),
@@ -41,7 +53,7 @@ let group300 = layerGroup(),
 let groupEje = [group300, group350, group400, group450, group500, group600, group700, group800, group900, group1000, groupNegro];
 let groupCot = [groupADM, groupCLC, groupCLX];
 
-var circleStyle = function (point: number) {
+var circleStyle = function (point: number): CircleMarkerOptions {
   return {
     fillColor: colors[point],
     radius: 8,
@@ -54,7 +66,14 @@ var circleStyle = function (point: number) {
   };
 };
 
-export async function fetchClients() {
+function formatearFecha(date: Date): string {
+  const dia = date.getDate().toString().padStart(2, '0');
+  const mes = (date.getMonth() + 1).toString().padStart(2, '0');
+  const anio = date.getFullYear();
+  return `${dia}/${mes}/${anio}`;
+}
+
+export async function fetchClients(): Promise<{ groupEje: LayerGroup[], groupCot: LayerGroup[] }> {
   const clientes: Clientes[] = await fetch(urlGet)
     .then(resp => resp.json())
     .then(data => {
@@ -67,9 +86,9 @@ export async function fetchClients() {
   let precio: number;
   let tel1: string;
   let marca: Marker | CircleMarker;
+  let date: Date;
 
   clientes.forEach((e) => {
-
     // Calcular color base dividiendo el costo por 100
     color = e.cost / 100;
     // Asignación de color basado en el valor de 'color'
@@ -85,43 +104,48 @@ export async function fetchClients() {
     }
     switch (color) {
       case 0:
-        p300.push([e.lat, e.lon, e.cost, e.status, e.user, e.tel1, e.name, e.updated_at]);
+        p300.push([e.lat, e.lon, e.cost, e.status, e.user, e.tel1, e.name, e.created_at]);
         break;
       case 1:
-        p350.push([e.lat, e.lon, e.cost, e.status, e.user, e.tel1, e.name, e.updated_at]);
+        p350.push([e.lat, e.lon, e.cost, e.status, e.user, e.tel1, e.name, e.created_at]);
         break;
       case 2:
-        p400.push([e.lat, e.lon, e.cost, e.status, e.user, e.tel1, e.name, e.updated_at]);
+        p400.push([e.lat, e.lon, e.cost, e.status, e.user, e.tel1, e.name, e.created_at]);
         break;
       case 3:
-        p450.push([e.lat, e.lon, e.cost, e.status, e.user, e.tel1, e.name, e.updated_at]);
+        p450.push([e.lat, e.lon, e.cost, e.status, e.user, e.tel1, e.name, e.created_at]);
         break;
       case 4:
-        p500.push([e.lat, e.lon, e.cost, e.status, e.user, e.tel1, e.name, e.updated_at]);
+        p500.push([e.lat, e.lon, e.cost, e.status, e.user, e.tel1, e.name, e.created_at]);
         break;
       case 5:
-        p600.push([e.lat, e.lon, e.cost, e.status, e.user, e.tel1, e.name, e.updated_at]);
+        p600.push([e.lat, e.lon, e.cost, e.status, e.user, e.tel1, e.name, e.created_at]);
         break;
       case 6:
-        p700.push([e.lat, e.lon, e.cost, e.status, e.user, e.tel1, e.name, e.updated_at]);
+        p700.push([e.lat, e.lon, e.cost, e.status, e.user, e.tel1, e.name, e.created_at]);
         break;
       case 7:
-        p800.push([e.lat, e.lon, e.cost, e.status, e.user, e.tel1, e.name, e.updated_at]);
+        p800.push([e.lat, e.lon, e.cost, e.status, e.user, e.tel1, e.name, e.created_at]);
         break;
       case 8:
-        p900.push([e.lat, e.lon, e.cost, e.status, e.user, e.tel1, e.name, e.updated_at]);
-        break;
-      case 9:
-        p1000.push([e.lat, e.lon, e.cost, e.status, e.user, e.tel1, e.name, e.updated_at]);
+        p900.push([e.lat, e.lon, e.cost, e.status, e.user, e.tel1, e.name, e.created_at]);
         break;
       default:
-        pNegro.push([e.lat, e.lon, e.cost, e.status, e.user, e.tel1, e.name, e.updated_at]);
+        pNegro.push([e.lat, e.lon, e.cost, e.status, e.user, e.tel1, e.name, e.created_at]);
     }
 
     e.tel1 ? tel1 = e.tel1.toString() : tel1 = "ND"
-    // marca = marker([e.lat, e.lon], {title: tel1})
-    marca = circleMarker(latLng(e.lat, e.lon), circleStyle(color));
-    const fecha = new Date(e.updated_at);
+    let date = convertirFechaISOaMasUno(e.created_at.toString());
+    
+    let markerOptions = {
+      ...circleStyle(color),
+      time: date
+    };
+    
+    marca = circleMarker([e.lat, e.lon], markerOptions);
+    // marca = new Marker([e.lat, e.lon], {time: date});
+
+    let fecha = new Date(e.created_at);
     const fechaFormateada = `${fecha.getDate().toString().padStart(2, '0')}/${(fecha.getMonth() + 1).toString().padStart(2, '0')}/${fecha.getFullYear()}`;
     const contenidoPopup = `
       <strong>Precio:</strong> ${e.cost} Bs.<br>
@@ -136,8 +160,6 @@ export async function fetchClients() {
     } else {
       e.status == "EJE" ? marca.addTo(groupEje[color]) : marca.addTo(groupEje[10])
     }
-
-
   });
   return { groupEje, groupCot};
 }
@@ -150,3 +172,12 @@ export async function fetchClients() {
 
 
 
+function convertirFechaISOaMasUno(isoString: string): string {
+  const fechaUtc = new Date(isoString);
+
+  const año = fechaUtc.getFullYear();
+  const mes = (fechaUtc.getMonth() + 1).toString().padStart(2, "0");
+  const dia = fechaUtc.getDate().toString().padStart(2, "0");
+
+  return `${año}-${mes}-${dia}`;
+}

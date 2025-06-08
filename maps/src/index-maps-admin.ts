@@ -1,3 +1,19 @@
+// Import jQuery
+import jQuery from 'jquery';
+
+// Declare types for TypeScript
+declare global {
+    interface Window {
+        $: typeof jQuery;
+        jQuery: typeof jQuery;
+    }
+}
+
+// Make jQuery available globally
+window.jQuery = jQuery;
+window.$ = jQuery;
+
+// Import other styles
 import "leaflet/dist/leaflet.css";
 import "leaflet.locatecontrol/dist/L.Control.Locate.min.css";
 import "../src/utils/leaflet.Control.Center.css";
@@ -6,6 +22,7 @@ import "leaflet.control.layers.tree/L.Control.Layers.Tree.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 
 import {
+  layerGroup,
   Map,
   tileLayer,
   Marker,
@@ -17,7 +34,8 @@ import {
   LatLng,
   Layer,
   markerClusterGroup,
-  polyline,
+  LayerGroup,
+  Polyline,
 } from "leaflet";
 import "./utils/leaflet.Control.Center";
 import { iconCamion, iconRed, locateOptions } from "./utils/ObjectLeaflet";
@@ -25,7 +43,6 @@ import "leaflet-control-custom";
 import "./types/leaflet-control-custom.d.ts";
 import "leaflet-draw";
 import "leaflet.control.layers.tree";
-
 import type {
   LeafletMouseEvent,
   LocationEvent,
@@ -33,7 +50,7 @@ import type {
   LeafletEvent,
   Path,
 } from "leaflet";
-import type { DataPrice, Poligonos, RutasResult } from "./types/types";
+import type { DataPrice, Poligonos } from "./types/types";
 import { createToast } from "./utils/toast";
 import { fetchClients } from "./utils/getClients";
 import "leaflet.markercluster";
@@ -43,6 +60,10 @@ import "./utils/leaflet.locate.css";
 import { cotizando } from "./utils/cotizando.ts";
 import { deleteTruckMarker, extractCoordinates, guardarBaseCamion, updateTruckMarkers } from "./utils/base&camion.ts";
 import { modalPrecio } from "./utils/modalPrecio.ts";
+
+import "./utils/SliderControl";
+
+
 
 let marker: Marker;
 let markerCamion: Marker;
@@ -68,6 +89,8 @@ const colores = [
   "#787878",
   "#FF33A6",
 ];
+
+
 
 const map = new Map("map", {
   center: [-17.784071, -63.180522],
@@ -635,27 +658,21 @@ async function initializeAreas() {
     ({ groupEje, groupCot } = await fetchClients());
 
     var options = {
-      spiderLegPolylineOptions: { weight: 0 }, // Lienas del spider
-      // spiderfyOnMaxZoom: $("#spiderfyOnMaxZoom-select").val() === "true",
+      spiderLegPolylineOptions: { weight: 0 },
       spiderfyOnMaxZoom: true,
       zoomToBoundsOnClick: false,
       removeOutsideVisibleBounds: true,
-      // document.getElementById("zoomToBoundsOnClick-select").value === "true",
-      // showCoverageOnHover: document.getElementById("showCoverageOnHover-select").value === "true",
       showCoverageOnHover: true,
       disableClusteringAtZoom: 18,
       maxClusterRadius: 50,
-      // maxClusterRadius: parseInt(document.getElementById("maxClusterRadius-select").value),
       spiderfyDistanceMultiplier: 1,
       chunkedLoading: true,
       chunkInterval: 100,
-      // chunkProgress: updateProgressBar
       singleAddRemoveBufferDuration: 200,
     };
 
     var mcgLayerSupportGroup = markerClusterGroup.layerSupport(options);
     mcgLayerSupportGroup.addTo(map);
-    window.mcgLayerSupportGroup = mcgLayerSupportGroup;
 
     mcgLayerSupportGroup.checkIn(groupCot);
     mcgLayerSupportGroup.checkIn(groupEje);
@@ -751,44 +768,86 @@ async function initializeAreas() {
         collapsed: false,
       })
       .addTo(map);
+
+    // Obtener todos los layers de una forma más eficiente
+    const grupoEjecutados = groupEje.flatMap(group => group.getLayers());
+    const grupoCotizados = groupCot.flatMap(group => group.getLayers());
+    const allLayers = [...grupoEjecutados, ...grupoCotizados];
+
+    // Esperar a que jQuery UI se cargue
+    jqueryUIScript.onload = () => {
+
+      let lg = new LayerGroup(allLayers);
+
+      const sliderControl = control.sliderControl({
+        position: "topright",
+        layer: lg,
+        timeAttribute: 'time',
+        isEpoch: false,
+        startTimeIdx: 0,
+        timeStrLength: 19,
+        maxValue: -1,
+        minValue: 0,
+        showAllOnStart: true,
+        alwaysShowDate: true,
+        range: true
+      });
+
+      map.addControl(sliderControl);
+      sliderControl.startSlider();
+      
+    }
+
   } catch (error) {
     console.error("Error al obtener las áreas:", error);
   }
-
 }
 
 // Inicializar las áreas cuando se carga el mapa
 initializeAreas();
 
-// Function to load all truck markers
-function loadTruckMarkers() {
-  document.querySelectorAll('.camion-coords').forEach((coordsInput) => {
-    if (coordsInput instanceof HTMLInputElement && coordsInput.value) {
-      try {
-        const coords = JSON.parse(coordsInput.value) as [number, number];
-        const row = coordsInput.closest('tr');
-        if (row) {
-          const checkbox = row.querySelector('.checkbox-camion') as HTMLInputElement;
-          const camionId = checkbox?.dataset.camionId;
-          if (camionId) {
-            const marker = new Marker(coords, {
-              icon: iconCamion
-            });
-            if (checkbox.checked) {
-              marker.addTo(map);
-            }
-            truckMarkers[camionId] = marker;
-          }
-        }
-      } catch (error) {
-        console.error('Error loading truck marker:', error);
-      }
-    }
-  });
-}
+// // Function to load all truck markers
+// function loadTruckMarkers() {
+//   document.querySelectorAll('.camion-coords').forEach((coordsInput) => {
+//     if (coordsInput instanceof HTMLInputElement && coordsInput.value) {
+//       try {
+//         const coords = JSON.parse(coordsInput.value) as [number, number];
+//         const row = coordsInput.closest('tr');
+//         if (row) {
+//           const checkbox = row.querySelector('.checkbox-camion') as HTMLInputElement;
+//           const camionId = checkbox?.dataset.camionId;
+//           if (camionId) {
+//             const marker = new Marker(coords, {
+//               icon: iconCamion
+//             });
+//             if (checkbox.checked) {
+//               marker.addTo(map);
+//             }
+//             truckMarkers[camionId] = marker;
+//           }
+//         }
+//       } catch (error) {
+//         console.error('Error loading truck marker:', error);
+//       }
+//     }
+//   });
+// }
 
 // Call loadTruckMarkers after map initialization
 map.whenReady(() => {
-  loadTruckMarkers();
+  // loadTruckMarkers();
 });
+
+// Load jQuery UI script from CDN and initialize slider when ready
+const jqueryUIScript = document.createElement('script');
+jqueryUIScript.src = 'https://code.jquery.com/ui/1.13.2/jquery-ui.min.js';
+jqueryUIScript.integrity = 'sha256-lSjKY0/srUM9BE3dPm+c4fBo1dky2v27Gdjm2uoZaL0=';
+jqueryUIScript.crossOrigin = 'anonymous';
+
+// Load jQuery UI styles from CDN
+const jqueryUIStyles = document.createElement('link');
+jqueryUIStyles.rel = 'stylesheet';
+jqueryUIStyles.href = 'https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.min.css';
+document.head.appendChild(jqueryUIStyles);
+document.head.appendChild(jqueryUIScript);
 
