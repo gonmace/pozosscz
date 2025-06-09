@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.utils.html import mark_safe
-from .models import Banner, Alcance, TipoCliente
+from .models import Banner, Alcance, TipoCliente, Contacto
 from adminsortable2.admin import SortableAdminMixin
 
 @admin.register(Banner)
@@ -49,3 +49,10 @@ class TipoClienteAdmin(SortableAdminMixin, admin.ModelAdmin):
             return mark_safe(f'<img src="{obj.img_svg.url}" style="height: 50px; background-color: white;"/>')
         return "No SVG"
     preview_svg.short_description = 'SVG Preview'
+    
+@admin.register(Contacto)
+class ContactoAdmin(admin.ModelAdmin):
+    list_display = ('nombre', 'telefono', 'mensaje', 'created_at', 'is_read')
+    list_display_links = ('nombre',)
+    list_editable = ('is_read',)
+    ordering = ['-created_at']

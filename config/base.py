@@ -23,13 +23,18 @@ INSTALLED_APPS = [
     'import_export',
     'tailwind',
     'theme',
-
+    'crispy_forms',
+    'crispy_tailwind',
+    
     'main',
     'pozosscz',
     'clientes',
     'formcontacto',
     'maps',
 ]
+
+CRISPY_ALLOWED_TEMPLATE_PACKS = "tailwind"
+CRISPY_TEMPLATE_PACK = "tailwind"
 
 TAILWIND_APP_NAME = 'theme'
 

@@ -6,8 +6,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import AllowAny
 import math
-import requests
-from typing import Tuple, List, Dict, Any
+from typing import Tuple, List
 import random
 from .utils import calculate_route_metrics
 from asgiref.sync import async_to_sync

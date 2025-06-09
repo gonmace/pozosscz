@@ -7,6 +7,10 @@ class DatosGenerales(SingletonModel):
     celular = models.CharField(
         "Teléfono Celular", max_length=12, default="+59171011118"
     )
+    
+    correo = models.EmailField(
+        "Correo Electrónico", max_length=100, default="info@pozosscz.com"
+    )
     mensaje_whatsapp = models.TextField(
         "Mensaje para Whatsapp",
         default="""¡Hola!, Requiero el servicio de limpieza en la siguiente ubicación: """

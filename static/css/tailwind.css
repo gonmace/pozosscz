@@ -26,6 +26,7 @@
     --color-green-600: oklch(62.7% 0.194 149.214);
     --color-green-700: oklch(52.7% 0.154 150.069);
     --color-teal-600: oklch(60% 0.118 184.704);
+    --color-blue-100: oklch(93.2% 0.032 255.585);
     --color-blue-400: oklch(70.7% 0.165 254.624);
     --color-blue-500: oklch(62.3% 0.214 259.815);
     --color-blue-600: oklch(54.6% 0.245 262.881);
@@ -1555,6 +1556,122 @@
   .toggle:disabled:before {
     background-color: transparent;
     border: var(--border) solid currentColor;
+  }
+  .\!input {
+    cursor: text !important;
+    border: var(--border) solid #0000 !important;
+    position: relative !important;
+    display: inline-flex !important;
+    flex-shrink: 1 !important;
+    appearance: none !important;
+    align-items: center !important;
+    gap: calc(0.25rem * 2) !important;
+    background-color: var(--color-base-100) !important;
+    padding-inline: calc(0.25rem * 3) !important;
+    vertical-align: middle !important;
+    white-space: nowrap !important;
+    width: clamp(3rem, 20rem, 100%) !important;
+    height: var(--size) !important;
+    font-size: 0.875rem !important;
+    touch-action: manipulation !important;
+    border-start-start-radius: var(--join-ss, var(--radius-field)) !important;
+    border-start-end-radius: var(--join-se, var(--radius-field)) !important;
+    border-end-start-radius: var(--join-es, var(--radius-field)) !important;
+    border-end-end-radius: var(--join-ee, var(--radius-field)) !important;
+    border-color: var(--input-color) !important;
+    box-shadow: 0 1px var(--input-color) inset, 0 -1px oklch(100% 0 0 / calc(var(--depth) * 0.1)) inset !important;
+  }
+  @supports (color: color-mix(in lab, red, red)) {
+    .\!input {
+      box-shadow: 0 1px color-mix(in oklab, var(--input-color) calc(var(--depth) * 10%), #0000) inset, 0 -1px oklch(100% 0 0 / calc(var(--depth) * 0.1)) inset !important;
+    }
+  }
+  .\!input {
+    --size: calc(var(--size-field, 0.25rem) * 10) !important;
+    --input-color: var(--color-base-content) !important;
+  }
+  @supports (color: color-mix(in lab, red, red)) {
+    .\!input {
+      --input-color: color-mix(in oklab, var(--color-base-content) 20%, #0000) !important;
+    }
+  }
+  .\!input:where(input) {
+    display: inline-flex !important;
+  }
+  .\!input :where(input) {
+    display: inline-flex !important;
+    height: 100% !important;
+    width: 100% !important;
+    appearance: none !important;
+    background-color: transparent !important;
+    border: none !important;
+  }
+  .\!input :where(input):focus, .\!input :where(input):focus-within {
+    --tw-outline-style: none !important;
+    outline-style: none !important;
+  }
+  @media (forced-colors: active) {
+    .\!input :where(input):focus, .\!input :where(input):focus-within {
+      outline: 2px solid transparent !important;
+      outline-offset: 2px !important;
+    }
+  }
+  .\!input :where(input[type="url"]), .\!input :where(input[type="email"]) {
+    direction: ltr !important;
+  }
+  .\!input :where(input[type="date"]) {
+    display: inline-block !important;
+  }
+  .\!input:focus, .\!input:focus-within {
+    --input-color: var(--color-base-content) !important;
+    box-shadow: 0 1px var(--input-color) !important;
+  }
+  @supports (color: color-mix(in lab, red, red)) {
+    .\!input:focus, .\!input:focus-within {
+      box-shadow: 0 1px color-mix(in oklab, var(--input-color) calc(var(--depth) * 10%), #0000) !important;
+    }
+  }
+  .\!input:focus, .\!input:focus-within {
+    outline: 2px solid var(--input-color) !important;
+    outline-offset: 2px !important;
+    isolation: isolate !important;
+    z-index: 1 !important;
+  }
+  .\!input:has(> input[disabled]), .\!input:is(:disabled, [disabled]) {
+    cursor: not-allowed !important;
+    border-color: var(--color-base-200) !important;
+    background-color: var(--color-base-200) !important;
+    color: var(--color-base-content) !important;
+  }
+  @supports (color: color-mix(in lab, red, red)) {
+    .\!input:has(> input[disabled]), .\!input:is(:disabled, [disabled]) {
+      color: color-mix(in oklab, var(--color-base-content) 40%, transparent) !important;
+    }
+  }
+  .\!input:has(> input[disabled])::placeholder, .\!input:is(:disabled, [disabled])::placeholder {
+    color: var(--color-base-content) !important;
+  }
+  @supports (color: color-mix(in lab, red, red)) {
+    .\!input:has(> input[disabled])::placeholder, .\!input:is(:disabled, [disabled])::placeholder {
+      color: color-mix(in oklab, var(--color-base-content) 20%, transparent) !important;
+    }
+  }
+  .\!input:has(> input[disabled]), .\!input:is(:disabled, [disabled]) {
+    box-shadow: none !important;
+  }
+  .\!input:has(> input[disabled]) > input[disabled] {
+    cursor: not-allowed !important;
+  }
+  .\!input::-webkit-date-and-time-value {
+    text-align: inherit !important;
+  }
+  .\!input[type="number"]::-webkit-inner-spin-button {
+    margin-block: calc(0.25rem * -3) !important;
+    margin-inline-end: calc(0.25rem * -3) !important;
+  }
+  .\!input::-webkit-calendar-picker-indicator {
+    position: absolute !important;
+    inset-inline-end: 0.75em !important;
   }
   .input {
     cursor: text;
@@ -4658,6 +4775,10 @@
     --tw-translate-y: calc(calc(1/4 * 100%) * -1);
     translate: var(--tw-translate-x) var(--tw-translate-y);
   }
+  .-translate-y-\[20\%\] {
+    --tw-translate-y: calc(20% * -1);
+    translate: var(--tw-translate-x) var(--tw-translate-y);
+  }
   .-translate-y-full {
     --tw-translate-y: -100%;
     translate: var(--tw-translate-x) var(--tw-translate-y);
@@ -4871,6 +4992,11 @@
     --tw-space-x-reverse: 0;
     margin-inline-start: calc(calc(var(--spacing) * 4) * var(--tw-space-x-reverse));
     margin-inline-end: calc(calc(var(--spacing) * 4) * calc(1 - var(--tw-space-x-reverse)));
+  }
+  :where(.space-x-6 > :not(:last-child)) {
+    --tw-space-x-reverse: 0;
+    margin-inline-start: calc(calc(var(--spacing) * 6) * var(--tw-space-x-reverse));
+    margin-inline-end: calc(calc(var(--spacing) * 6) * calc(1 - var(--tw-space-x-reverse)));
   }
   :where(.divide-y > :not(:last-child)) {
     --tw-divide-y-reverse: 0;
@@ -5228,6 +5354,9 @@
       background-color: color-mix(in oklab, var(--color-black) 50%, transparent);
     }
   }
+  .bg-blue-100 {
+    background-color: var(--color-blue-100);
+  }
   .bg-blue-400 {
     background-color: var(--color-blue-400);
   }
@@ -5439,6 +5568,22 @@
   .bg-white {
     background-color: var(--color-white);
   }
+  .bg-white\/10 {
+    background-color: color-mix(in srgb, #fff 10%, transparent);
+  }
+  @supports (color: color-mix(in lab, red, red)) {
+    .bg-white\/10 {
+      background-color: color-mix(in oklab, var(--color-white) 10%, transparent);
+    }
+  }
+  .bg-white\/20 {
+    background-color: color-mix(in srgb, #fff 20%, transparent);
+  }
+  @supports (color: color-mix(in lab, red, red)) {
+    .bg-white\/20 {
+      background-color: color-mix(in oklab, var(--color-white) 20%, transparent);
+    }
+  }
   .bg-white\/30 {
     background-color: color-mix(in srgb, #fff 30%, transparent);
   }
@@ -5447,12 +5592,28 @@
       background-color: color-mix(in oklab, var(--color-white) 30%, transparent);
     }
   }
+  .bg-white\/40 {
+    background-color: color-mix(in srgb, #fff 40%, transparent);
+  }
+  @supports (color: color-mix(in lab, red, red)) {
+    .bg-white\/40 {
+      background-color: color-mix(in oklab, var(--color-white) 40%, transparent);
+    }
+  }
   .bg-white\/50 {
     background-color: color-mix(in srgb, #fff 50%, transparent);
   }
   @supports (color: color-mix(in lab, red, red)) {
     .bg-white\/50 {
       background-color: color-mix(in oklab, var(--color-white) 50%, transparent);
+    }
+  }
+  .bg-white\/60 {
+    background-color: color-mix(in srgb, #fff 60%, transparent);
+  }
+  @supports (color: color-mix(in lab, red, red)) {
+    .bg-white\/60 {
+      background-color: color-mix(in oklab, var(--color-white) 60%, transparent);
     }
   }
   .bg-white\/80 {
@@ -5776,6 +5937,9 @@
   }
   .pt-6 {
     padding-top: calc(var(--spacing) * 6);
+  }
+  .pt-8 {
+    padding-top: calc(var(--spacing) * 8);
   }
   .pt-10 {
     padding-top: calc(var(--spacing) * 10);
@@ -6472,6 +6636,9 @@
     --btn-color: var(--color-warning);
     --btn-fg: var(--color-warning-content);
   }
+  .\!input-primary, .\!input-primary:focus, .\!input-primary:focus-within {
+    --input-color: var(--color-primary) !important;
+  }
   .\!select-primary, .\!select-primary:focus, .\!select-primary:focus-within {
     --input-color: var(--color-primary) !important;
   }
@@ -6509,6 +6676,9 @@
     --input-color: var(--color-success);
   }
   .radio-primary {
+    --input-color: var(--color-primary);
+  }
+  .textarea-primary, .textarea-primary:focus, .textarea-primary:focus-within {
     --input-color: var(--color-primary);
   }
   .toggle-success:checked, .toggle-success[aria-checked="true"] {
@@ -7277,6 +7447,11 @@
   @media (width >= 48rem) {
     .md\:w-24 {
       width: calc(var(--spacing) * 24);
+    }
+  }
+  @media (width >= 48rem) {
+    .md\:max-w-2xl {
+      max-width: var(--container-2xl);
     }
   }
   @media (width >= 48rem) {

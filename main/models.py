@@ -48,3 +48,18 @@ class TipoCliente(models.Model):
         verbose_name = 'Tipo de Cliente'
         verbose_name_plural = 'Tipos de Clientes'
         ordering = ['order']
+        
+class Contacto(models.Model):
+    nombre = models.CharField(max_length=255)
+    telefono = models.CharField(max_length=255)
+    mensaje = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_read = models.BooleanField(default=False)
+    
+    def __str__(self):
+        return self.nombre
+    
+    class Meta:
+        verbose_name = 'Contacto'
+        verbose_name_plural = 'Contactos'
+        ordering = ['-created_at']
