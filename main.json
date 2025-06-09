@@ -1,0 +1,160 @@
+[
+{
+  "model": "main.banner",
+  "pk": 1,
+  "fields": {
+    "svg": "banner/fotoCristo2.svg",
+    "img": "banner/fotoCristo1.webp",
+    "img_alt": "Cristo Redentor",
+    "is_active": true
+  }
+},
+{
+  "model": "main.alcance",
+  "pk": 1,
+  "fields": {
+    "img_svg": "alcance/camion.svg",
+    "titulo": "Llama ya!!!",
+    "descripcion": "Llámanos o escribanos para conocer nuestras tarifas.",
+    "is_active": true,
+    "order": 4
+  }
+},
+{
+  "model": "main.alcance",
+  "pk": 2,
+  "fields": {
+    "img_svg": "alcance/leaf.svg",
+    "titulo": "Medio Ambiente",
+    "descripcion": "Porque al igual que vos, amamos a Santa Cruz y la queremos ver verde y limpia. Juntos cuidamos nuejtro ambiente, ¡nos encargamos de todo!",
+    "is_active": true,
+    "order": 0
+  }
+},
+{
+  "model": "main.alcance",
+  "pk": 4,
+  "fields": {
+    "img_svg": "alcance/ubicacion.svg",
+    "titulo": "Estamos cerca",
+    "descripcion": "Atendemos Warnes, Cotoca, La Guardia, y en Santa Cruz : el Centro, Plan 3000, Villa 1ro de Mayo, Pampa de la Isla, Zona Norte, El Palmar, Urubó, Parque Industrial y toda la mancha urbana",
+    "is_active": true,
+    "order": 2
+  }
+},
+{
+  "model": "main.alcance",
+  "pk": 6,
+  "fields": {
+    "img_svg": "alcance/sombrero_bE5Oy5Q.svg",
+    "titulo": "Que hacemoj",
+    "descripcion": "Limpieza de Pozos Sépticos, Limpieza de Cámaras Sépticas, Limpieza de Pozos Ciegos, Limpieza de Fosas Sépticas y Destranques de Cañerías. Nuestro trabajo es garanti(Saó)",
+    "is_active": true,
+    "order": 1
+  }
+},
+{
+  "model": "main.tipocliente",
+  "pk": 1,
+  "fields": {
+    "img_svg": "tipo_cliente/industrias.svg",
+    "nombre": "Industrias",
+    "is_active": true,
+    "order": 1
+  }
+},
+{
+  "model": "main.tipocliente",
+  "pk": 2,
+  "fields": {
+    "img_svg": "tipo_cliente/casa.svg",
+    "nombre": "Viviendas",
+    "is_active": true,
+    "order": 2
+  }
+},
+{
+  "model": "main.tipocliente",
+  "pk": 3,
+  "fields": {
+    "img_svg": "tipo_cliente/colegios.svg",
+    "nombre": "Colegios",
+    "is_active": true,
+    "order": 3
+  }
+},
+{
+  "model": "main.tipocliente",
+  "pk": 4,
+  "fields": {
+    "img_svg": "tipo_cliente/hoteles.svg",
+    "nombre": "Hoteles",
+    "is_active": true,
+    "order": 4
+  }
+},
+{
+  "model": "main.tipocliente",
+  "pk": 5,
+  "fields": {
+    "img_svg": "tipo_cliente/mercados.svg",
+    "nombre": "Mercados",
+    "is_active": true,
+    "order": 5
+  }
+},
+{
+  "model": "main.tipocliente",
+  "pk": 6,
+  "fields": {
+    "img_svg": "tipo_cliente/restaurantes.svg",
+    "nombre": "Restaurantes",
+    "is_active": true,
+    "order": 6
+  }
+},
+{
+  "model": "main.contacto",
+  "pk": 9,
+  "fields": {
+    "nombre": "Jaime",
+    "telefono": "+59167728817",
+    "mensaje": "Hola",
+    "created_at": "2025-06-09T04:09:18.557Z",
+    "is_read": false
+  }
+},
+{
+  "model": "main.contacto",
+  "pk": 10,
+  "fields": {
+    "nombre": "Hola",
+    "telefono": "212",
+    "mensaje": "asas",
+    "created_at": "2025-06-09T04:11:19.065Z",
+    "is_read": false
+  }
+},
+{
+  "model": "main.contacto",
+  "pk": 11,
+  "fields": {
+    "nombre": "Hola",
+    "telefono": "212",
+    "mensaje": "sdsd",
+    "created_at": "2025-06-09T04:12:55.603Z",
+    "is_read": false
+  }
+},
+{
+  "model": "main.contacto",
+  "pk": 12,
+  "fields": {
+    "nombre": "Hola",
+    "telefono": "212",
+    "mensaje": "asas",
+    "created_at": "2025-06-09T04:19:37.849Z",
+    "is_read": false
+  }
+}
+]
