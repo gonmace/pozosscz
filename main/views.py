@@ -7,12 +7,44 @@ from .forms import ContactForm
 from django.contrib import messages
 
 def home_page(request):
-    active_banners = Banner.objects.filter(is_active=True)
-    alcances = Alcance.objects.filter(is_active=True)
-    tipos_clientes = TipoCliente.objects.filter(is_active=True)
+    # Obtener o crear datos generales
     datos_generales = DatosGenerales.objects.first()
     if not datos_generales:
         datos_generales = DatosGenerales.objects.create()
+    
+    # Obtener o crear banner activo
+    active_banners = Banner.objects.filter(is_active=True)
+    if not active_banners.exists():
+        # Crear un banner por defecto si no existe ninguno
+        default_banner = Banner.objects.create(
+            titulo="Bienvenido a Pozos SCZ",
+            descripcion="Servicio de limpieza de pozos sépticos en Santa Cruz",
+            is_active=True
+        )
+        active_banners = [default_banner]
+    
+    # Obtener o crear alcances
+    alcances = Alcance.objects.filter(is_active=True)
+    if not alcances.exists():
+        # Crear un alcance por defecto si no existe ninguno
+        Alcance.objects.create(
+            titulo="Servicio Profesional",
+            descripcion="Ofrecemos un servicio profesional y de calidad",
+            is_active=True
+        )
+        alcances = Alcance.objects.filter(is_active=True)
+    
+    # Obtener o crear tipos de clientes
+    tipos_clientes = TipoCliente.objects.filter(is_active=True)
+    if not tipos_clientes.exists():
+        # Crear un tipo de cliente por defecto si no existe ninguno
+        TipoCliente.objects.create(
+            nombre="Residencial",
+            img_svg='<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" /></svg>',
+            is_active=True
+        )
+        tipos_clientes = TipoCliente.objects.filter(is_active=True)
+
     celular = datos_generales.celular
     return render(request, 'HomePage.html', {
         'banner': active_banners[0],
