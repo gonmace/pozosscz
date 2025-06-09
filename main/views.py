@@ -14,7 +14,12 @@ def home_page(request):
         datos_generales = DatosGenerales.objects.create()
     
     # Obtener o crear banner activo
-    active_banners = Banner.objects.filter(is_active=True)
+    active_banner = Banner.objects.filter(is_active=True).first()
+    if not active_banner:
+        active_banner = Banner.objects.create(
+            img_alt="Banner por defecto",
+            is_active=True
+        )
     
     # Obtener o crear alcances
     alcances = Alcance.objects.filter(is_active=True)
@@ -24,7 +29,7 @@ def home_page(request):
 
     celular = datos_generales.celular
     return render(request, 'HomePage.html', {
-        'banner': active_banners[0],
+        'banner': active_banner,
         'alcances': alcances,
         'tipos_clientes': tipos_clientes,
         'celular': celular

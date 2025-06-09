@@ -86,9 +86,11 @@
 {% endblock content %}
 {% block js %}
 <script type="text/javascript">
+    {% if banner.img %}
     const banner_img = "{{ banner.img.url }}";
     const banner_svg = "{{ banner.svg.url }}";
     const banner_alt = "{{ banner.img_alt }}";
+    {% endif %}
 </script>
 <script src="{% static 'js/main.js' %}"></script>
 
