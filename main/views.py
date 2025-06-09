@@ -11,6 +11,8 @@ def home_page(request):
     alcances = Alcance.objects.filter(is_active=True)
     tipos_clientes = TipoCliente.objects.filter(is_active=True)
     datos_generales = DatosGenerales.objects.first()
+    if not datos_generales:
+        datos_generales = DatosGenerales.objects.create()
     celular = datos_generales.celular
     return render(request, 'HomePage.html', {
         'banner': active_banners[0],

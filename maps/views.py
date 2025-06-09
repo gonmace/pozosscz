@@ -86,6 +86,8 @@ TORNO_POLYGON = [
 
 def cotiza(request):
     datos_generales = DatosGenerales.objects.first()
+    if not datos_generales:
+        datos_generales = DatosGenerales.objects.create()
     datos_dict = {
         'celular': datos_generales.celular,
         'mensaje_cotizar': datos_generales.mensaje_cotizar
