@@ -2,7 +2,7 @@
 services:
   postgres:
     image: postgres:15-alpine  
-    container_name: postgres_db
+    container_name: pozosscz_db
     ports:
       - "5435:5432"
     env_file:
@@ -14,7 +14,7 @@ services:
 
   redis:
     image: redis:alpine
-    container_name: redis_cache
+    container_name: pozosscz_redis
     networks:
       - pozos_network
 
@@ -22,7 +22,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: django_app
+    container_name: pozosscz_app
     command: ./entrypoint.sh
     volumes:
       - ./staticfiles:/app/staticfiles  
