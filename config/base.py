@@ -29,7 +29,6 @@ INSTALLED_APPS = [
     'main',
     'pozosscz',
     'clientes',
-    'formcontacto',
     'maps',
 ]
 

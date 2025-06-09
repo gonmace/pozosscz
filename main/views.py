@@ -1,5 +1,5 @@
-from django.shortcuts import render
-from django.contrib.auth import logout
+from django.shortcuts import render, redirect
+from django.contrib.auth import logout, authenticate, login
 from django.http import JsonResponse
 from .models import Banner, Alcance, Contacto, TipoCliente
 from pozosscz.models import DatosGenerales
@@ -30,7 +30,7 @@ def contact(request):
             )
             contacto.save()
             messages.success(request, '¡Gracias por contactarnos! Te responderemos pronto.')
-            form = ContactForm()
+            return redirect('home_page')
     else:
         form = ContactForm()
     datos_generales = DatosGenerales.objects.first()
@@ -43,8 +43,24 @@ def contact(request):
         'celular': celular
     })
 
+def login_view(request):
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        user = authenticate(request, username=username, password=password)
+        
+        if user is not None:
+            login(request, user)
+            return redirect('mapa')
+        else:
+            messages.error(request, 'Usuario o contraseña incorrectos')
+            return redirect('login')
+    
+    return render(request, 'login.html')
+
 def logout_view(request):
     if request.method == 'POST':
         logout(request)
-        return JsonResponse({'message': 'Successfully logged out'})
-    return JsonResponse({'error': 'Method not allowed'}, status=405)
+        messages.success(request, 'Cierre de sesión exitoso')
+        return redirect('home_page')
+    return redirect('home_page')

@@ -4,9 +4,17 @@
       <!-- Las imagenes son 1200x600 -->
 
       <div class="absolute inset-0 top-2/3 ">
+        {% if messages %}
+        {% for message in messages %}
+        <h2 id="titulo" class="z-50 overflow-hidden py-1 md:py-2 bg-white bg-opacity-65 uppercase tracking-wide md:tracking-wider xl:tracking-widest text-center text-xl sm:text-4xl lg:text-5xl {% if message.tags == 'success' %}text-green-700 {% else %}text-red-500 {% endif %}">
+          {{ message }}
+        </h1>
+        {% endfor %}
+        {% else %}
         <h1 id="titulo" class="z-50 overflow-hidden py-1 md:py-2 bg-white bg-opacity-65 uppercase tracking-wide md:tracking-wider xl:tracking-widest text-center text-xl sm:text-4xl lg:text-5xl text-primary">
           LIMPIEZA DE POZOS
         </h1>
+        {% endif %}
       </div>
     </div>
   

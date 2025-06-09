@@ -11,7 +11,6 @@ urlpatterns = [
     path('', include('maps.urls')),
     path('', include('clientes.urls')),
     path('', include('pozosscz.urls')),
-    path('api/v1/formcontacto', include('formcontacto.urls')),
     path('spritesheet.svg', RedirectView.as_view(url=settings.STATIC_URL + 'maps/spritesheet.svg', permanent=True)),
 ]
 

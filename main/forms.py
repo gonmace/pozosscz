@@ -1,23 +1,45 @@
 from django import forms
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Submit, Field
+from django.core.validators import RegexValidator, MinLengthValidator
 
 class ContactForm(forms.Form):
     nombre = forms.CharField(
         max_length=100,
+        min_length=4,
+        validators=[
+            RegexValidator(
+                regex=r'^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$',
+                message='El nombre solo debe contener letras'
+            )
+        ],
         widget=forms.TextInput(attrs={
             'class': '!input !input-bordered !input-primary w-full',
             'placeholder': 'Tu nombre'
         })
     )
     telefono = forms.CharField(
-        max_length=20,
+        max_length=12,
+        min_length=8,
+        validators=[
+            RegexValidator(
+                regex=r'^\d+$',
+                message='El teléfono solo debe contener números'
+            )
+        ],
         widget=forms.TextInput(attrs={
             'class': '!input !input-bordered !input-primary w-full',
             'placeholder': 'Tu teléfono'
         })
     )
     mensaje = forms.CharField(
+        min_length=20,
+        validators=[
+            RegexValidator(
+                regex=r'^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s.,]+$',
+                message='El mensaje solo debe contener letras'
+            )
+        ],
         widget=forms.Textarea(attrs={
             'class': '!textarea !textarea-bordered !textarea-primary w-full',
             'placeholder': 'Tu mensaje',

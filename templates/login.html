@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block body_class %}bg-gradient-to-b from-primary via-white to-primary{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative">
+    <div class="w-full max-w-md mx-auto bg-white/20 rounded-xl shadow-md overflow-hidden md:max-w-2xl p-8 z-20 sombra -translate-y-[20%]">
+        <div class="text-center mb-8">
+            <h2 class="text-2xl font-bold text-gray-900 mb-2">Iniciar Sesión</h2>
+        </div>
+
+        {% if messages %}
+        <div class="mb-8">
+            {% for message in messages %}
+            <div class="p-4 {% if message.tags == 'success' %}bg-green-100 text-green-700{% else %}bg-red-100 text-red-700{% endif %} rounded-lg">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+            <div>
+                <label for="username" class="block text-sm font-medium text-gray-700">Usuario</label>
+                <div class="mt-1">
+                    <input id="username" name="username" type="text" required class="input input-bordered input-primary w-full">
+                </div>
+            </div>
+
+            <div>
+                <label for="password" class="block text-sm font-medium text-gray-700">Contraseña</label>
+                <div class="mt-1">
+                    <input id="password" name="password" type="password" required class="input input-bordered input-primary w-full">
+                </div>
+            </div>
+
+            <div>
+                <button type="submit" class="btn btn-primary w-full">
+                    Ingresar
+                </button>
+            </div>
+        </form>
+    </div>
+    <div class="absolute bottom-0 w-full">
+        {% include 'components/footer.html' %}
+    </div>
+</div>
+{% endblock %}

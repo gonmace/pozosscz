@@ -56,14 +56,14 @@
         {% endfor %}
         <li>
           {% if is_authenticated %}
-            <a href="#" id="logout-link" class="logout-link flex justify-between">
+            <a href="{% url 'logout' %}" id="logout-link" class="logout-link flex justify-between">
               LogOut
               <div class="w-5 h-5 ">
                 {% inline_svg_from_static 'icons/logout.svg' %}
               </div>
             </a>
           {% else %}
-            <a href="#" class="flex justify-between">
+            <a href="{% url 'login' %}" class="flex justify-between">
               LogIn
               <div class="w-5 h-5 ">
                 {% inline_svg_from_static 'icons/login.svg' %}
@@ -75,14 +75,14 @@
     </div>
 
     {% if is_authenticated %}
-      <a href="#" id="logout-link-desktop" class="hidden md:flex flex-row w-20 justify-around">
+      <a href="{% url 'logout' %}" id="logout-link-desktop" class="hidden md:flex flex-row w-20 justify-around">
         
         <div class="w-5 h-5 ">
           {% inline_svg_from_static 'icons/logout.svg' %}
         </div>
       </a>
     {% else %}
-      <a href="#" class="hidden md:flex flex-row w-20 justify-around">
+      <a href="{% url 'login' %}" class="hidden md:flex flex-row w-20 justify-around">
         
         <div class="w-5 h-5 ">
           {% inline_svg_from_static 'icons/login.svg' %}

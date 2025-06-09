@@ -72,11 +72,9 @@
   .item {
     @apply text-accent inline-flex items-center h-20 w-20 justify-center mb-5 flex-shrink-0;
   }
-  .navbar {
-    transition: background-color 0.4s ease;
-  }
+  
   .scrolled {
-    @apply md:bg-primary
+    @apply md:bg-primary 
   }
   .puntos {
     @apply ml-2 inline-block border-black border-1 w-4 h-4 text-center rounded-full;
