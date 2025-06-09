@@ -7,17 +7,22 @@ class DatosGenerales(SingletonModel):
     celular = models.CharField(
         "Teléfono Celular", max_length=12, default="+59171011118"
     )
-    mensaje_cotizar = models.TextField(
-        "Cotizar",
-        default="""¡Hola!, Requiero el servicio de limpieza
-         en la siguiente ubicación: """
+    mensaje_whatsapp = models.TextField(
+        "Mensaje para Whatsapp",
+        default="""¡Hola!, Requiero el servicio de limpieza en la siguiente ubicación: """
     )
+    mensaje_cotizar = models.TextField(
+        "Mensaje para Cotizar",
+        default="Precio del servicio de limpieza del pozo y cámara séptica para vivienda."
+    )    
 
     def __str__(self):
         return "Datos Generales"
 
     class Meta:
         verbose_name = "Datos Generales"
+        verbose_name_plural = "Datos Generales"
+        
 
 
 class PreciosPozosSCZ(SingletonModel):

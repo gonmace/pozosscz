@@ -1,4 +1,4 @@
-import { Map, tileLayer, Marker, control, polyline, Path } from "leaflet"; 
+import { Map, tileLayer, Marker, control, Path } from "leaflet"; 
 import "./utils/leaflet.Control.Center";
 import { LocateControl } from "leaflet.locatecontrol";
 import type {
@@ -11,21 +11,43 @@ import {
   locateOptions,
 } from "./utils/ObjectLeaflet";
 import "leaflet-control-custom";
-// Types for leaflet-control-custom
 import "./types/leaflet-control-custom.d.ts";
 
 import "leaflet/dist/leaflet.css";
 import "../src/utils/leaflet.Control.Center.css";
 import "leaflet.locatecontrol/dist/L.Control.Locate.min.css";
 import "./utils/leaflet.locate.css";
+import type { DataPrice } from "./types/types";
+import { cotizando } from "./utils/cotizando.ts";
+import { postData } from "./utils/postCliente.ts";
+import { mensajeWapp } from "./utils/utils.ts";
+
+declare global {
+  interface Window {
+    DATOS_GENERALES: {
+      mensaje_cotizar: string;
+      celular: string;
+      mensaje_whatsapp: string;
+      [key: string]: any;
+    }
+    ISAUTHENTICATED: boolean;
+  }
+}
+
+const DATOS_GENERALES = window.DATOS_GENERALES;
+const ISAUTHENTICATED = window.ISAUTHENTICATED;
+
 
 let marker: Marker;
 let paths: Path[] = [];
+let dataPrice: DataPrice;
+let precioFinal: number;
 const overlay = document.getElementById("overlay") as HTMLDivElement;
 const modalPrecio = document.getElementById("precios") as HTMLDialogElement;
-const modalPrecioClose = document.getElementById("modalPrecioClose") as HTMLButtonElement;
 const parrafo = modalPrecio.querySelector("p") as HTMLParagraphElement;
 const botonConfirmar = document.getElementById("confirmar") as HTMLButtonElement;
+const modalPrecioClose = document.getElementById("modalPrecioClose") as HTMLButtonElement;
+const modalPrecioCancelar = document.getElementById("cancelar") as HTMLButtonElement;
 
 const map = new Map("map", {
   center: [-17.784071, -63.180522],
@@ -138,77 +160,68 @@ function onMapClick(e: LeafletMouseEvent) {
 
   // Agrega boton de COTIZA que haga fetch al servidor de mapas y encontrar rutas y tiempos
   async function contratar() {
-    if (!marker) {
-      alert("Por favor seleccione una ubicación en el mapa");
-      return;
-    }
-
-    // Remove existing paths
-    paths.forEach(path => map.removeLayer(path));
-    paths = [];
-
     overlay.classList.remove("invisible");
-
-    try {
-      const response = await fetch("/api/v1/contratar/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          lat: marker.getLatLng().lat,
-          lon: marker.getLatLng().lng,
-        }),
+    dataPrice = await cotizando(marker);
+    overlay.classList.add("invisible");
+    precioFinal = Math.round(dataPrice.precio / 10) * 10;
+    parrafo.innerHTML = `<b>Bs.${precioFinal}</b> ${DATOS_GENERALES.mensaje_cotizar}`;
+    modalPrecio.showModal();
+    botonConfirmar.addEventListener("click", async () => {
+      let codigo = generarCodigo(precioFinal);
+      let celular = DATOS_GENERALES.celular;
+      if (ISAUTHENTICATED) {
+        console.log("Está autenticado, no guarda cotización");
+      } else {
+      await postData("pozosscz.com", "", precioFinal, marker, "COT", "CLC", codigo).then(() => {
+        console.log("Confirmado - Cliente guardado");
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        overlay.classList.add("invisible");
-        alert(errorData.error || "Error al procesar la solicitud");
-        return;
       }
+      let menLatLon = `Código de cotización:${codigo}%0D%0A
+      ¡Hola!, Requiero el servicio de limpieza en la siguiente ubicación:%0D%0A
+      https://maps.google.com/maps?q=${marker.getLatLng().lat.toFixed(7)}%2C${marker.getLatLng().lng.toFixed(7)}&z=17&hl=es`;
+      mensajeWapp(menLatLon, celular);
+    });
 
-      const data = await response.json();
-      
-      // Draw routes on the map
-      const colors = ["red", "green", "orange", "cyan"];
-      data.routes.forEach((route: any, index: number) => {
-        const coordinates = route.geometry.map((coord: number[]) => [coord[1], coord[0]]);
-        const path = polyline(coordinates, {
-          color: colors[index % colors.length],
-          opacity: 0.95
-        }).addTo(map);
-        paths.push(path);
+    const botonesCancelar = [modalPrecioClose, modalPrecioCancelar];
+    botonesCancelar.forEach(async (boton) => {
+      boton.addEventListener("click", async () => {
+        modalPrecio.close();
+        if (ISAUTHENTICATED) {
+          console.log("Está autenticado, no guarda cotización");
+        } else {
+          await postData("pozosscz.com", "", precioFinal, marker, "COT", "CLX").then(() => {
+            console.log("Cancelado - Cliente guardado");
+          });          
+        }
       });
-      
-      // Mostrar el modal con el precio
-      parrafo.innerHTML = `Costo base para vivienda <br> Bs. ${data.price}`;
-      modalPrecio.showModal();
-
-      // Función para manejar el cierre del modal
-      async function handleClose() {
-        overlay.classList.add("invisible");
-        modalPrecio.close();
-        // Remove paths when closing the modal
-        // paths.forEach(path => map.removeLayer(path));
-        // paths = [];
-      }
-
-      // Función para manejar la confirmación
-      async function handleConfirmar() {
-        overlay.classList.add("invisible");
-        modalPrecio.close();
-        // Keep the paths visible when confirming
-        window.location.href = data.whatsapp_url;
-      }
-
-      // Agregar listeners
-      modalPrecioClose.onclick = handleClose;
-      botonConfirmar.onclick = handleConfirmar;
-
-    } catch (error) {
-      console.error("Error:", error);
-      overlay.classList.add("invisible");
-      alert("Error al procesar la solicitud");
-    }
+    });
+    
   }
+
+  function generarCodigo(precio) {
+    const now = new Date();
+    
+    // Año: últimos dos dígitos
+    const anio = now.getFullYear() % 100;
+  
+    // Mes y día con 2 dígitos
+    const mes = String(now.getMonth() + 1).padStart(2, '0'); // meses van de 0 a 11
+    const dia = String(now.getDate()).padStart(2, '0');
+  
+    // Convertir precio a string para acceder a dígitos
+    const precioStr = precio.toString();
+  
+    let d1 = precioStr[0] || '0';
+    let d2 = precioStr[1] || '0';
+    let d3 = precioStr[2] || '0';
+    let d4 = precioStr[3] || '';
+  
+    // Si el precio es de 3 dígitos, usar d3 como último
+    // Si el precio es de 4 dígitos, usar d3 + d4 como último
+    const final = precioStr.length === 4 ? d3 + d4 : d3;
+  
+    // Concatenar todos los componentes
+    const codigo = `${anio}${d1}${mes}${d2}${dia}${final}`;
+    return codigo;
+  }
+  

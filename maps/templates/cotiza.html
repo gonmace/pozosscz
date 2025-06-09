@@ -16,17 +16,17 @@
 
     <!-- You can open the modal using ID.showModal() method -->
     <dialog id="precios" class="modal">
-      <div class="modal-box">
+      <div class="modal-box bg-neutral text-black sombra">
         <form method="dialog">
           <button id="modalPrecioClose" class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
             >✕</button>
         
-          <h3 class="font-bold text-lg">Cotización</h3>
-          <hr />
-          <p class="py-4 text-center"></p>
+          <h3 class="font-bold text-lg uppercase">Cotización</h3>
+          <hr/>
+          <p class="py-4 text-lg text-left"></p>
           <div class="flex justify-end">
-            <button id="confirmar" class="btn btn-accent"
-              >Confirmar</button>
+            <button id="confirmar" class="btn btn-accent mr-2 sombra">Confirmar</button>
+            <button id="cancelar" class="btn btn-ghost sombra">Cancelar</button>
           </div>
         </form>
       </div>
@@ -34,5 +34,9 @@
 {% endblock %}
 
 {% block js %}
+<script>
+  window.ISAUTHENTICATED = {{ request.user.is_authenticated|yesno:"true,false" }};
+  window.DATOS_GENERALES = {{ datos_generales|safe }};
+</script>
 <script type="module" src="{% static 'maps/maps.js' %}"></script>
 {% endblock %}

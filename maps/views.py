@@ -86,7 +86,12 @@ TORNO_POLYGON = [
 ]
 
 def cotiza(request):
-    return render(request, 'cotiza.html')
+    datos_generales = DatosGenerales.objects.first()
+    datos_dict = {
+        'celular': datos_generales.celular,
+        'mensaje_cotizar': datos_generales.mensaje_cotizar
+    }
+    return render(request, 'cotiza.html', {'datos_generales': datos_dict})
 
 def mapa(request):
     basecamiones = BaseCamion.objects.filter(deleted=False)

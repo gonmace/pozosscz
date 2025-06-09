@@ -19,13 +19,16 @@ export interface DataPrice {
   distances: number[];
   times: number[];
   paths: number[][][];
+  distance_saguapac: number[];
+  time_saguapac: number[];
+  origin_saguapac: string[];
   path_saguapac: number[][][];
-  origen: number;
-  factor_zona: number;
   costo: number;
-  chofer: number;
   utilidad: number;
+  factor_zona: number;
+  chofer: number;
   precio: number;
+  origen: number;
 }
 
 export interface RutasResult {
