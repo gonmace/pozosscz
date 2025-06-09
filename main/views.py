@@ -5,6 +5,7 @@ from .models import Banner, Alcance, Contacto, TipoCliente
 from pozosscz.models import DatosGenerales
 from .forms import ContactForm
 from django.contrib import messages
+from django.core.files.base import ContentFile
 
 def home_page(request):
     # Obtener o crear datos generales
@@ -17,10 +18,13 @@ def home_page(request):
     if not active_banners.exists():
         # Crear un banner por defecto si no existe ninguno
         default_banner = Banner.objects.create(
-            titulo="Bienvenido a Pozos SCZ",
-            descripcion="Servicio de limpieza de pozos sépticos en Santa Cruz",
+            img_alt="Banner por defecto",
             is_active=True
         )
+        # Crear archivos temporales para svg e img
+        svg_content = '<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="600"><rect width="100%" height="100%" fill="#f0f0f0"/><text x="50%" y="50%" text-anchor="middle" font-size="48">Banner por defecto</text></svg>'
+        default_banner.svg.save('default.svg', ContentFile(svg_content.encode()), save=True)
+        default_banner.img.save('default.jpg', ContentFile(b''), save=True)
         active_banners = [default_banner]
     
     # Obtener o crear alcances
