@@ -47,4 +47,4 @@ CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND')
 
 CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS').split(',')
 
-CSRF_TRUSTED_ORIGINS = ['https://be.pozosscz.com']
+CSRF_TRUSTED_ORIGINS = ['https://limpiezapozossepticos.com', 'https://www.pozosscz.com', 'https://pozosscz.com']
