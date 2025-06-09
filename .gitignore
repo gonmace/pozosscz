@@ -13,3 +13,5 @@ ArchivosBase
 .env
 db.sqlite3
 node_modules/
+main/src/node_modules/
+maps/src/node_modules/
