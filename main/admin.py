@@ -5,8 +5,8 @@ from adminsortable2.admin import SortableAdminMixin
 
 @admin.register(MetaTag)
 class MetaTagAdmin(admin.ModelAdmin):
-    list_display = ['slug', 'title']
-    list_editable = ('title',)
+    list_display = ['slug', 'title', 'description']
+    list_editable = ('title', 'description')
 
 
 @admin.register(Banner)
