@@ -2,11 +2,17 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from meta.views import Meta as MetaObject
 
+def default_extra_props():
+    return {
+        'viewport': 'width=device-width, initial-scale=1.0'
+    }
+
 class MetaTag(models.Model):
     slug = models.SlugField(unique=True, help_text="Identificador de la página (por ejemplo: 'contacto')")
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     image = models.ImageField(upload_to='meta_images/', blank=True, null=True)
+    extra_props = models.JSONField(default=default_extra_props, blank=True)
 
     def as_meta(self, request=None):
         kwargs = {

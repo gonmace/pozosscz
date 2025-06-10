@@ -1,17 +1,17 @@
 <section id="bgBanner" class="relative w-full mx-auto h-96 sm:h-screen overflow-x-clip">
-    <div id="banner" class="bg-center bg-no-repeat h-full" >
-      <div class="skeleton w-full absolute top-1/2 transform -translate-y-1/2" style="padding-top: 50%;" ></div>
+    <div id="banner" class="bg-center bg-no-repeat h-full z-10" >
+      
       <!-- Las imagenes son 1200x600 -->
 
-      <div class="absolute inset-0 top-2/3 ">
+      <div class="absolute inset-0 top-2/3 z-20">
         {% if messages %}
         {% for message in messages %}
-        <h2 id="titulo" class="z-50 overflow-hidden py-1 md:py-2 bg-white bg-opacity-65 uppercase tracking-wide md:tracking-wider xl:tracking-widest text-center text-xl sm:text-4xl lg:text-5xl {% if message.tags == 'success' %}text-green-700 {% else %}text-red-500 {% endif %}">
+        <h2 id="titulo" class="py-1 md:py-2 bg-white bg-opacity-65 uppercase tracking-wide md:tracking-wider xl:tracking-widest text-center text-xl sm:text-4xl lg:text-5xl {% if message.tags == 'success' %}text-green-700 {% else %}text-red-500 {% endif %}" style="opacity: 0;">
           {{ message }}
         </h1>
         {% endfor %}
         {% else %}
-        <h1 id="titulo" class="z-50 overflow-hidden py-1 md:py-2 bg-white bg-opacity-65 uppercase tracking-wide md:tracking-wider xl:tracking-widest text-center text-xl sm:text-4xl lg:text-5xl text-primary">
+        <h1 id="titulo" class="py-1 md:py-2 bg-white bg-opacity-65 uppercase tracking-wide md:tracking-wider xl:tracking-widest text-center text-xl sm:text-4xl lg:text-5xl text-primary" style="opacity: 0;">
           LIMPIEZA DE POZOS
         </h1>
         {% endif %}

@@ -52,7 +52,7 @@ const modalPrecioCancelar = document.getElementById("cancelar") as HTMLButtonEle
 const map = new Map("map", {
   center: [-17.784071, -63.180522],
   zoom: 12,
-  zoomControl: true,
+  zoomControl: false,
 });
 
 const osm = tileLayer("https://{s}.tile.osm.org/{z}/{x}/{y}.png", {

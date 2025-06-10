@@ -144,6 +144,9 @@ DEFAULT_META = {
     "USE_OG": True,
     "USE_TWITTER": True,
     "USE_FACEBOOK": True,
+    "EXTRA_PROPS": {
+        'viewport': 'width=device-width, initial-scale=1.0, minimum-scale=1.0'
+    },
 }
 
 META_SITE_DOMAIN = "pozosscz.com"

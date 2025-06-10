@@ -79,5 +79,15 @@
   .puntos {
     @apply ml-2 inline-block border-black border-1 w-4 h-4 text-center rounded-full;
   }
+  #map {
+    @apply h-screen;
+
+  }
+  @media (max-width: 768px) {
+    #map {
+      height: calc(100vh - 45px);
+      max-height: calc(100vh - 45px);
+    }
+  }
 
 }

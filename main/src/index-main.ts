@@ -17,8 +17,6 @@ function updateBannerContent(svgUrl: string, imgUrl: string, imgAlt: string) {
   image.className =
     "w-full absolute top-1/2 transform -translate-y-1/2 animate-fade animate-duration-2500 animate-delay-2000 animate-ease-out animate-reverse";
 
-  const skeleton = document.querySelector(".skeleton.w-full")!;
-  skeleton.remove();
   banner.appendChild(image);
 }
 
@@ -58,6 +56,7 @@ if (bgBanner && camion && titulo) {
   tl.add(
     "#titulo",
     {
+      opacity: [0, 1],
       translateX: ["-100%", "0%"],
       duration: 4000,
     },
