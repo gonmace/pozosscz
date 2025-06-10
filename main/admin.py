@@ -1,7 +1,13 @@
 from django.contrib import admin
 from django.utils.html import mark_safe
-from .models import Banner, Alcance, TipoCliente, Contacto
+from .models import Banner, Alcance, TipoCliente, Contacto, MetaTag
 from adminsortable2.admin import SortableAdminMixin
+
+@admin.register(MetaTag)
+class MetaTagAdmin(admin.ModelAdmin):
+    list_display = ['slug', 'title']
+    list_editable = ('title',)
+
 
 @admin.register(Banner)
 class BannerAdmin(admin.ModelAdmin):

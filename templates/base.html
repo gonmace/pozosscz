@@ -1,15 +1,23 @@
-{% load static tailwind_tags %}
+{% load static tailwind_tags meta %}
 
 <!DOCTYPE html>
-<html lang="es" data-theme="dark">
+<html lang="es" data-theme="dark" {% meta_namespaces %}>
   <head>
     <meta charset="utf-8" />
-    <meta http-equiv="x-ua-compatible" content="ie=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    {% block meta %}
+    {% block head %}
+
     {% endblock %}
 
+    <!-- https://realfavicongenerator.net/ -->
+    <link rel="icon" type="image/png" href="{% static 'favicon/favicon-96x96.png' %}" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="{% static 'favicon/favicon.svg' %}" />
+    <link rel="shortcut icon" href="{% static 'favicon/favicon.ico' %}" />
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'favicon/apple-touch-icon.png' %}" />
+    <link rel="manifest" href="{% static 'favicon/site.webmanifest' %}" />
+    {{ meta.og_description }}
+    {% include "meta/meta.html" %}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -22,7 +30,7 @@
     {% block javascript_top %}
     {% endblock %}
 
-    <title>{% block title %}{% endblock %}</title>
+    <title>{{ meta.title }}</title>
   </head>
 
   <body class="{% block body_class %}{% endblock %} h-fit">

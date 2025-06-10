@@ -1,6 +1,5 @@
 import httpx  # en lugar de requests
 from typing import Tuple, List
-import json
 
 async def calculate_route_metrics(lat: float, lon: float, bases: List[Tuple[float, float, str]], waypoint: Tuple[float, float] = None) -> Tuple[List[float], List[float], List[str], List[List[List[float]]]]:
     """Calculate distances and times from service bases to target location."""

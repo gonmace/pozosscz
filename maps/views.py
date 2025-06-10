@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from main.utils import get_meta_for_slug, get_slug_from_request
 from pozosscz.models import AreasFactor, BaseCamion, PreciosPozosSCZ, DatosGenerales
 from clientes.models import Cliente
 from rest_framework.views import APIView
@@ -92,7 +93,12 @@ def cotiza(request):
         'celular': datos_generales.celular,
         'mensaje_cotizar': datos_generales.mensaje_cotizar
     }
-    return render(request, 'cotiza.html', {'datos_generales': datos_dict})
+    slug = get_slug_from_request(request)
+    meta = get_meta_for_slug(slug, request)
+    return render(request, 'cotiza.html', 
+                  {'datos_generales': datos_dict,
+                   'meta': meta
+                   })
 
 def mapa(request):
     basecamiones = BaseCamion.objects.filter(deleted=False)

@@ -1,5 +1,27 @@
 from django.db import models
 from django.core.exceptions import ValidationError
+from meta.views import Meta as MetaObject
+
+class MetaTag(models.Model):
+    slug = models.SlugField(unique=True, help_text="Identificador de la página (por ejemplo: 'contacto')")
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    image = models.ImageField(upload_to='meta_images/', blank=True, null=True)
+
+    def as_meta(self, request=None):
+        kwargs = {
+            "title": self.title,
+            "description": self.description,
+            "use_og": True,
+            "use_twitter": True,
+            "use_facebook": True,
+        }
+        if self.image and request:
+            kwargs["image"] = request.build_absolute_uri(self.image.url)
+        return MetaObject(request=request, **kwargs)
+
+    def __str__(self):
+        return self.slug
 
 def validate_svg(value):
     if not value.name.endswith('.svg'):

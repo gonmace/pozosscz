@@ -1,11 +1,29 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import logout, authenticate, login
-from django.http import JsonResponse
 from .models import Banner, Alcance, Contacto, TipoCliente
 from pozosscz.models import DatosGenerales
 from .forms import ContactForm
 from django.contrib import messages
-from django.core.files.base import ContentFile
+from django.contrib.sitemaps import Sitemap
+from django.urls import reverse
+from django.http import HttpResponse
+from .utils import get_slug_from_request, get_meta_for_slug
+
+class StaticViewSitemap(Sitemap):
+    def items(self):
+        return ['home_page', 'cotiza', 'contact']
+
+    def location(self, item):
+        return reverse(item)
+
+def robots_txt(request):
+    lines = [
+        "User-agent: *",
+        "Disallow: /mapa",
+        "Sitemap: https://pozosscz.com/sitemap.xml",
+    ]
+    return HttpResponse("\n".join(lines), content_type="text/plain")
+
 
 def home_page(request):
     # Obtener o crear datos generales
@@ -28,11 +46,16 @@ def home_page(request):
     tipos_clientes = TipoCliente.objects.filter(is_active=True)
 
     celular = datos_generales.celular
+    
+    slug = get_slug_from_request(request)
+    meta = get_meta_for_slug(slug, request)
+
     return render(request, 'HomePage.html', {
         'banner': active_banner,
         'alcances': alcances,
         'tipos_clientes': tipos_clientes,
-        'celular': celular
+        'celular': celular,
+        'meta': meta
     })
 
 def contact(request):
@@ -53,10 +76,14 @@ def contact(request):
     correo = datos_generales.correo
     celular = datos_generales.celular
     
+    slug = get_slug_from_request(request)
+    meta = get_meta_for_slug(slug, request)
+    
     return render(request, 'contact.html', {
         'form': form,
         'correo': correo,
-        'celular': celular
+        'celular': celular,
+        'meta': meta
     })
 
 def login_view(request):

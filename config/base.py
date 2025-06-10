@@ -25,6 +25,7 @@ INSTALLED_APPS = [
     'theme',
     'crispy_forms',
     'crispy_tailwind',
+    'meta',
     
     'main',
     'pozosscz',
@@ -134,3 +135,15 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ],
 }
+
+DEFAULT_META = {
+    "TITLE": "Limpieza de pozos sépticos Santa Cruz",
+    "DESCRIPTION": "Expertos en limpieza y succión de pozos sépticos, rápido y seguro.",
+    "KEYWORDS": ["pozos", "limpieza", "succión", "servicio sanitario", "pozos sépticos", "limpieza de pozos", "succión de pozos", "destranque", "cámara séptica", "pozos", "destranque", "cámara séptica"],
+    "IMAGE": "/static/img/default-og.jpg",
+    "USE_OG": True,
+    "USE_TWITTER": True,
+    "USE_FACEBOOK": True,
+}
+
+META_SITE_DOMAIN = "pozosscz.com"
