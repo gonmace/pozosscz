@@ -3,7 +3,7 @@
       
       <!-- Las imagenes son 1200x600 -->
 
-      <div class="absolute inset-0 top-2/3 z-20">
+      <div class="absolute inset-0 top-2/3">
         {% if messages %}
         {% for message in messages %}
         <h2 id="titulo" class="py-1 md:py-2 bg-white bg-opacity-65 uppercase tracking-wide md:tracking-wider xl:tracking-widest text-center text-xl sm:text-4xl lg:text-5xl {% if message.tags == 'success' %}text-green-700 {% else %}text-red-500 {% endif %}" style="opacity: 0;">
@@ -68,14 +68,12 @@
       </svg>
     </div>
   
-    <div
-      id="contratanos"
-      class="absolute left-1/2 bottom-0 transform -translate-x-1/2 text-center pb-1">
+    <div id="contratanos" class="absolute left-1/2 bottom-0 transform -translate-x-1/2 text-center pb-1">
       <p class="text-lg lg:text-xl sombra">¿ya nos conoces?</p>
       <a
         type="button"
-        href="/cotiza"
-        class="btn btn-secondary text-white md:tracking-widest shadow-lg text-lg opacity-0">
+        href="{% url 'cotiza' %}"
+        class="btn btn-secondary shadow opacity-0">
         Contrátanos
       </a>
     </div>
