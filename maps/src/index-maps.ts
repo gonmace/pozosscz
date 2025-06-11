@@ -86,11 +86,11 @@ control
 .custom({
   position: "bottomcenter",
   content: `<div>
-            <button id="cotiza" class="btn btn-secondary btn-disabled sombra w-32">
+            <button id="cotiza" class="btn btn-secondary btn-sm sm:btn-md btn-disabled sombra w-32">
             COTIZA
             </button>
           </div>`,
-  classes: "pb-1",
+  classes: "pb-11 sm:pb-1",
   events: {
     click: contratar,
   },
@@ -164,7 +164,16 @@ function onMapClick(e: LeafletMouseEvent) {
     dataPrice = await cotizando(marker);
     overlay.classList.add("invisible");
     precioFinal = Math.round(dataPrice.precio / 10) * 10;
-    parrafo.innerHTML = `<b>Bs.${precioFinal}</b> ${DATOS_GENERALES.mensaje_cotizar}`;
+    if (dataPrice.distance_scz < dataPrice.distancia_maxima_cotizar && dataPrice.factor_zona == 0) {
+      parrafo.innerHTML = `<b>Bs.${precioFinal}</b> ${DATOS_GENERALES.mensaje_cotizar} <span class=" italic">Precio referencial, sujeto a confirmación. Contáctanos para más detalles.</span>` ;
+      botonConfirmar.textContent = "Contáctanos";
+    } else {
+      parrafo.innerHTML = `<b>Bs.${precioFinal}</b> ${DATOS_GENERALES.mensaje_cotizar}`;
+    }
+    if (dataPrice.distance_scz > dataPrice.distancia_maxima_cotizar) {
+      parrafo.innerHTML = `La ubicación seleccionada excede la distancia máxima permitida por el sistema. Por favor, contáctanos para obtener una cotización personalizada.`;
+      botonConfirmar.textContent = "Contáctanos";
+    }
     modalPrecio.showModal();
     botonConfirmar.addEventListener("click", async () => {
       let codigo = generarCodigo(precioFinal);

@@ -18,7 +18,7 @@ class DatosGenerales(SingletonModel):
     mensaje_cotizar = models.TextField(
         "Mensaje para Cotizar",
         default="Precio del servicio de limpieza del pozo y cámara séptica para vivienda."
-    )    
+    )
 
     def __str__(self):
         return "Datos Generales"
@@ -61,7 +61,7 @@ class PreciosPozosSCZ(SingletonModel):
     )
 
     factor_tiempo = models.FloatField(
-        "Factor tiempo (min)",
+        "Factor tiempo Camion/auto (min)",
         default=1.25,
         help_text="Factor tiempo en min"
     )
@@ -79,7 +79,7 @@ class PreciosPozosSCZ(SingletonModel):
     utilidad_km = models.FloatField(
         "Utilidad Km 50% de ida y 50% retorno",
         default=5,
-        help_text="Utilidad en %"
+        help_text="Utilidad en Bs/Km"
     )
     
     utilidad_base = models.IntegerField(
@@ -91,7 +91,17 @@ class PreciosPozosSCZ(SingletonModel):
     costo_adicional_km_retorno = models.FloatField(
         "Costo adicional Km > 20 km",
         default=1,
-        help_text="Costo adicional en Bs/Km."
+        help_text="Costo adicional de retorno (>20km) en Bs/Km."
+    )
+    distancia_maxima_cotizar = models.IntegerField(
+        "Distancia máxima para cotizar (Km)",
+        default=60,
+        help_text="Distancia máxima para cotizar en Km. linea recta desde centro de SCZ."
+    )
+    factor_global = models.FloatField(
+        "Factor precio final",
+        default=1,
+        help_text="Factor global por defecto 1."
     )
 
     def __str__(self):

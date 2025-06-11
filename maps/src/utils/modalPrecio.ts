@@ -34,6 +34,10 @@ function limpiarModal() {
     while (tbFinal.firstChild) {
       tbFinal.removeChild(tbFinal.firstChild);
     }
+    const warning = document.getElementById("warning") as HTMLDivElement;
+    while (warning.firstChild) {
+      warning.removeChild(warning.firstChild);
+    }
     formName.value = "";
     formPhone.value = "";
     formCost.value = "";
@@ -64,12 +68,6 @@ export const modalPrecio = (data: DataPrice, colorPath: string[], marker: Marker
     currentMarker = marker;
     const modalPrecio = document.getElementById("modalPrecio") as HTMLDialogElement;
     limpiarModal();
-    
-    // Add close event listener
-    modalPrecio.addEventListener('close', () => {
-        console.log("close");
-        limpiarModal();
-    });
 
     // Store paths in the global array
     data.paths.forEach((path: any, index: number) => {
@@ -134,6 +132,28 @@ export const modalPrecio = (data: DataPrice, colorPath: string[], marker: Marker
     row3.appendChild(row_facturado);
     tbPrecios.appendChild(row3);
 
+    const warning = document.getElementById("warning") as HTMLDivElement;
+    warning.style.color = "yellow";
+    if (data.costo_adicional_retorno > 0) {
+        const ojo = document.createElement("p");
+        ojo.textContent = "* Costo adicional de retorno (>20km): " + data.costo_adicional_retorno.toFixed(0)+" Bs.";
+        warning.appendChild(ojo);
+    }
+    if (data.factor_zona < 1) {
+        const ojo2 = document.createElement("p");
+        ojo2.textContent = "* Punto fuera de cualquier zona";
+        ojo2.style.color = "red";
+        warning.appendChild(ojo2);
+    }
+
+    if (data.distance_scz > data.distancia_maxima_cotizar) {
+        const ojo3 = document.createElement("p");
+        ojo3.innerHTML = "* Distancia desde al centro de SCZ: " + 
+        data.distance_scz.toFixed(0) + "km.<br>   Distancia máxima para cotizar: " + 
+        data.distancia_maxima_cotizar + "km.";
+        ojo3.style.color = "orange";
+        warning.appendChild(ojo3);
+    }
     modalPrecio.showModal();
     // Inicializar el arrastre inmediatamente
     dragModal('draggableModal', 'modalHeader');

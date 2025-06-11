@@ -1,19 +1,19 @@
 from django.shortcuts import render
 from main.utils import get_meta_for_slug, get_slug_from_request
 from pozosscz.models import AreasFactor, BaseCamion, PreciosPozosSCZ, DatosGenerales
-from clientes.models import Cliente
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import AllowAny
 import math
 from typing import Tuple, List
-import random
+from geopy.distance import geodesic
 from .utils import calculate_route_metrics
 from asgiref.sync import async_to_sync
 
 
 # Service bases coordinates
+SCZ_CENTER = (-17.783280,-63.182184)
 SAGUAPAC_BASE = (-17.74620847, -63.12672898, "saguapac")
 GARAJE_BASE = (-17.78595813, -63.12451243, "garaje")
 
@@ -151,15 +151,11 @@ class ContratarAPIView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+        distance_scz = geodesic(SCZ_CENTER, (lat, lon)).km
         # Get area factors
         factors = self.get_area_factors(lat, lon)
-        if not factors:
-            return Response(
-                {"error": "Location is outside service area"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
         # Calculate combined factor
-        combined_factor = math.prod(factors)
+        combined_factor = math.prod(factors) if factors else 0
 
         # Get waypoint if location is in special areas
         waypoint = self.get_waypoint_for_location(lat, lon)
@@ -183,6 +179,7 @@ class ContratarAPIView(APIView):
         min_index = distances.index(min(distances))
 
         p = PreciosPozosSCZ.objects.first()
+        
         
         # Costo de Ida
         costo_ida_km = ((distances[min_index] / 1000) / p.consumo_diesel_km["vacio"]) * p.precio_diesel
@@ -234,13 +231,15 @@ class ContratarAPIView(APIView):
         
         print("Factor Zona", combined_factor)
         
-        utilidad_total = (utilidad_km + utilidad_base) * combined_factor
+        utilidad_total = (utilidad_km + utilidad_base) * (combined_factor if factors else 1)
         print("utilidad_total", utilidad_total)
         
         chofer = (costo_total + utilidad_total) * (p.personal_camion / 100)
         print("chofer", chofer)
         
-        precio = (costo_total + utilidad_total + chofer)
+        print("distancia_scz", distance_scz)
+        
+        precio = (costo_total + utilidad_total + chofer) * p.factor_global
         print("precio", precio)
         
         return Response(
@@ -254,8 +253,11 @@ class ContratarAPIView(APIView):
                 "origin_saguapac": origin_saguapac,
                 "path_saguapac": geometry_saguapac,
                 
+                "distance_scz": distance_scz,
+                "distancia_maxima_cotizar": p.distancia_maxima_cotizar,
                 "origen": min_index,
                 "costo": costo_total,
+                "costo_adicional_retorno": costo_adicional_km_retorno,
                 "utilidad": utilidad_total,
                 "factor_zona": combined_factor,
                 "chofer": chofer,
@@ -264,97 +266,3 @@ class ContratarAPIView(APIView):
             status=status.HTTP_200_OK
         )
         
-        
-        if not distances:
-            return Response(
-                {"error": "Could not calculate route to location"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        # Find shortest route
-        min_index = distances.index(min(distances))
-        distance = distances[min_index]
-        time = times[min_index]
-
-        # Get pricing configuration
-        try:
-            pricing = PreciosPozosSCZ.objects.first()
-            if not pricing:
-                return Response(
-                    {"error": "Pricing configuration not found"},
-                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
-                )
-        except PreciosPozosSCZ.DoesNotExist:
-            return Response(
-                {"error": "Pricing configuration not found"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-        # Calculate price
-        distance_price = distance * pricing.p_km
-        time_price = time * pricing.p_tiempo
-        base_price = pricing.p_base
-        
-        # Use the higher of distance or time-based price
-        final_price = base_price + max(distance_price, time_price)
-        final_price_with_factor = final_price * combined_factor
-        
-        # Round to nearest 10
-        rounded_price = round(final_price_with_factor / 10) * 10
-
-        # Generate unique code
-        code_parts = list(str(rounded_price))
-        for _ in range(4):
-            code_parts.insert(random.randint(0, len(code_parts)), str(random.randint(0, 9)))
-        unique_code = ''.join(code_parts)
-
-        # Create client record
-        try:
-            client = Cliente.objects.create(
-                # name=name,
-                # tel1=phone,
-                cost=rounded_price,
-                lat=lat,
-                lon=lon,
-                cod=unique_code,
-                status='COT',
-                user='CLC'  # Client confirmed
-            )
-        except Exception as e:
-            return Response(
-                {"error": f"Failed to create client record: {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-        # Get WhatsApp message template
-        try:
-            datos_generales = DatosGenerales.objects.first()
-            whatsapp_number = datos_generales.celular if datos_generales else "+59167728817"
-            message_template = datos_generales.mensaje_cotizar if datos_generales else "¡Hola!, Requiero el servicio de limpieza en la siguiente ubicación:"
-        except Exception:
-            whatsapp_number = "+59167728817"
-            message_template = "¡Hola!, Requiero el servicio de limpieza en la siguiente ubicación:"
-
-        # Format WhatsApp message
-        message = f"Código de cotización:{unique_code}\n{message_template}\nhttps://maps.google.com/maps?q={lat},{lon}&z=17&hl=es"
-        whatsapp_url = f"https://wa.me/{whatsapp_number}?text={message}"
-
-        response_data = {
-            "price": rounded_price,
-            "code": unique_code,
-            "whatsapp_url": whatsapp_url,
-            "distance": distance,
-            "time": time,
-            "origin": origins[min_index],
-            "routes": [
-                {
-                    "geometry": geometry,
-                    "origin": origin,
-                    "distance": dist,
-                    "time": t
-                }
-                for geometry, origin, dist, t in zip(geometries, origins, distances, times)
-            ]
-        }
-
-        return Response(response_data, status=status.HTTP_200_OK)

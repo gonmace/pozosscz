@@ -15,6 +15,7 @@ export interface MenuItem {
 }
 
 export interface DataPrice {
+  error: any;
   origins: string[];
   distances: number[];
   times: number[];
@@ -24,11 +25,15 @@ export interface DataPrice {
   origin_saguapac: string[];
   path_saguapac: number[][][];
   costo: number;
+  costo_adicional_retorno: number;
   utilidad: number;
   factor_zona: number;
   chofer: number;
   precio: number;
   origen: number;
+  distance_scz: number;
+  distancia_maxima_cotizar: number;
+  factor_global: number;
 }
 
 export interface RutasResult {

@@ -61,7 +61,7 @@ L.Control.SliderControl = L.Control.extend({
                     <input type="range" id="rangeMax" class="range-input">
                     
                     <!-- Custom Track -->
-                    <div class="relative w-full h-2 rounded-md">
+                    <div class="relative w-full h-2 rounded-md bg-gray-300">
                         <div id="rangeTrack" class="absolute h-2 bg-accent rounded-md"></div>
                     </div>
                 </div>

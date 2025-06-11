@@ -83,11 +83,6 @@
     @apply h-screen;
 
   }
-  @media (max-width: 768px) {
-    #map {
-      height: calc(100vh - 45px);
-      max-height: calc(100vh - 45px);
-    }
-  }
+
 
 }

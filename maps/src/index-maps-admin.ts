@@ -50,7 +50,7 @@ let marker: Marker;
 let markerCamion: Marker;
 let paths: Path[] = [];
 let dataPrice: DataPrice;
-const colorPath = ["red", "green", "blue", "cyan"];
+const colorPath = ["#FF8444", "#286d31", "#3357FF", "#A633FF"];
 const overlay = document.getElementById("overlay") as HTMLDivElement;
 
 // Store truck markers with their IDs
@@ -285,7 +285,7 @@ document.querySelectorAll('.locate-camion').forEach((button) => {
       if (coordsInput && coordsInput.value) {
         try {
           const coords = JSON.parse(coordsInput.value) as [number, number];
-          map.flyTo(coords, 13);
+          map.flyTo(coords, 12);
         } catch (error) {
           console.error('Error parsing coordinates:', error);
         }
@@ -566,7 +566,6 @@ function updateTextareaWithCoordinates(layer: Layer) {
       const form = event.target as HTMLFormElement;
       const factorInput = document.getElementById("factor") as HTMLInputElement;
       let factorValue = factorInput.value.replace(",", ".");
-      console.log(factorValue);
 
       if (isNaN(parseFloat(factorValue))) {
         createToast(

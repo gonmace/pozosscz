@@ -151,7 +151,7 @@ if (bgBanner && camion && titulo) {
 
   // Animación del botón
   tl.add(
-    ".btn-secondary",
+    "#contratanos",
     {
       opacity: [0, 1],
       duration: 2000,

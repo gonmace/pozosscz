@@ -14,6 +14,4 @@ router.register(r'areasfactor', AreasFactorViewSet, 'areasfactor')
 
 urlpatterns = [
     path('api/v1/', include(router.urls)),
-    path('', views.hello_world, name='hello_world'),
-    # path('api/login/', CustomAuthToken.as_view(), name='api_login'),
 ]

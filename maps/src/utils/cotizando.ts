@@ -3,6 +3,7 @@ import { DataPrice } from "../types/types";
 
 export const cotizando = async (marker: Marker): Promise<DataPrice> => {
     let data: DataPrice = {
+        error: null,
         distances: [],
         times: [],
         origins: [],
@@ -12,6 +13,7 @@ export const cotizando = async (marker: Marker): Promise<DataPrice> => {
         origin_saguapac: [],
         path_saguapac: [],
         costo: 0,
+        costo_adicional_retorno: 0,
         utilidad: 0,
         factor_zona: 0,
         chofer: 0,
@@ -34,7 +36,7 @@ export const cotizando = async (marker: Marker): Promise<DataPrice> => {
             throw new Error('Failed to fetch routes');
         }
         data = await response.json();
-        
+
     } catch (error) {
         console.error('Error fetching routes:', error);
     }
