@@ -231,7 +231,7 @@ class ContratarAPIView(APIView):
         
         print("Factor Zona", combined_factor)
         
-        utilidad_total = (utilidad_km + utilidad_base) * (combined_factor if factors else 1)
+        utilidad_total = (utilidad_km + utilidad_base) * (1 if combined_factor==0 else combined_factor)
         print("utilidad_total", utilidad_total)
         
         chofer = (costo_total + utilidad_total) * (p.personal_camion / 100)
