@@ -128,7 +128,7 @@ URLwhatsapp.addEventListener("input", (e) => {
 control
   .custom({
     position: "bottomright",
-    content: `<div class="ml-18">
+    content: `<div class="ml-18 mb-11 sm:mb-1">
                 <button id="cotiza" class="btn btn-secondary btn-sm sombra">
                   COTIZA
                 </button>
