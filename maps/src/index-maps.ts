@@ -72,8 +72,8 @@ const esri = tileLayer(
 
 // Crear un objeto que contiene las capas base
 const baseMaps = {
-  OpenStreetMap: osm,
-  "Esri World Imagery": esri,
+  "Satelital": osm,
+  "Mapa": esri,
 };
 
 map.getContainer().style.cursor = "crosshair";
