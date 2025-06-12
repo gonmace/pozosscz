@@ -21,6 +21,7 @@ L.Control.SliderControl = L.Control.extend({
     initialize: function (options) {
         L.Util.setOptions(this, options);
         this._layer = this.options.layer;
+        this._dates = []; // Array para almacenar fechas
     },
 
     extractTimestamp: function(time, options) {
@@ -53,7 +54,7 @@ L.Control.SliderControl = L.Control.extend({
         var sliderContainer = L.DomUtil.create('div', 'slider', this._container);
         var sliderContent = `
             <div id="leaflet-slider" class="bg-gray-100 w-full max-w-xs px-4 py-1 rounded-lg shadow-lg">
-                <div id="slider-timestamp" class="text-lg font-bold mb-4 hidden"></div>
+                <div id="slider-timestamp" class="text-black font-bold mb-4 hidden"></div>
                 
                 <div class="relative mt-4 slider-container">
                     <!-- Custom Range Inputs -->
@@ -66,7 +67,7 @@ L.Control.SliderControl = L.Control.extend({
                     </div>
                 </div>
                 
-                <div class="flex justify-between mt-1 text-black text-xs">
+                <div class="flex justify-between mt-1 text-black font-bold">
                     <span id="startDate"></span>
                     <span id="endDate"></span>
                 </div>
@@ -93,11 +94,29 @@ L.Control.SliderControl = L.Control.extend({
         // Initialize markers array
         var options = this.options;
         this.options.markers = [];
+        this._dates = []; // Limpiar el array de fechas
 
         if (this._layer) {
             var index_temp = 0;
-            this._layer.eachLayer(function (layer) {
+            this._layer.eachLayer((layer) => {
                 options.markers[index_temp] = layer;
+                
+                // Extraer y guardar la fecha de cada marcador
+                let timeValue;
+                if (layer.feature !== undefined && layer.feature.properties[this.options.timeAttribute]) {
+                    timeValue = layer.feature.properties[this.options.timeAttribute];
+                } else if (layer.options[this.options.timeAttribute]) {
+                    timeValue = layer.options[this.options.timeAttribute];
+                }
+                
+                if (timeValue) {
+                    const dateStr = this.extractTimestamp(timeValue, this.options);
+                    const dateShort = dateStr.split(' ')[0];
+                    this._dates[index_temp] = dateShort;
+                } else {
+                    this._dates[index_temp] = `Fecha ${index_temp}`;
+                }
+                
                 ++index_temp;
             });
             options.maxValue = index_temp - 1;
@@ -215,12 +234,19 @@ L.Control.SliderControl = L.Control.extend({
         if (startDate && endDate) {
             const startDateShort = startDate.split(' ')[0];
             const endDateShort = endDate.split(' ')[0];
-            this._startDateSpan.textContent = startDateShort;
-            this._endDateSpan.textContent = endDateShort;
+            
+            // Update the timestamp div with min-max values
             this._timestampDiv.innerHTML = `${startDate} - ${endDate}`;
+            
+            // Update the bottom spans with date values
+            this._startDateSpan.textContent = this._dates[min] || startDateShort;
+            this._endDateSpan.textContent = this._dates[max] || endDateShort;
         }
 
-        this._updateMarkers(min, max);
+        // Only update markers on mouseup for better performance
+        if (!event || event.type === 'mouseup') {
+            this._updateMarkers(min, max);
+        }
     },
 
     _updateTimestamp: function(marker) {
@@ -305,9 +331,17 @@ L.Control.SliderControl = L.Control.extend({
             }
         }
 
-        // Bind event handlers
+        // Bind event handlers to update UI in real-time
         this._rangeMin.addEventListener('input', (e) => this._updateRange(e));
         this._rangeMax.addEventListener('input', (e) => this._updateRange(e));
+        
+        // Also update markers on mouseup for better performance
+        this._rangeMin.addEventListener('mouseup', (e) => this._updateRange(e));
+        this._rangeMax.addEventListener('mouseup', (e) => this._updateRange(e));
+        
+        // Touch events support for mobile
+        this._rangeMin.addEventListener('touchend', (e) => this._updateRange(e));
+        this._rangeMax.addEventListener('touchend', (e) => this._updateRange(e));
 
         // Initial update
         this._updateRange();
