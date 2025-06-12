@@ -331,6 +331,48 @@
       max-width: 90cqi;
     }
   }
+  .\!modal {
+    pointer-events: none !important;
+    visibility: hidden !important;
+    position: fixed !important;
+    inset: calc(0.25rem * 0) !important;
+    margin: calc(0.25rem * 0) !important;
+    display: grid !important;
+    height: 100% !important;
+    max-height: none !important;
+    width: 100% !important;
+    max-width: none !important;
+    align-items: center !important;
+    justify-items: center !important;
+    background-color: transparent !important;
+    padding: calc(0.25rem * 0) !important;
+    color: inherit !important;
+    overflow-x: hidden !important;
+    transition: translate 0.3s ease-out, visibility 0.3s allow-discrete, background-color 0.3s ease-out, opacity 0.1s ease-out !important;
+    overflow-y: hidden !important;
+    overscroll-behavior: contain !important;
+    z-index: 999 !important;
+  }
+  .\!modal::backdrop {
+    display: none !important;
+  }
+  .\!modal.modal-open, .\!modal[open], .\!modal:target {
+    pointer-events: auto !important;
+    visibility: visible !important;
+    opacity: 100% !important;
+    background-color: oklch(0% 0 0/ 0.4) !important;
+  }
+  .\!modal.modal-open .modal-box, .\!modal[open] .modal-box, .\!modal:target .modal-box {
+    translate: 0 0 !important;
+    scale: 1 !important;
+    opacity: 1 !important;
+  }
+  @starting-style {
+    .\!modal.modal-open, .\!modal[open], .\!modal:target {
+      visibility: hidden !important;
+      opacity: 0% !important;
+    }
+  }
   .modal {
     pointer-events: none;
     visibility: hidden;
