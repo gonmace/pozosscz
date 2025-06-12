@@ -3364,11 +3364,17 @@
   .z-\[1500\] {
     z-index: 1500;
   }
+  .z-\[9999\] {
+    z-index: 9999;
+  }
   .z-\[10000\] {
     z-index: 10000;
   }
   .z-\[10001\] {
     z-index: 10001;
+  }
+  .z-\[99999\] {
+    z-index: 99999;
   }
   .col-12 {
     grid-column: 12;
@@ -6684,6 +6690,18 @@
   .\!btn-primary {
     --btn-color: var(--color-primary) !important;
     --btn-fg: var(--color-primary-content) !important;
+  }
+  .badge-error {
+    --badge-color: var(--color-error);
+    --badge-fg: var(--color-error-content);
+  }
+  .badge-info {
+    --badge-color: var(--color-info);
+    --badge-fg: var(--color-info-content);
+  }
+  .badge-success {
+    --badge-color: var(--color-success);
+    --badge-fg: var(--color-success-content);
   }
   .btn-accent {
     --btn-color: var(--color-accent);

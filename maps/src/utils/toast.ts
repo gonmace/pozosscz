@@ -46,7 +46,7 @@ export function createToast(
     const div = document.createElement('div');
     div.id = id;
     div.innerHTML = `
-      <div role="alert" class="alert w-1/2 ${alertclass} z-[1500] ${posicionClass}">
+      <div role="alert" class="alert w-1/2 ${alertclass} z-[99999] ${posicionClass}">
         ${svg}
         <span>${mensaje}</span>
       </div>`;

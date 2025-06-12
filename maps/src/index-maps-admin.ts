@@ -41,10 +41,17 @@ import "leaflet.markercluster.layersupport";
 import { LocateControl } from "leaflet.locatecontrol";
 import "./utils/leaflet.locate.css";
 import { cotizando } from "./utils/cotizando.ts";
-import { deleteTruckMarker, extractCoordinates, guardarBaseCamion, updateTruckMarkers } from "./utils/base&camion.ts";
+import {
+  deleteTruckMarker,
+  extractCoordinates,
+  guardarBaseCamion,
+  updateTruckMarkers,
+} from "./utils/base&camion.ts";
 import { modalPrecio } from "./utils/modalPrecio.ts";
 
 import "./utils/SliderControl";
+import { initializeSearchModal } from "./utils/findClients";
+import { tableModal } from "./utils/tableModel";
 
 let marker: Marker;
 let markerCamion: Marker;
@@ -71,8 +78,6 @@ const colores = [
   "#FF33A6",
 ];
 
-
-
 const map = new Map("map", {
   center: [-17.784071, -63.180522],
   zoom: 12,
@@ -81,20 +86,23 @@ const map = new Map("map", {
 });
 
 // Restore map view from localStorage if available
-const savedView = localStorage.getItem('mapView');
+const savedView = localStorage.getItem("mapView");
 if (savedView) {
   const { center, zoom } = JSON.parse(savedView);
   map.setView(center, zoom);
 }
 
 // Save map view to localStorage when it changes
-map.on('moveend', () => {
+map.on("moveend", () => {
   const center = map.getCenter();
   const zoom = map.getZoom();
-  localStorage.setItem('mapView', JSON.stringify({
-    center: [center.lat, center.lng],
-    zoom
-  }));
+  localStorage.setItem(
+    "mapView",
+    JSON.stringify({
+      center: [center.lat, center.lng],
+      zoom,
+    })
+  );
 });
 
 const osm = tileLayer("https://{s}.tile.osm.org/{z}/{x}/{y}.png", {
@@ -124,25 +132,23 @@ URLwhatsapp.addEventListener("input", (e) => {
     : (putMarker.disabled = true);
 });
 
-
-control
-  .custom({
-    position: "bottomright",
-    content: `<div class="ml-18 mb-9 sm:mb-1">
+const cotiza = control.custom({
+  position: "bottomright",
+  content: `<div class="ml-18 mb-9 sm:mb-1">
                 <button id="cotiza" class="btn btn-secondary btn-sm sombra">
                   COTIZA
                 </button>
               </div>`,
-    events: {
-      click: async () => {
-        overlay.classList.remove("invisible");
-        dataPrice = await cotizando(marker);
-        overlay.classList.add("invisible");
-        modalPrecio(dataPrice, colorPath, marker, map);
-      },
+  events: {
+    click: async () => {
+      overlay.classList.remove("invisible");
+      dataPrice = await cotizando(marker);
+      overlay.classList.add("invisible");
+      modalPrecio(dataPrice, colorPath, marker, map);
     },
-  })
-  .addTo(map);
+  },
+});
+cotiza.addTo(map);
 
 const botonCotiza = document.getElementById("cotiza") as HTMLButtonElement;
 botonCotiza.disabled = true;
@@ -185,7 +191,7 @@ putMarker.onclick = () => {
     marker = new Marker([latitud, longitud], {
       icon: iconRed,
     }).addTo(map);
-  
+
     putMarker.disabled = true;
   } catch {
     alert("Algo salió mal");
@@ -194,14 +200,18 @@ putMarker.onclick = () => {
 };
 
 const BaseMarker = document.getElementById("BaseMarker") as HTMLButtonElement;
-const GuardarBaseMarker = document.getElementById("GuardarBaseMarker") as HTMLButtonElement;
+const GuardarBaseMarker = document.getElementById(
+  "GuardarBaseMarker"
+) as HTMLButtonElement;
 let coordinates: [number, number] | null = null;
 
 // Añadir base / camion al mapa
 BaseMarker.addEventListener("click", () => {
-  const coordinatesInput = document.getElementById("coordinates") as HTMLInputElement;
+  const coordinatesInput = document.getElementById(
+    "coordinates"
+  ) as HTMLInputElement;
   coordinates = extractCoordinates(coordinatesInput.value);
-  
+
   if (!coordinates) {
     createToast(
       "coordinates",
@@ -215,11 +225,11 @@ BaseMarker.addEventListener("click", () => {
 
   const [lat, lon] = coordinates;
   const latLng = new LatLng(lat, lon);
-  
+
   if (markerCamion) {
     map.removeLayer(markerCamion);
   }
-  
+
   markerCamion = new Marker(latLng, {
     icon: iconCamion,
   }).addTo(map);
@@ -277,30 +287,34 @@ GuardarBaseMarker.addEventListener("click", async () => {
 });
 
 // Manejar clicks en los botones locate-camion
-document.querySelectorAll('.locate-camion').forEach((button) => {
-  button.addEventListener('click', (e) => {
-    const row = (e.target as HTMLElement).closest('tr');
+document.querySelectorAll(".locate-camion").forEach((button) => {
+  button.addEventListener("click", (e) => {
+    const row = (e.target as HTMLElement).closest("tr");
     if (row) {
-      const coordsInput = row.querySelector('.camion-coords') as HTMLInputElement;
+      const coordsInput = row.querySelector(
+        ".camion-coords"
+      ) as HTMLInputElement;
       if (coordsInput && coordsInput.value) {
         try {
           const coords = JSON.parse(coordsInput.value) as [number, number];
           map.flyTo(coords, 12);
         } catch (error) {
-          console.error('Error parsing coordinates:', error);
+          console.error("Error parsing coordinates:", error);
         }
       }
     }
   });
 });
 
-document.querySelectorAll('.checkbox-camion').forEach((checkbox) => {
-  checkbox.addEventListener('change', (e) => {
-    const row = (e.target as HTMLElement).closest('tr');
+document.querySelectorAll(".checkbox-camion").forEach((checkbox) => {
+  checkbox.addEventListener("change", (e) => {
+    const row = (e.target as HTMLElement).closest("tr");
     if (row) {
-      const checkbox = row.querySelector('.checkbox-camion') as HTMLInputElement;
+      const checkbox = row.querySelector(
+        ".checkbox-camion"
+      ) as HTMLInputElement;
       if (checkbox) {
-        const camionId = checkbox.dataset.camionId || '';
+        const camionId = checkbox.dataset.camionId || "";
         const checked = checkbox.checked;
         try {
           updateTruckMarkers(camionId, checked);
@@ -327,17 +341,19 @@ document.querySelectorAll('.checkbox-camion').forEach((checkbox) => {
   });
 });
 
-document.querySelectorAll('.delete-camion').forEach((button) => {
-  button.addEventListener('click', async (e) => {
-    const row = (e.target as HTMLElement).closest('tr');
+document.querySelectorAll(".delete-camion").forEach((button) => {
+  button.addEventListener("click", async (e) => {
+    const row = (e.target as HTMLElement).closest("tr");
     if (row) {
-      const camionId = row.querySelector('.camion-id') as HTMLInputElement;
-      const camionName = row.querySelector('td')?.textContent || 'este camión';
-      
+      const camionId = row.querySelector(".camion-id") as HTMLInputElement;
+      const camionName = row.querySelector("td")?.textContent || "este camión";
+
       if (camionId && camionId.value) {
         // Show confirmation toast
-        const confirmDelete = confirm(`¿Está seguro que desea eliminar ${camionName}?`);
-        
+        const confirmDelete = confirm(
+          `¿Está seguro que desea eliminar ${camionName}?`
+        );
+
         if (confirmDelete) {
           try {
             await deleteTruckMarker(camionId.value);
@@ -366,16 +382,18 @@ document.querySelectorAll('.delete-camion').forEach((button) => {
   });
 });
 
-
 // Funcion para ubicar el marcador en el mapa
 function onMapClick(e: LeafletMouseEvent) {
-  
   // Obtener el elemento nav y el contenedor del slider
   const navElement = document.querySelector("nav");
   const sliderContainer = document.querySelector(".leaflet-top.leaflet-right");
   // Verificar si el clic ocurrió fuera del nav y del slider
-  if (navElement && !navElement.contains(e.originalEvent.target as Node) &&
-      sliderContainer && !sliderContainer.contains(e.originalEvent.target as Node)) {
+  if (
+    navElement &&
+    !navElement.contains(e.originalEvent.target as Node) &&
+    sliderContainer &&
+    !sliderContainer.contains(e.originalEvent.target as Node)
+  ) {
     if (marker) {
       map.removeLayer(marker);
     } else {
@@ -384,7 +402,7 @@ function onMapClick(e: LeafletMouseEvent) {
     marker = new Marker(e.latlng, {
       icon: iconRed,
     }).addTo(map);
-    
+
     console.log(
       "Lat: " + e.latlng.lat.toFixed(6) + ", Lon: " + e.latlng.lng.toFixed(6)
     );
@@ -417,11 +435,9 @@ map.on("locationfound", function (e: LocationEvent) {
     icon: iconRed,
   }).addTo(map);
 
-
   // Remove existing paths
   paths.forEach((path) => map.removeLayer(path));
   paths = [];
-  
 });
 
 map.on("locationerror", function (e: ErrorEvent) {
@@ -457,7 +473,6 @@ const drawControl = new Control.Draw({
 });
 
 map.addControl(drawControl);
-
 
 // Desactivar el click listener cuando comienza el dibujo
 map.on(Draw.Event.DRAWSTART, function () {
@@ -510,120 +525,120 @@ function updateTextareaWithCoordinates(layer: Layer) {
   }
 }
 
-    // Dibujar pligonos
-    const drawCordinates = document.getElementById("submit-coordinates") as HTMLButtonElement;
-    const coordinatesInput = document.getElementById("polygon-coordinates") as HTMLTextAreaElement | null;
-    drawCordinates.addEventListener("click", () => {
-      if (!coordinatesInput) {
+// Dibujar pligonos
+const drawCordinates = document.getElementById(
+  "submit-coordinates"
+) as HTMLButtonElement;
+const coordinatesInput = document.getElementById(
+  "polygon-coordinates"
+) as HTMLTextAreaElement | null;
+drawCordinates.addEventListener("click", () => {
+  if (!coordinatesInput) {
+    createToast(
+      "coordenadas",
+      "map",
+      "El área de texto para las coordenadas no se encontró.",
+      "top",
+      "error"
+    );
+    return;
+  }
+  try {
+    const coordinates = JSON.parse(coordinatesInput.value);
+    if (
+      Array.isArray(coordinates) &&
+      coordinates.every((coord) => Array.isArray(coord) && coord.length === 2)
+    ) {
+      const latLngs = coordinates.map(
+        (coord) => new LatLng(coord[0], coord[1])
+      );
+      const polygon = new Polygon(latLngs, { color: "blue" });
+      drawnItems.addLayer(polygon);
+      map.fitBounds(polygon.getBounds());
+    } else {
+      createToast(
+        "coordenadas",
+        "map",
+        "Formato de coordenadas inválido. Asegúrese de que las coordenadas estén en el formato correcto.",
+        "top",
+        "error"
+      );
+    }
+  } catch (error) {
+    createToast(
+      "coordenadas",
+      "map",
+      "Error al parsear las coordenadas. Asegúrese de que las coordenadas estén en el formato JSON correcto.",
+      "top",
+      "error"
+    );
+  }
+});
+
+// Guardar zona en la base de datos
+const savePolygon = document.getElementById("savePolygon") as HTMLFormElement;
+savePolygon.addEventListener("submit", (event: SubmitEvent): boolean => {
+  event.preventDefault();
+
+  const form = event.target as HTMLFormElement;
+  const factorInput = document.getElementById("factor") as HTMLInputElement;
+  let factorValue = factorInput.value.replace(",", ".");
+
+  if (isNaN(parseFloat(factorValue))) {
+    createToast(
+      "factor",
+      "map",
+      "Ingrese un valor numérico válido para el factor.",
+      "top",
+      "warning"
+    );
+    return false;
+  }
+
+  // Set the value back to the input in a valid format
+  factorInput.value = factorValue;
+
+  const formData = new FormData(form);
+
+  fetch(form.action, {
+    method: form.method,
+    body: formData,
+  })
+    .then((response) => {
+      if (response.ok) {
         createToast(
-          "coordenadas",
+          "creaArea",
           "map",
-          "El área de texto para las coordenadas no se encontró.",
+          "Area agregada exitosamente",
+          "top",
+          "success"
+        );
+        setTimeout(() => {
+          location.reload();
+        }, 3000); // Retraso de 3 segundos
+      } else {
+        createToast(
+          "creaArea",
+          "map",
+          "Hubo un error al agregar el área",
           "top",
           "error"
         );
-        return;
       }
-      try {
-        const coordinates = JSON.parse(coordinatesInput.value);
-        if (
-          Array.isArray(coordinates) &&
-          coordinates.every(
-            (coord) => Array.isArray(coord) && coord.length === 2
-          )
-        ) {
-          const latLngs = coordinates.map(
-            (coord) => new LatLng(coord[0], coord[1])
-          );
-          const polygon = new Polygon(latLngs, { color: "blue" });
-          drawnItems.addLayer(polygon);
-          map.fitBounds(polygon.getBounds());
-        } else {
-          createToast(
-            "coordenadas",
-            "map",
-            "Formato de coordenadas inválido. Asegúrese de que las coordenadas estén en el formato correcto.",
-            "top",
-            "error"
-          );
-        }
-      } catch (error) {
-        createToast(
-          "coordenadas",
-          "map",
-          "Error al parsear las coordenadas. Asegúrese de que las coordenadas estén en el formato JSON correcto.",
-          "top",
-          "error"
-        );
-      }
+    })
+    .catch((error) => {
+      createToast(
+        "creaArea",
+        "map",
+        "Hubo un error al agregar el área",
+        "top",
+        "error"
+      );
     });
 
-    // Guardar zona en la base de datos
-    const savePolygon = document.getElementById("savePolygon") as HTMLFormElement;
-    savePolygon.addEventListener("submit", (event: SubmitEvent): boolean => {
-      event.preventDefault();
+  return false;
+});
 
-      const form = event.target as HTMLFormElement;
-      const factorInput = document.getElementById("factor") as HTMLInputElement;
-      let factorValue = factorInput.value.replace(",", ".");
-
-      if (isNaN(parseFloat(factorValue))) {
-        createToast(
-          "factor",
-          "map",
-          "Ingrese un valor numérico válido para el factor.",
-          "top",
-          "warning"
-        );
-        return false;
-      }
-
-      // Set the value back to the input in a valid format
-      factorInput.value = factorValue;
-
-      const formData = new FormData(form);
-
-      fetch(form.action, {
-        method: form.method,
-        body: formData,
-      })
-        .then((response) => {
-          if (response.ok) {
-            createToast(
-              "creaArea",
-              "map",
-              "Area agregada exitosamente",
-              "top",
-              "success"
-            );
-            setTimeout(() => {
-              location.reload();
-            }, 3000); // Retraso de 3 segundos
-          } else {
-            createToast(
-              "creaArea",
-              "map",
-              "Hubo un error al agregar el área",
-              "top",
-              "error"
-            );
-          }
-        })
-        .catch((error) => {
-          createToast(
-            "creaArea",
-            "map",
-            "Hubo un error al agregar el área",
-            "top",
-            "error"
-          );
-        });
-
-      return false;
-    });
-
-
-    
 async function fetchAreaFactor() {
   const areaFact = await fetch("/api/v1/areasfactor/")
     .then((r) => r.json())
@@ -769,8 +784,8 @@ async function initializeAreas() {
       .addTo(map);
 
     // SLIDER
-    const grupoEjecutados = groupEje.flatMap(group => group.getLayers());
-    const grupoCotizados = groupCot.flatMap(group => group.getLayers());
+    const grupoEjecutados = groupEje.flatMap((group) => group.getLayers());
+    const grupoCotizados = groupCot.flatMap((group) => group.getLayers());
     const allLayers = [...grupoEjecutados, ...grupoCotizados];
 
     let lg = new LayerGroup(allLayers);
@@ -778,7 +793,7 @@ async function initializeAreas() {
     const sliderControl = control.sliderControl({
       position: "topright",
       layer: lg,
-      timeAttribute: 'time',
+      timeAttribute: "time",
       isEpoch: false,
       startTimeIdx: 0,
       timeStrLength: 19,
@@ -786,33 +801,66 @@ async function initializeAreas() {
       minValue: 0,
       showAllOnStart: true,
       alwaysShowDate: true,
-      range: true
+      range: true,
     });
 
     map.addControl(sliderControl);
     sliderControl.startSlider();
-
   } catch (error) {
     console.error("Error al obtener las áreas:", error);
   }
 
-  
+  const buscarCliente = control.custom({
+    position: "topright",
+    content: `<div class="ml-18 mb-9 sm:mb-1">
+  <button id="buscarCliente" class="btn btn-accent btn-sm sombra flex items-center gap-2">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sombra" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 10a7 7 0 11-14 0 7 7 0 0114 0z" />
+    </svg>
+  </button>
+</div>`,
+    events: {
+      click: () => {
+        initializeSearchModal(map);
+      },
+    },
+  });
+  buscarCliente.addTo(map);
+
+  const tableClientes = control.custom({
+    position: "topright",
+    content: `<div class="ml-18 mb-9 sm:mb-1">
+      <button id="tableClientes" class="btn btn-accent btn-sm sombra flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sombra" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+        </svg>
+      </button>
+    </div>`,
+    events: {
+      click: () => {
+        tableModal(map);
+      },
+    },
+  });
+  tableClientes.addTo(map);
 }
 
 // Inicializar las áreas cuando se carga el mapa
 initializeAreas();
 function loadTruckMarkers() {
-  document.querySelectorAll('.camion-coords').forEach((coordsInput) => {
+  document.querySelectorAll(".camion-coords").forEach((coordsInput) => {
     if (coordsInput instanceof HTMLInputElement && coordsInput.value) {
       try {
         const coords = JSON.parse(coordsInput.value) as [number, number];
-        const row = coordsInput.closest('tr');
+        const row = coordsInput.closest("tr");
         if (row) {
-          const checkbox = row.querySelector('.checkbox-camion') as HTMLInputElement;
+          const checkbox = row.querySelector(
+            ".checkbox-camion"
+          ) as HTMLInputElement;
           const camionId = checkbox?.dataset.camionId;
           if (camionId) {
             const marker = new Marker(coords, {
-              icon: iconCamion
+              icon: iconCamion,
             });
             if (checkbox.checked) {
               marker.addTo(map);
@@ -821,7 +869,7 @@ function loadTruckMarkers() {
           }
         }
       } catch (error) {
-        console.error('Error loading truck marker:', error);
+        console.error("Error loading truck marker:", error);
       }
     }
   });
@@ -831,5 +879,3 @@ function loadTruckMarkers() {
 map.whenReady(() => {
   loadTruckMarkers();
 });
-
-

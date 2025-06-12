@@ -171,85 +171,13 @@
       </div>
     </div>
 
-<!-- You can open the modal using ID.showModal() method -->
-<dialog id="modalPrecio" class="modal items-start justify-center">
-  <div id="draggableModal" class="modal-box w-fit max-w-none relative pt-0 px-0 mt-4">
-    
-    <!-- Encabezado para arrastrar -->
-    <div id="modalHeader" class="text-center cursor-move pt-2 h-8 bg-base-300 px-0 font-bold text-sm rounded-t-lg">
-      Cálculo del Precio
-    </div>
+    {% include 'modal_precio.html' %}
 
-    <div class="flex mt-4 px-6">
-      <!-- Tabla de precios -->
-      <div class="flex-1">
-        <table id="tPrecios" class="table-auto font-light text-xs text-center">
-          <thead>
-            <tr>
-              <th>Origen</th>
-              <th>Dist(km)</th>
-              <th>T.(min)</th>
-            </tr>
-          </thead>
-          <tbody id="tbValores" class="bg-base-100"></tbody>
-
-          <thead>
-            <tr>
-              <th></th>
-              <th>Menor Dist.</th>
-              <th>Factor</th>
-            </tr>
-          </thead>
-          <tbody id="tbMenor" class="bg-base-100"></tbody>
-
-          <thead class="bg-base-300">
-            <tr>
-              <th>Costo</th>
-              <th>Chofer</th>
-              <th>Utilidad</th>
-            </tr>
-          </thead>
-          <tbody id="tbFinal" class="bg-base-300"></tbody>
-
-          <thead class="bg-base-300">
-            <tr>
-              <th>Precio</th>
-              <th>Sugerido</th>
-              <th>Facturado</th>
-            </tr>
-          </thead>
-          <tbody id="tbPrecios" class="bg-base-300"></tbody>
-        </table>
-        <!-- Warning -->
-        <div id="warning" class="text-warning text-left text-xs">
-          
-        </div>
-      </div>
-
-      <!-- Formulario al lado derecho -->
-      <div class="w-40 ml-6">
-        <div class="flex flex-col gap-2">
-          <label class="input input-bordered input-sm flex">
-            <input id="formName" type="text" class="grow" placeholder="Nombre"/>
-          </label>
-          <label class="input input-bordered input-sm flex">
-            <input id="formPhone" type="text" class="grow" placeholder="Teléfono"/>
-          </label>
-          <label class="input input-bordered input-sm flex">
-            <input id="formCost" type="text" class="grow" placeholder="Precio"/>
-          </label>
-          <div class="flex gap-2 mt-2">
-            <button type="button" id="saveData" class="btn btn-accent btn-sm flex-1">Guardar</button>
-            <button type="button" class="btn btn-warning btn-sm flex-1" onclick="modalPrecio.close()">Cerrar</button>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
-</dialog>
 
-    </div>
-  </main>
+    {% include 'modal_search.html' %}
+
+</main>
 {% endblock %}
 
 {% block js %}

@@ -25,8 +25,8 @@ USUARIO_CHOICES = [
 
 
 class Cliente(models.Model):
-    tel1 = models.CharField("telefono 1", max_length=8, null=True, blank=True)
-    tel2 = models.CharField("telefono 2", max_length=12, blank=True)
+    tel1 = models.CharField("telefono 1", max_length=13, null=True, blank=True)
+    tel2 = models.CharField("telefono 2", max_length=13, blank=True)
     name = models.CharField("nombre", max_length=51, blank=True, null=True)
     address = models.CharField("direccion - comentario", max_length=120, blank=True)
     cod = models.CharField("codigo", max_length=10, blank=True, null=True)
@@ -42,7 +42,7 @@ class Cliente(models.Model):
     user = models.CharField(
         "usuario", max_length=10, choices=USUARIO_CHOICES, default='ADM'
     )
-    created_at = models.DateTimeField("creado", auto_now=True)
+    created_at = models.DateTimeField("creado", auto_now_add=True)
     # created_at = models.DateTimeField("creado", blank=True, null=True)
 
     class Meta:

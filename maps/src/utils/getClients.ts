@@ -9,6 +9,7 @@ import {
 import type { CircleMarker, LayerGroup } from "leaflet";
 import type { Clientes } from "../types/types";
 import 'leaflet.markercluster';
+import { editClient } from './tableModel';
 
 // Extend MarkerOptions and CircleMarkerOptions to include time
 declare module 'leaflet' {
@@ -74,6 +75,29 @@ function formatearFecha(date: Date): string {
 }
 
 export async function fetchClients(): Promise<{ groupEje: LayerGroup[], groupCot: LayerGroup[] }> {
+  // Add event listener for client updates
+  window.addEventListener('clientUpdated', async () => {
+    // Clear existing markers
+    groupEje.forEach(group => group.clearLayers());
+    groupCot.forEach(group => group.clearLayers());
+    
+    // Reset arrays
+    p300 = [];
+    p350 = [];
+    p400 = [];
+    p450 = [];
+    p500 = [];
+    p600 = [];
+    p700 = [];
+    p800 = [];
+    p900 = [];
+    p1000 = [];
+    pNegro = [];
+    
+    // Fetch and process clients again
+    await fetchClients();
+  });
+
   const clientes: Clientes[] = await fetch(urlGet)
     .then(resp => resp.json())
     .then(data => {
@@ -148,12 +172,39 @@ export async function fetchClients(): Promise<{ groupEje: LayerGroup[], groupCot
     let fecha = new Date(e.created_at);
     const fechaFormateada = `${fecha.getDate().toString().padStart(2, '0')}/${(fecha.getMonth() + 1).toString().padStart(2, '0')}/${fecha.getFullYear()}`;
     const contenidoPopup = `
-      <strong>Precio:</strong> ${e.cost} Bs.<br>
-      ${e.tel1 ? `<strong>Nombre:</strong> ${e.name}<br>` : ''}
-      ${e.tel1 ? `<strong>Telefono:</strong> ${e.tel1}<br>` : ''}
-      <em>${fechaFormateada}</em>
-      `;
+      <div class="flex flex-col gap-2">
+        <div>
+          <strong>Precio:</strong> ${e.cost} Bs.<br>
+          ${e.tel1 ? `<strong>Nombre:</strong> ${e.name}<br>` : ''}
+          ${e.tel1 ? `<strong>Telefono:</strong> ${e.tel1}<br>` : ''}
+          ${e.address ? `<strong>Dir-Com:</strong> ${e.address}<br>` : ''}
+          <em>${fechaFormateada}</em>
+        </div>
+        <div class="flex justify-end">
+          <button class="btn btn-sm btn-secondary edit-client-popup" data-client='${JSON.stringify(e)}'>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    `;
     marca.bindPopup(contenidoPopup);
+    
+    // Add event listener for the edit button in the popup
+    marca.on('popupopen', () => {
+      const editButton = document.querySelector('.edit-client-popup');
+      if (editButton) {
+        editButton.addEventListener('click', () => {
+          const clientData = editButton.getAttribute('data-client');
+          if (clientData) {
+            const client = JSON.parse(clientData);
+            editClient(client);
+          }
+        });
+      }
+    });
+
     if (e.status == "COT") {
       e.user == "ADM" ? marca.addTo(groupADM) : null
       e.user == "CLC" ? marca.addTo(groupCLC) : marca.addTo(groupCLX)
@@ -163,14 +214,6 @@ export async function fetchClients(): Promise<{ groupEje: LayerGroup[], groupCot
   });
   return { groupEje, groupCot};
 }
-
-
-
-
-
-
-
-
 
 function convertirFechaISOaMasUno(isoString: string): string {
   const fechaUtc = new Date(isoString);
