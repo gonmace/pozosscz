@@ -53,7 +53,7 @@ L.Control.SliderControl = L.Control.extend({
         // Create a control sliderContainer with custom range input
         var sliderContainer = L.DomUtil.create('div', 'slider', this._container);
         var sliderContent = `
-            <div id="leaflet-slider" class="bg-gray-100 w-full max-w-xs px-4 py-1 rounded-lg shadow-lg">
+            <div id="leaflet-slider" class="bg-gray-100 w-full max-w-md px-4 py-1 rounded-lg shadow-lg">
                 <div id="slider-timestamp" class="text-black font-bold mb-4 hidden"></div>
                 
                 <div class="relative mt-4 slider-container">
@@ -130,7 +130,13 @@ L.Control.SliderControl = L.Control.extend({
         style.textContent = `
             .slider {
                 margin: 0.5rem;
-                min-width: 280px;
+                min-width: 392px; /* 280px + 40% */
+            }
+
+            @media (max-width: 640px) {
+                .slider {
+                    min-width: 60vw;
+                }
             }
 
             .slider-container {
