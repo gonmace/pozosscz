@@ -31,9 +31,14 @@ export const locateOptions = {
 };
 
 export const iconCamion = new Icon({
-  iconUrl: "/static/img/leaflet/marker-camion.svg",
-  iconRetinaUrl: "/static/img/leaflet/marker-camion.svg",
-  iconSize: [64, 64],
-  iconAnchor: [32, 32],
+  iconUrl: "/static/img/leaflet/marker-camion-filled.svg",
+  iconRetinaUrl: "/static/img/leaflet/marker-camion-filled.svg",
+  iconSize: [26, 42],
+  iconAnchor: [13, 42],
   popupAnchor: [-3, -76],
+  shadowUrl: "/static/img/leaflet/marker-shadow.png",
+  shadowRetinaUrl: "/static/img/leaflet/marker-shadow.png",
+  shadowSize: [68, 50],
+  shadowAnchor: [22, 49],
 });
+

@@ -4588,6 +4588,9 @@
   .max-h-2 {
     max-height: calc(var(--spacing) * 2);
   }
+  .max-h-40 {
+    max-height: calc(var(--spacing) * 40);
+  }
   .max-h-60 {
     max-height: calc(var(--spacing) * 60);
   }
@@ -4596,6 +4599,9 @@
   }
   .max-h-96 {
     max-height: calc(var(--spacing) * 96);
+  }
+  .max-h-\[60vh\] {
+    max-height: 60vh;
   }
   .max-h-full {
     max-height: 100%;
@@ -5330,6 +5336,9 @@
   }
   .border-base-200 {
     border-color: var(--color-base-200);
+  }
+  .border-base-300 {
+    border-color: var(--color-base-300);
   }
   .border-black {
     border-color: var(--color-black);

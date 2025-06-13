@@ -145,11 +145,15 @@
               Dibujar Poly
             </button>
             <button
-            type="button"
-            id="submit-coordinates"
-            class="btn btn-sm btn-success mt-1">
-            Clientes 
-          </button>
+              type="button"
+              id="find-clients"
+              class="btn btn-sm btn-success mt-1">
+              Clientes 
+            </button>
+          </div>
+          <div id="client-results" class="mt-2 hidden">
+            <div class="text-sm font-semibold">Clientes encontrados: <span id="client-count">0</span></div>
+            <div id="client-list" class="mt-1 max-h-40 overflow-y-auto"></div>
           </div>
             <div class="mt-4 flex">
               <input
@@ -179,10 +183,19 @@
     </div>
 
     {% include 'modal_precio.html' %}
-
-  </div>
-
     {% include 'modal_search.html' %}
+
+    <!-- Modal para resultados de clientes -->
+    <dialog id="client-results-modal" class="modal">
+      <div class="modal-box w-11/12 max-w-5xl">
+        <h3 class="font-bold text-lg mb-4">Clientes encontrados: <span id="modal-client-count">0</span></h3>
+        <div id="modal-client-list" class="max-h-[60vh] overflow-y-auto"></div>
+        <div class="modal-action">
+          <button id="export-csv" class="btn btn-primary">Exportar CSV</button>
+          <button id="close-client-modal" class="btn">Cerrar</button>
+        </div>
+      </div>
+    </dialog>
 
 </main>
 {% endblock %}

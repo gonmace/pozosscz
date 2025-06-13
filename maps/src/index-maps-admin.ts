@@ -5,7 +5,6 @@ import "../src/utils/leaflet.Control.Center.css";
 import "leaflet-draw/dist/leaflet.draw.css";
 import "leaflet.control.layers.tree/L.Control.Layers.Tree.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
-
 import {
   Map,
   tileLayer,
@@ -52,6 +51,7 @@ import { modalPrecio } from "./utils/modalPrecio.ts";
 import "./utils/SliderControl";
 import { initializeSearchModal } from "./utils/findClients";
 import { tableModal } from "./utils/tableModel";
+import { findClientsInPolygon, parsePolygonCoordinates, fetchAllClients } from "./utils/findClientsInPolygon";
 
 let marker: Marker;
 let markerCamion: Marker;
@@ -529,9 +529,23 @@ function updateTextareaWithCoordinates(layer: Layer) {
 const drawCordinates = document.getElementById(
   "submit-coordinates"
 ) as HTMLButtonElement;
+const findClientsButton = document.getElementById(
+  "find-clients"
+) as HTMLButtonElement;
 const coordinatesInput = document.getElementById(
   "polygon-coordinates"
 ) as HTMLTextAreaElement | null;
+
+// Enable/disable find clients button based on polygon coordinates
+coordinatesInput?.addEventListener("input", () => {
+  if (coordinatesInput && coordinatesInput.value.trim()) {
+    const coordinates = parsePolygonCoordinates(coordinatesInput.value);
+    findClientsButton.disabled = !coordinates;
+  } else {
+    findClientsButton.disabled = true;
+  }
+});
+
 drawCordinates.addEventListener("click", () => {
   if (!coordinatesInput) {
     createToast(
@@ -555,6 +569,7 @@ drawCordinates.addEventListener("click", () => {
       const polygon = new Polygon(latLngs, { color: "blue" });
       drawnItems.addLayer(polygon);
       map.fitBounds(polygon.getBounds());
+      findClientsButton.disabled = false;
     } else {
       createToast(
         "coordenadas",
@@ -563,6 +578,7 @@ drawCordinates.addEventListener("click", () => {
         "top",
         "error"
       );
+      findClientsButton.disabled = true;
     }
   } catch (error) {
     createToast(
@@ -572,6 +588,139 @@ drawCordinates.addEventListener("click", () => {
       "top",
       "error"
     );
+    findClientsButton.disabled = true;
+  }
+});
+
+// Find clients in polygon
+findClientsButton.addEventListener("click", async () => {
+  if (!coordinatesInput || !coordinatesInput.value.trim()) {
+    createToast(
+      "clientes",
+      "map",
+      "No hay coordenadas de polígono para buscar clientes.",
+      "top",
+      "error"
+    );
+    return;
+  }
+
+  const coordinates = parsePolygonCoordinates(coordinatesInput.value);
+  if (!coordinates) {
+    createToast(
+      "clientes",
+      "map",
+      "Formato de coordenadas inválido.",
+      "top",
+      "error"
+    );
+    return;
+  }
+
+  // Show loading state
+  findClientsButton.disabled = true;
+  findClientsButton.innerHTML = '<span class="loading loading-spinner loading-sm"></span>';
+
+  try {
+    // Fetch all clients from API
+    const clients = await fetchAllClients();
+    
+    // Find clients in polygon
+    const clientsInPolygon = findClientsInPolygon(clients, coordinates);
+
+    // Update UI with results
+    const modal = document.getElementById("client-results-modal") as HTMLDialogElement;
+    const modalClientCount = document.getElementById("modal-client-count");
+    const modalClientList = document.getElementById("modal-client-list");
+
+    if (modal && modalClientCount && modalClientList) {
+      modalClientCount.textContent = clientsInPolygon.length.toString();
+      
+      // Clear previous results
+      modalClientList.innerHTML = "";
+      
+      // Add new results
+      clientsInPolygon.forEach(client => {
+        const clientItem = document.createElement("div");
+        clientItem.className = "text-sm p-2 hover:bg-base-200 border-b border-base-300";
+        clientItem.innerHTML = `
+          <div class="font-medium">${client.name || 'Sin nombre'}</div>
+          <div class="text-xs text-gray-800">${client.address || 'Sin dirección'}</div>
+          <div class="text-xs text-gray-600">
+            <span class="font-medium">Código:</span> ${client.cod || 'N/A'} | 
+            <span class="font-medium">Costo:</span> ${client.cost || 'N/A'} | 
+            <span class="font-medium">Servicio:</span> ${client.service || 'N/A'}
+          </div>
+          <div class="text-xs text-gray-600">
+            <span class="font-medium">Tel:</span> ${client.tel1 || 'N/A'} ${client.tel2 ? `| ${client.tel2}` : ''}
+          </div>
+          <div class="text-xs text-gray-600">
+            <span class="font-medium">Coords:</span> ${client.lat.toFixed(6)}, ${client.lon.toFixed(6)}
+          </div>
+        `;
+        modalClientList.appendChild(clientItem);
+      });
+
+      // Show modal
+      modal.showModal();
+
+      // Handle export to CSV
+      const exportButton = document.getElementById("export-csv");
+      if (exportButton) {
+        exportButton.onclick = () => {
+          const csvContent = [
+            // CSV Header
+            ['Nombre', 'Teléfono', 'Precio'].join(','),
+            // CSV Data
+            ...clientsInPolygon.map(client => [
+              `"${(client.name || '').replace(/"/g, '""')}"`,
+              `"${(client.tel1 || '').replace(/"/g, '""')}"`,
+              client.cost || ''
+            ].join(','))
+          ].join('\n');
+
+          // Create and download file
+          const blob = new Blob([`\ufeff${csvContent}`], { type: 'text/csv;charset=utf-8;' });
+          const link = document.createElement('a');
+          const url = URL.createObjectURL(blob);
+          link.setAttribute('href', url);
+          link.setAttribute('download', `clientes_${new Date().toISOString().split('T')[0]}.csv`);
+          link.style.visibility = 'hidden';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        };
+      }
+
+      // Handle close button
+      const closeButton = document.getElementById("close-client-modal");
+      if (closeButton) {
+        closeButton.onclick = () => {
+          modal.close();
+        };
+      }
+
+      createToast(
+        "clientes",
+        "map",
+        `Se encontraron ${clientsInPolygon.length} clientes en el polígono.`,
+        "top",
+        "success"
+      );
+    }
+  } catch (error) {
+    console.error('Error fetching clients:', error);
+    createToast(
+      "clientes",
+      "map",
+      "Error al buscar clientes. Por favor, intente nuevamente.",
+      "top",
+      "error"
+    );
+  } finally {
+    // Reset button state
+    findClientsButton.disabled = false;
+    findClientsButton.textContent = "Clientes";
   }
 });
 
@@ -859,6 +1008,7 @@ function loadTruckMarkers() {
           ) as HTMLInputElement;
           const camionId = checkbox?.dataset.camionId;
           if (camionId) {
+
             const marker = new Marker(coords, {
               icon: iconCamion,
             });
