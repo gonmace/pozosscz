@@ -127,7 +127,7 @@ const putMarker = document.getElementById("putMarker") as HTMLButtonElement;
 putMarker.disabled = true;
 const URLwhatsapp = document.getElementById("URLwhatsapp") as HTMLInputElement;
 URLwhatsapp.addEventListener("input", (e) => {
-  URLwhatsapp.value.length >= 28
+  URLwhatsapp.value.length >= 20
     ? (putMarker.disabled = false)
     : (putMarker.disabled = true);
 });
@@ -154,47 +154,80 @@ const botonCotiza = document.getElementById("cotiza") as HTMLButtonElement;
 botonCotiza.disabled = true;
 
 putMarker.onclick = () => {
-  let latitud: number = 0,
-    longitud: number = 0;
+  let latitud: number = 0, longitud: number = 0;
+  const mensaje = URLwhatsapp.value;
+  let encontrado = false;
+
   try {
-    if (URLwhatsapp.value.indexOf("%2C") != -1) {
-      let ambos = URLwhatsapp.value.split("%2C");
-      let izq = ambos[0].split("?q=");
-      let der = ambos[1].split("&z=");
-      latitud = parseFloat(izq[1]);
-      longitud = parseFloat(der[0]);
+    // 1. Coordenadas directas: -17.77,-63.18 o similares
+    let match = mensaje.match(/(-?\d+\.\d+)[,\s]+(-?\d+\.\d+)/);
+    if (match) {
+      latitud = parseFloat(match[1]);
+      longitud = parseFloat(match[2]);
+      encontrado = true;
     }
-    if (URLwhatsapp.value.indexOf(",") != -1) {
-      let ambos = URLwhatsapp.value.split(",");
-      if (ambos.length == 2) {
-        let izq = ambos[0].split("?q=");
-        if (izq.length == 1) {
-          latitud = parseFloat(ambos[0]);
-        } else {
-          latitud = parseFloat(izq[1]);
-        }
-        longitud = parseFloat(ambos[1]);
-      }
-      if (ambos.length == 3) {
-        let izq = ambos[0].split("/@");
-        latitud = parseFloat(izq[1]);
-        longitud = parseFloat(ambos[1]);
+
+    // 2. Enlace con q= (ej: maps.google.com/?q=-17.77,-63.18)
+    if (!encontrado) {
+      match = mensaje.match(/q=(?:\(|%28)?(-?\d+\.\d+)[,%2C\s]+(-?\d+\.\d+)(?:\)|%29)?/);
+      if (match) {
+        latitud = parseFloat(match[1]);
+        longitud = parseFloat(match[2]);
+        encontrado = true;
       }
     }
+
+    // 3. Enlace con @lat,lon
+    if (!encontrado) {
+      match = mensaje.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+      if (match) {
+        latitud = parseFloat(match[1]);
+        longitud = parseFloat(match[2]);
+        encontrado = true;
+      }
+    }
+
+    // 4. Enlace con !3d<lat>!4d<lon>
+    if (!encontrado) {
+      match = mensaje.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/);
+      if (match) {
+        latitud = parseFloat(match[1]);
+        longitud = parseFloat(match[2]);
+        encontrado = true;
+      }
+    }
+
+    // 5. Coordenadas tipo shortlink ya resuelto (maps.app.goo.gl debe estar resuelto antes en backend o no se podrá acceder desde el navegador por CORS)
+    // Aquí solo intentamos detectar coordenadas después de redirección
+    if (!encontrado && mensaje.includes("maps.app.goo.gl")) {
+      alert("Shortlinks de maps.app.goo.gl no es posible resolver el link.");
+      return;
+    }
+
+    if (!encontrado) {
+      alert("No se encontraron coordenadas válidas.");
+      return;
+    }
+
+    // Reiniciar campo
     URLwhatsapp.value = "";
+
+    // Mostrar marcador
     if (marker) {
       map.removeLayer(marker);
     } else {
       botonCotiza.disabled = false;
     }
+
     map.flyTo([latitud, longitud], 16);
     marker = new Marker([latitud, longitud], {
       icon: iconRed,
     }).addTo(map);
 
     putMarker.disabled = true;
-  } catch {
-    alert("Algo salió mal");
+  } catch (err) {
+    alert("Algo salió mal al intentar extraer las coordenadas.");
+    console.error(err);
     URLwhatsapp.value = "";
   }
 };
