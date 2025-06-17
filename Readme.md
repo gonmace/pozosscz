@@ -1,6 +1,7 @@
 # PozsSCZ
 
 docker exec -it pozosscz_app python manage.py collectstatic --settings=config.prod
+docker exec -it pozosscz_app python manage.py makemigrations --settings=config.prod
 docker exec -it pozosscz_app python manage.py migrate --settings=config.prod
 
 python manage.py dumpdata clientes --indent 2 > cliente.json

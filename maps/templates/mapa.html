@@ -9,7 +9,7 @@
 <main class="w-full relative">
     {% include 'components/simple_header.html' with class_nav='w-fit ml-12 text-black fixed  z-[10000] rounded-sm bg-white border border-gray-500' %}
     <div class="flex flex-col sm:flex-row">
-      <div id="map" class="h-screen w-full">
+      <div id="map" class="h-[85vh] lg:h-screen w-full relative">
     
         <div id="overlay" class="invisible z-[10000] absolute inset-0 bg-black/50 flex items-center justify-center">
           <span class="loading loading-spinner text-secondary"></span>
@@ -17,7 +17,7 @@
  
       </div>
 
-    <div class="mx-1 sm:mx-2 sm:w-60 h-screen overflow-y-auto">
+    <div class="mx-1 sm:mx-2 sm:w-60 overflow-y-auto">
         <div class="my-2 text-center">
           <input
             id="URLwhatsapp"
