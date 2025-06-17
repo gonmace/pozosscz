@@ -173,14 +173,14 @@ export const modalPrecio = (data: DataPrice, colorPath: string[], marker: Marker
       }
 
       // Validación del campo de precio
-      if (precio_sugerido === "" || parseInt(precio_sugerido) < 300) {
+      if (formCost.value === "" || parseInt(formCost.value) < 300) {
         createToast('validación', 'map', 'El precio no debe quedar en blanco o es un valor inválido.', 'top', 'error');
         return;
       }
 
       try {
         // Asegúrate de que postData es una función asíncrona que retorna una promesa
-        const response = await postData(formName.value, formPhone.value, parseInt(precio_sugerido), currentMarker!);
+        const response = await postData(formName.value, formPhone.value, parseInt(formCost.value), currentMarker!);
         
         // Si la respuesta es exitosa
         createToast('postData', 'map', 'Datos guardados con éxito', 'top', 'success');

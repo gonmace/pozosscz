@@ -28,7 +28,7 @@ class Cliente(models.Model):
     tel1 = models.CharField("telefono 1", max_length=20, null=True, blank=True)
     tel2 = models.CharField("telefono 2", max_length=20, blank=True)
     name = models.CharField("nombre", max_length=51, blank=True, null=True)
-    address = models.CharField("direccion - comentario", max_length=255, blank=True)
+    address = models.TextField("direccion - comentario", max_length=255, blank=True)
     cod = models.CharField("codigo", max_length=10, blank=True, null=True)
     cost = models.IntegerField("precio", default=0)
     service = models.CharField(

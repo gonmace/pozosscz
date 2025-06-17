@@ -30,23 +30,20 @@ class ClienteResource(resources.ModelResource):
 class ClienteAdmin(ImportExportModelAdmin):
     resource_class = ClienteResource
     list_display = (
-        'id',
+        'format_created_at',
         'name',
         'tel1',
         'cod',
         'cost',
         'status',
         'service',
-        'lat',
-        'lon',
         'user',
-        'format_created_at',
         'address'
     )
     list_editable = (
-        'status', 'service', 'name', 'tel1', 'cod', 
+        'status', 'service', 'name', 'tel1', 'cod', 'cost','address'
     )
-    list_display_links = ('id', )
+    list_display_links = ('format_created_at', )
 
     def format_created_at(self, obj):
         return obj.created_at.strftime('%d-%m-%Y, %H:%M')
@@ -55,6 +52,7 @@ class ClienteAdmin(ImportExportModelAdmin):
 
     formfield_overrides = {
         models.CharField: {'widget': TextInput(attrs={'size': '8'})},
+        models.TextField: {'widget': TextInput(attrs={'size': '40'})},
     }
 
     class Media:

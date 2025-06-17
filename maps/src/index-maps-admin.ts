@@ -645,16 +645,16 @@ findClientsButton.addEventListener("click", async () => {
         clientItem.className = "text-sm p-2 hover:bg-base-200 border-b border-base-300";
         clientItem.innerHTML = `
           <div class="font-medium">${client.name || 'Sin nombre'}</div>
-          <div class="text-xs text-gray-800">${client.address || 'Sin dirección'}</div>
-          <div class="text-xs text-gray-600">
+          <div class="text-xs text-gray-400">${client.address || 'Sin dirección'}</div>
+          <div class="text-xs text-gray-300">
             <span class="font-medium">Código:</span> ${client.cod || 'N/A'} | 
             <span class="font-medium">Costo:</span> ${client.cost || 'N/A'} | 
             <span class="font-medium">Servicio:</span> ${client.service || 'N/A'}
           </div>
-          <div class="text-xs text-gray-600">
+          <div class="text-xs text-gray-400">
             <span class="font-medium">Tel:</span> ${client.tel1 || 'N/A'} ${client.tel2 ? `| ${client.tel2}` : ''}
           </div>
-          <div class="text-xs text-gray-600">
+          <div class="text-xs text-gray-400">
             <span class="font-medium">Coords:</span> ${client.lat.toFixed(6)}, ${client.lon.toFixed(6)}
           </div>
         `;
@@ -670,12 +670,14 @@ findClientsButton.addEventListener("click", async () => {
         exportButton.onclick = () => {
           const csvContent = [
             // CSV Header
-            ['Nombre', 'Teléfono', 'Precio'].join(','),
+            ['Nombre', 'Teléfono', 'Precio', 'Dirección', 'Fecha'].join(','),
             // CSV Data
             ...clientsInPolygon.map(client => [
               `"${(client.name || '').replace(/"/g, '""')}"`,
               `"${(client.tel1 || '').replace(/"/g, '""')}"`,
-              client.cost || ''
+              client.cost || '',
+              `"${(client.address || '').replace(/"/g, '""')}"`,
+              client.created_at ? new Date(client.created_at).toLocaleDateString() : ''
             ].join(','))
           ].join('\n');
 
