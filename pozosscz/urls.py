@@ -1,5 +1,5 @@
 from django.urls import include, path
-from rest_framework import routers
+from config.router_helper import SafeDefaultRouter
 from pozosscz.views import (
     PreciosPozosSCZViewSet,
     AreasFactorViewSet,
@@ -7,7 +7,7 @@ from pozosscz.views import (
 )
 from . import views
 
-router = routers.DefaultRouter()
+router = SafeDefaultRouter()
 router.register(r'basecamion', BaseCamionViewSet, 'basecamion')
 router.register(r'precios', PreciosPozosSCZViewSet, 'precios')
 router.register(r'areasfactor', AreasFactorViewSet, 'areasfactor')

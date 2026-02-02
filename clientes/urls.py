@@ -1,8 +1,8 @@
 from django.urls import include, path
-from rest_framework import routers
+from config.router_helper import SafeDefaultRouter
 from clientes.views import ClienteViewSet
 
-router = routers.DefaultRouter()
+router = SafeDefaultRouter()
 
 router.register(r'clientes', ClienteViewSet, 'clientes')
 
