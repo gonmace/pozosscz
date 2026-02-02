@@ -67,19 +67,33 @@ echo ""
 
 # 1. Backup en formato SQL (solo tabla clientes_cliente)
 echo "1️⃣  Creando backup SQL de la tabla clientes_cliente..."
+echo "   Usando formato INSERT para máxima compatibilidad..."
+
 if [ "$DOCKER_CMD" = "docker" ]; then
     docker exec "$CONTAINER_NAME" pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" \
-        -t clientes_cliente --data-only --column-inserts > "$BACKUP_SQL"
+        -t clientes_cliente --data-only --column-inserts --no-owner --no-acl > "$BACKUP_SQL" 2>&1
 else
     $DOCKER_CMD exec -T postgres pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" \
-        -t clientes_cliente --data-only --column-inserts > "$BACKUP_SQL"
+        -t clientes_cliente --data-only --column-inserts --no-owner --no-acl > "$BACKUP_SQL" 2>&1
 fi
 
 if [ $? -eq 0 ]; then
+    # Verificar que el backup tiene datos
+    INSERT_COUNT=$(grep -c "^INSERT INTO" "$BACKUP_SQL" 2>/dev/null || echo "0")
     SQL_SIZE=$(du -h "$BACKUP_SQL" | cut -f1)
-    echo "   ✓ Backup SQL creado: $BACKUP_SQL ($SQL_SIZE)"
+    
+    if [ "$INSERT_COUNT" -gt 0 ]; then
+        echo "   ✓ Backup SQL creado: $BACKUP_SQL ($SQL_SIZE)"
+        echo "   ✓ Insert statements encontrados: $INSERT_COUNT"
+    else
+        echo "   ⚠️  Backup creado pero no se encontraron INSERT statements"
+        echo "   Verificando contenido del archivo..."
+        head -20 "$BACKUP_SQL"
+    fi
 else
     echo "   ✗ Error al crear backup SQL"
+    echo "   Verificando error:"
+    tail -10 "$BACKUP_SQL"
 fi
 
 # 2. Backup en formato CSV
