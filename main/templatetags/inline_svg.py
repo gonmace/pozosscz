@@ -17,7 +17,9 @@ def inline_svg_from_media(media_url_path):
         # Asume que es una ruta relativa ya válida
         relative_path = media_url_path.lstrip("/")
 
-    full_path = os.path.join(settings.MEDIA_ROOT, relative_path)
+    # Asegurar que MEDIA_ROOT sea string
+    media_root = str(settings.MEDIA_ROOT) if hasattr(settings, 'MEDIA_ROOT') else ''
+    full_path = os.path.join(media_root, relative_path)
 
     if os.path.exists(full_path) and full_path.endswith(".svg"):
         try:
@@ -39,7 +41,9 @@ def inline_svg_from_static(static_path):
     else:
         relative_path = static_path.lstrip("/")
 
-    full_path = os.path.join(settings.STATIC_ROOT, relative_path)
+    # Asegurar que STATIC_ROOT sea string
+    static_root = str(settings.STATIC_ROOT) if hasattr(settings, 'STATIC_ROOT') else ''
+    full_path = os.path.join(static_root, relative_path)
 
     if os.path.exists(full_path) and full_path.endswith(".svg"):
         try:

@@ -25,9 +25,10 @@ if settings.DEBUG:
         # django_browser_reload no está instalado, continuar sin él
         pass
     urlpatterns += staticfiles_urlpatterns()
-    urlpatterns += static(
-        settings.STATIC_URL, document_root=settings.STATIC_ROOT
-        )
-    urlpatterns += static(
-        settings.MEDIA_URL, document_root=settings.MEDIA_ROOT
-        )
+    # Asegurar que STATIC_ROOT y MEDIA_ROOT sean strings
+    static_root = str(settings.STATIC_ROOT) if hasattr(settings, 'STATIC_ROOT') else None
+    media_root = str(settings.MEDIA_ROOT) if hasattr(settings, 'MEDIA_ROOT') else None
+    if static_root:
+        urlpatterns += static(settings.STATIC_URL, document_root=static_root)
+    if media_root:
+        urlpatterns += static(settings.MEDIA_URL, document_root=media_root)
