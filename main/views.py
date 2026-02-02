@@ -11,7 +11,7 @@ from .utils import get_slug_from_request, get_meta_for_slug
 
 class StaticViewSitemap(Sitemap):
     def items(self):
-        return ['home_page', 'cotiza', 'contact']
+        return ['home_page', 'cotiza', 'calcula', 'contact']
 
     def location(self, item):
         return reverse(item)
@@ -54,6 +54,33 @@ def home_page(request):
         'banner': active_banner,
         'alcances': alcances,
         'tipos_clientes': tipos_clientes,
+        'celular': celular,
+        'meta': meta
+    })
+
+def calcula(request):
+    datos_generales = DatosGenerales.objects.first()
+    if not datos_generales:
+        datos_generales = DatosGenerales.objects.create()
+    celular = datos_generales.celular
+    
+    slug = get_slug_from_request(request)
+    meta = get_meta_for_slug(slug, request)
+    
+    # Mejorar meta tags específicos para la página calcula
+    if slug == 'calcula':
+        from meta.views import Meta as MetaObject
+        meta = MetaObject(
+            title="Calculadoras de Pozos Sépticos - Capacidad y Dimensiones | PozosSCZ",
+            description="Herramientas gratuitas para calcular la capacidad y dimensionar pozos sépticos. Calcula el volumen de pozos existentes y las dimensiones recomendadas según número de habitantes. Incluye calculadora de capacidad en m³ y litros, y calculadora de dimensiones con profundidad recomendada.",
+            keywords=["calculadora pozo séptico", "calcular capacidad pozo", "volumen pozo séptico", "calculadora pozos", "capacidad pozo en litros", "calcular m3 pozo", "herramienta cálculo pozos", "dimensionar pozo séptico", "calcular profundidad pozo", "dimensiones pozo séptico", "calculadora dimensiones pozos"],
+            use_og=True,
+            use_twitter=True,
+            use_facebook=True,
+            request=request
+        )
+    
+    return render(request, 'calcula.html', {
         'celular': celular,
         'meta': meta
     })

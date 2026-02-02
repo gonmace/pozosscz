@@ -1,0 +1,440 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head %}
+<!-- Schema.org structured data for Calculators -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "name": "Calculadoras de Pozos Sépticos - PozosSCZ",
+  "description": "Herramientas gratuitas para calcular la capacidad y dimensionar pozos sépticos. Calcula volumen y dimensiones recomendadas según número de habitantes.",
+  "url": "{{ request.build_absolute_uri }}",
+  "mainEntity": [
+    {
+      "@type": "WebApplication",
+      "name": "Calculadora de Capacidad de Pozos Sépticos",
+      "description": "Calcula el volumen y capacidad de un pozo séptico existente ingresando diámetro y profundidad",
+      "applicationCategory": "UtilityApplication",
+      "operatingSystem": "Any",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "featureList": [
+        "Cálculo de volumen en metros cúbicos",
+        "Cálculo de capacidad en litros",
+        "Interfaz visual con gráficos explicativos de diámetro y profundidad"
+      ]
+    },
+    {
+      "@type": "WebApplication",
+      "name": "Calculadora de Dimensiones de Pozos Sépticos",
+      "description": "Calcula las dimensiones recomendadas para un pozo séptico según el número de habitantes y años entre limpiezas",
+      "applicationCategory": "UtilityApplication",
+      "operatingSystem": "Any",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "featureList": [
+        "Cálculo de profundidad recomendada",
+        "Cálculo de volumen necesario",
+        "Basado en normas técnicas (180 L/persona/día, 45 L/persona/año de lodo)"
+      ]
+    }
+  ]
+}
+</script>
+{% endblock %}
+
+{% block body_class %}bg-gradient-to-b from-primary via-white to-primary{% endblock %}
+
+{% block content %}
+<main class="relative min-h-screen">
+    <!-- Header -->
+    <nav class="w-full fixed z-50 rounded-2xl left-1/2 transform -translate-x-1/2">
+        {% include 'components/header.html' with class_nav='max-w-7xl mx-auto rounded-2xl' %}
+    </nav>
+
+<div class="py-4 px-4 sm:px-6 lg:px-8 pt-20 pb-40">
+    <div class="max-w-6xl mx-auto relative z-20">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Contenedor principal - Calculadora de Capacidad -->
+        <div class="bg-white/20 rounded-xl shadow-md p-4 md:p-6">
+            <!-- Título -->
+            <header class="text-center mb-4">
+                <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">Calcula la Capacidad de tu Pozo Séptico</h1>
+                <p class="text-sm text-gray-600 mt-2">Ingresa las medidas de tu pozo para conocer su capacidad</p>
+            </header>
+            <form id="calculaForm" class="space-y-4" aria-label="Formulario para calcular la capacidad del pozo séptico">
+                <!-- Campo Diámetro -->
+                <div class="space-y-2">
+                    <label for="diametro" class="block text-base font-semibold text-gray-900">
+                        Diámetro del Pozo (metros)
+                    </label>
+                    <div class="flex flex-col md:flex-row gap-3 items-start md:items-center">
+                        <div class="flex-1">
+                            <input 
+                                type="number" 
+                                id="diametro" 
+                                name="diametro" 
+                                step="0.01" 
+                                min="0.1" 
+                                placeholder="Ej: 1.5"
+                                class="!input !input-bordered !input-primary w-full"
+                                style="background-color: white !important; color: #1f2937 !important;"
+                                required
+                            />
+                        </div>
+                        <!-- Gráfico Diámetro -->
+                        <div class="flex-shrink-0 w-full md:w-40" aria-hidden="true">
+                            <div class="bg-white rounded-lg p-2 shadow-sm">
+                                <p class="text-xs font-medium text-gray-700 mb-1 text-center">Diámetro</p>
+                                <svg viewBox="0 0 200 100" class="w-full h-auto" aria-label="Ilustración del diámetro del pozo visto desde arriba" role="img">
+                                    <title>Vista superior del pozo mostrando el diámetro</title>
+                                    <!-- Círculo representando la vista superior del pozo -->
+                                    <circle cx="100" cy="50" r="35" fill="none" stroke="#1f8e43" stroke-width="2.5"/>
+                                    <!-- Línea del diámetro -->
+                                    <line x1="65" y1="50" x2="135" y2="50" stroke="#FF4444" stroke-width="2" stroke-dasharray="4,4"/>
+                                    <!-- Etiquetas -->
+                                    <text x="100" y="30" text-anchor="middle" class="text-xs fill-gray-700 font-semibold">Diámetro</text>
+                                    <text x="65" y="45" text-anchor="middle" class="text-xs fill-red-600 font-semibold">D</text>
+                                    <text x="135" y="45" text-anchor="middle" class="text-xs fill-red-600 font-semibold">D</text>
+                                    <!-- Flechas -->
+                                    <path d="M 65 50 L 60 45 M 65 50 L 60 55" stroke="#FF4444" stroke-width="2" fill="none"/>
+                                    <path d="M 135 50 L 140 45 M 135 50 L 140 55" stroke="#FF4444" stroke-width="2" fill="none"/>
+                                </svg>
+                                <p class="text-xs text-gray-600 text-center mt-1">Distancia de un lado al otro</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Campo Profundidad -->
+                <div class="space-y-2">
+                    <label for="profundidad" class="block text-base font-semibold text-gray-900">
+                        Profundidad del Pozo (metros)
+                    </label>
+                    <div class="flex flex-col md:flex-row gap-3 items-start md:items-center">
+                        <div class="flex-1">
+                            <input 
+                                type="number" 
+                                id="profundidad" 
+                                name="profundidad" 
+                                step="0.01" 
+                                min="0.1" 
+                                placeholder="Ej: 2.5"
+                                class="!input !input-bordered !input-primary w-full"
+                                style="background-color: white !important; color: #1f2937 !important;"
+                                required
+                            />
+                        </div>
+                        <!-- Gráfico Profundidad -->
+                        <div class="flex-shrink-0 w-full md:w-40" aria-hidden="true">
+                            <div class="bg-white rounded-lg p-2 shadow-sm">
+                                <p class="text-xs font-medium text-gray-700 mb-1 text-center">Profundidad</p>
+                                <svg viewBox="0 0 200 140" class="w-full h-auto" aria-label="Ilustración de la profundidad del pozo visto de lado" role="img">
+                                    <title>Vista lateral del pozo mostrando la profundidad</title>
+                                    <!-- Rectángulo representando el pozo de lado -->
+                                    <rect x="80" y="15" width="35" height="100" fill="none" stroke="#1f8e43" stroke-width="2.5"/>
+                                    <!-- Línea de profundidad -->
+                                    <line x1="115" y1="15" x2="115" y2="115" stroke="#FF4444" stroke-width="2" stroke-dasharray="4,4"/>
+                                    <!-- Etiquetas -->
+                                    <text x="140" y="65" text-anchor="middle" class="text-xs fill-gray-700 font-semibold">Profundidad</text>
+                                    <text x="120" y="20" text-anchor="start" class="text-xs fill-red-600 font-semibold">P</text>
+                                    <text x="120" y="120" text-anchor="start" class="text-xs fill-red-600 font-semibold">P</text>
+                                    <!-- Flechas -->
+                                    <path d="M 115 15 L 110 20 M 115 15 L 120 20" stroke="#FF4444" stroke-width="2" fill="none"/>
+                                    <path d="M 115 115 L 110 110 M 115 115 L 120 110" stroke="#FF4444" stroke-width="2" fill="none"/>
+                                    <!-- Suelo -->
+                                    <line x1="70" y1="115" x2="130" y2="115" stroke="#8B4513" stroke-width="3"/>
+                                    <text x="100" y="130" text-anchor="middle" class="text-xs fill-gray-600">Suelo</text>
+                                </svg>
+                                <p class="text-xs text-gray-600 text-center mt-1">Distancia desde la superficie</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botón Calcular -->
+                <div class="flex justify-center pt-2">
+                    <button type="submit" class="btn btn-primary px-6 sombra" aria-label="Calcular la capacidad del pozo séptico">
+                        Calcular Capacidad
+                    </button>
+                </div>
+            </form>
+
+            <!-- Resultado -->
+            <section id="resultado" class="mt-4 hidden" aria-live="polite" aria-atomic="true">
+                <div class="bg-primary/10 border-2 border-primary rounded-lg p-4">
+                    <h2 class="text-lg font-bold text-gray-900 mb-3 text-center">Resultado del Cálculo</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-center">
+                        <div class="bg-white rounded-lg p-3 shadow-sm">
+                            <p class="text-xs text-gray-600 mb-1">Capacidad</p>
+                            <p id="capacidad" class="text-xl font-bold text-primary"></p>
+                            <p class="text-xs text-gray-500">m³</p>
+                        </div>
+                        <div class="bg-white rounded-lg p-3 shadow-sm">
+                            <p class="text-xs text-gray-600 mb-1">Capacidad</p>
+                            <p id="capacidadLitros" class="text-xl font-bold text-primary"></p>
+                            <p class="text-xs text-gray-500">litros</p>
+                        </div>
+                    </div>
+                    <div class="mt-3 text-center">
+                        <p class="text-xs text-gray-600">
+                            <strong>Fórmula utilizada:</strong> Volumen = π × (Radio)² × Profundidad
+                        </p>
+                        <p class="text-xs text-gray-500 mt-1">
+                            Donde Radio = Diámetro ÷ 2
+                        </p>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Contenedor secundario - Calculadora de Dimensiones -->
+        <div class="bg-white/20 rounded-xl shadow-md p-4 md:p-6">
+            <!-- Título -->
+            <header class="text-center mb-4">
+                <h2 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">Dimensiona tu Pozo Séptico</h2>
+                <p class="text-sm text-gray-600 mt-2">Calcula las dimensiones recomendadas según el número de habitantes</p>
+            </header>
+            <form id="dimensionaForm" class="space-y-4" aria-label="Formulario para calcular las dimensiones recomendadas del pozo séptico según número de personas y años entre limpiezas">
+                <!-- Campo Número de Personas -->
+                <div class="space-y-2">
+                    <label for="personas" class="block text-base font-semibold text-gray-900">
+                        Número de Personas
+                    </label>
+                    <div class="flex-1">
+                        <input 
+                            type="number" 
+                            id="personas" 
+                            name="personas" 
+                            step="1" 
+                            min="1" 
+                            max="50"
+                            placeholder="Ej: 5"
+                            class="!input !input-bordered !input-primary w-full"
+                            style="background-color: white !important; color: #1f2937 !important;"
+                            required
+                        />
+                    </div>
+                </div>
+
+                <!-- Campo Diámetro -->
+                <div class="space-y-2">
+                    <label for="diametroDimensiones" class="block text-base font-semibold text-gray-900">
+                        Diámetro del Pozo (metros)
+                    </label>
+                    <div class="flex-1">
+                        <input 
+                            type="number" 
+                            id="diametroDimensiones" 
+                            name="diametroDimensiones" 
+                            step="0.1" 
+                            min="0.5" 
+                            max="5"
+                            value="1"
+                            placeholder="Ej: 1"
+                            class="!input !input-bordered !input-primary w-full"
+                            style="background-color: white !important; color: #1f2937 !important;"
+                            required
+                        />
+                    </div>
+                </div>
+
+                <!-- Campo Años entre Limpiezas -->
+                <div class="space-y-2">
+                    <label for="aniosLimpieza" class="block text-base font-semibold text-gray-900">
+                        Años entre Limpiezas
+                    </label>
+                    <div class="flex-1">
+                        <input 
+                            type="number" 
+                            id="aniosLimpieza" 
+                            name="aniosLimpieza" 
+                            step="0.5" 
+                            min="1" 
+                            max="10"
+                            value="4"
+                            placeholder="Ej: 4"
+                            class="!input !input-bordered !input-primary w-full"
+                            style="background-color: white !important; color: #1f2937 !important;"
+                            required
+                        />
+                    </div>
+                </div>
+
+                <!-- Botón Calcular -->
+                <div class="flex justify-center pt-2">
+                    <button type="submit" class="btn btn-primary px-6 sombra" aria-label="Calcular las dimensiones recomendadas del pozo séptico">
+                        Calcular Dimensiones
+                    </button>
+                </div>
+            </form>
+
+            <!-- Resultado Dimensiones -->
+            <section id="resultadoDimensiones" class="mt-4 hidden" aria-live="polite" aria-atomic="true">
+                <div class="bg-primary/10 border-2 border-primary rounded-lg p-4">
+                    <h3 class="text-lg font-bold text-gray-900 mb-3 text-center">Dimensiones Recomendadas</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-center mb-3">
+                        <div class="bg-white rounded-lg p-3 shadow-sm">
+                            <p class="text-xs text-gray-600 mb-1">Profundidad Útil</p>
+                            <p id="profundidadUtil" class="text-xl font-bold text-primary"></p>
+                            <p class="text-xs text-gray-500">metros</p>
+                        </div>
+                        <div class="bg-white rounded-lg p-3 shadow-sm">
+                            <p class="text-xs text-gray-600 mb-1">Profundidad Total</p>
+                            <p id="profundidadTotal" class="text-xl font-bold text-primary"></p>
+                            <p class="text-xs text-gray-500">metros</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-center">
+                        <div class="bg-white rounded-lg p-3 shadow-sm">
+                            <p class="text-xs text-gray-600 mb-1">Volumen Total</p>
+                            <p id="volumenTotal" class="text-xl font-bold text-primary"></p>
+                            <p class="text-xs text-gray-500">m³</p>
+                        </div>
+                        <div class="bg-white rounded-lg p-3 shadow-sm">
+                            <p class="text-xs text-gray-600 mb-1">Capacidad</p>
+                            <p id="capacidadDimensiones" class="text-xl font-bold text-primary"></p>
+                            <p class="text-xs text-gray-500">litros</p>
+                        </div>
+                    </div>
+                    <div class="mt-3 text-center space-y-2">
+                        <p class="text-xs text-gray-600">
+                            <strong>Parámetros:</strong> 180 L/persona/día, 45 L/persona/año de lodo
+                        </p>
+                        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mt-3 text-left">
+                            <p class="text-xs text-yellow-800 font-semibold mb-1">⚠️ Nota importante:</p>
+                            <p class="text-xs text-yellow-700">
+                                Los resultados son <strong>teóricos</strong> y deben ser considerados como referencia. 
+                                Los años entre limpiezas dependen en gran medida del mantenimiento adecuado de la cámara séptica 
+                                y de evitar que los sólidos pasen al pozo. Además, la profundidad también depende del tipo de suelo, 
+                                siendo necesario llegar a un <strong>suelo arenoso filtrante</strong> para un correcto funcionamiento del sistema.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+        </div>
+    </div>
+
+    <!-- WhatsApp Bubble -->
+    {% include 'components/whatsapp_bubble.html' with position_class="bottom-6 right-6" z_index="10001" %}
+</div>
+
+<!-- Footer -->
+<div class="absolute bottom-0 w-full z-0">
+    {% include 'components/footer.html' %}
+</div>
+</main>
+
+{% endblock %}
+
+{% block js %}
+<script>
+document.getElementById('calculaForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const diametro = parseFloat(document.getElementById('diametro').value);
+    const profundidad = parseFloat(document.getElementById('profundidad').value);
+    
+    if (isNaN(diametro) || isNaN(profundidad) || diametro <= 0 || profundidad <= 0) {
+        alert('Por favor, ingresa valores válidos mayores a cero.');
+        return;
+    }
+    
+    // Calcular radio
+    const radio = diametro / 2;
+    
+    // Calcular volumen (capacidad) en m³
+    // Volumen de un cilindro: V = π × r² × h
+    const capacidadMetrosCubicos = Math.PI * Math.pow(radio, 2) * profundidad;
+    
+    // Convertir a litros (1 m³ = 1000 litros)
+    const capacidadLitros = capacidadMetrosCubicos * 1000;
+    
+    // Mostrar resultados
+    document.getElementById('capacidad').textContent = capacidadMetrosCubicos.toFixed(2);
+    document.getElementById('capacidadLitros').textContent = Math.round(capacidadLitros);
+    
+    // Mostrar el resultado
+    document.getElementById('resultado').classList.remove('hidden');
+    document.getElementById('resultado').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+});
+
+// Calculadora de Dimensiones
+document.getElementById('dimensionaForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const personas = parseInt(document.getElementById('personas').value);
+    const diametro = parseFloat(document.getElementById('diametroDimensiones').value);
+    const aniosLimpieza = parseFloat(document.getElementById('aniosLimpieza').value);
+    
+    if (isNaN(personas) || isNaN(diametro) || isNaN(aniosLimpieza) || personas <= 0 || diametro <= 0 || aniosLimpieza <= 0) {
+        alert('Por favor, ingresa valores válidos mayores a cero.');
+        return;
+    }
+    
+    // Parámetros de cálculo según normas técnicas
+    const consumoAguaPorPersona = 180; // litros por persona por día
+    const lodoPorPersonaPorAnio = 45; // litros por persona por año
+    const periodoRetencion = 1; // días (24 horas mínimo)
+    
+    // Calcular volumen de aguas servidas (m³)
+    const volumenAguasServidas = (personas * consumoAguaPorPersona * periodoRetencion) / 1000;
+    
+    // Calcular volumen de lodo acumulado (m³)
+    const volumenLodo = (personas * lodoPorPersonaPorAnio * aniosLimpieza) / 1000;
+    
+    // Volumen total necesario (m³)
+    const volumenNecesario = volumenAguasServidas + volumenLodo;
+    
+    // Calcular radio
+    const radio = diametro / 2;
+    
+    // Calcular profundidad útil necesaria para el volumen requerido
+    // Volumen = π × r² × h
+    // h = Volumen / (π × r²)
+    let profundidadUtil = volumenNecesario / (Math.PI * Math.pow(radio, 2));
+    
+    // Aplicar profundidad mínima según número de personas
+    let profundidadMinima = 1.20; // Profundidad base para 1-10 personas
+    if (personas >= 19 && personas <= 20) {
+        profundidadMinima = 1.50;
+    } else if (personas >= 17 && personas <= 18) {
+        profundidadMinima = 1.45;
+    } else if (personas >= 15 && personas <= 16) {
+        profundidadMinima = 1.40;
+    } else if (personas >= 13 && personas <= 14) {
+        profundidadMinima = 1.35;
+    } else if (personas >= 11 && personas <= 12) {
+        profundidadMinima = 1.30;
+    }
+    
+    // Usar la mayor entre la profundidad calculada y la mínima recomendada
+    profundidadUtil = Math.max(profundidadUtil, profundidadMinima);
+    
+    // Profundidad total = profundidad útil + 0.30m
+    const profundidadTotal = profundidadUtil + 0.30;
+    
+    // Calcular volumen real con las dimensiones finales
+    const volumenReal = Math.PI * Math.pow(radio, 2) * profundidadUtil;
+    
+    // Mostrar resultados
+    document.getElementById('profundidadUtil').textContent = profundidadUtil.toFixed(2);
+    document.getElementById('profundidadTotal').textContent = profundidadTotal.toFixed(2);
+    document.getElementById('volumenTotal').textContent = volumenReal.toFixed(2);
+    document.getElementById('capacidadDimensiones').textContent = Math.round(volumenReal * 1000);
+    
+    // Mostrar el resultado
+    document.getElementById('resultadoDimensiones').classList.remove('hidden');
+    document.getElementById('resultadoDimensiones').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+});
+</script>
+{% endblock %}

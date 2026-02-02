@@ -10,6 +10,7 @@ urlpatterns = [
     path('', views.home_page, name='home_page'),
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
+    path('calcula/', views.calcula, name='calcula'),
     path('contact/', views.contact, name='contact'),
     path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='django.contrib.sitemaps.views.sitemap'),
     path('robots.txt', views.robots_txt, name='robots_txt'),

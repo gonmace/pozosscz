@@ -16,6 +16,12 @@ def menu_data(request) -> Dict[str, List[Dict]]:
             "protected": False
         },
         {
+            "name": "Calcula",
+            "link": "/calcula",
+            "icon": "calcula",
+            "protected": False
+        },
+        {
             "name": "Contáctanos",
             "link": "/contact",
             "icon": "contact",
