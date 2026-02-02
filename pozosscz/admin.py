@@ -17,10 +17,12 @@ class AreasFactorAdmin(SortableAdminMixin, admin.ModelAdmin):
     # ordering = ['my_order']
 
     def save_model(self, request, obj, form, change):
-        if obj.is_main:
-            # Set all other instances to is_main=False
-            AreasFactor.objects.exclude(pk=obj.pk).update(is_main=False)
+        # Guardar primero el objeto para que tenga un pk
         super().save_model(request, obj, form, change)
+        
+        # Luego, si es principal, actualizar los demás
+        if obj.is_main:
+            AreasFactor.objects.exclude(pk=obj.pk).update(is_main=False)
 admin.site.register(AreasFactor, AreasFactorAdmin)
 
 admin.site.register(DatosGenerales, SingletonModelAdmin)
