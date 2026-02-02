@@ -6,7 +6,9 @@ from .base import *
 DEBUG_STR = str(config('DJANGO_DEBUG', default='False')).strip().lower()
 DEBUG = DEBUG_STR in ('true', '1', 'yes', 'on')
 
-ALLOWED_HOSTS = config('DJANGO_ALLOWED_HOSTS', default='').split(',')
+# Limpiar ALLOWED_HOSTS - remover espacios y strings vacíos
+ALLOWED_HOSTS_STR = config('DJANGO_ALLOWED_HOSTS', default='')
+ALLOWED_HOSTS = [h.strip() for h in ALLOWED_HOSTS_STR.split(',') if h.strip()]
 
 INSTALLED_APPS += [
 
@@ -58,7 +60,11 @@ CACHES = {
 CELERY_BROKER_URL = config('CELERY_BROKER_URL')
 CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND')
 
-CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS').split(',')
+# Limpiar CORS_ALLOWED_ORIGINS - remover espacios y strings vacíos
+CORS_ORIGINS_STR = config('CORS_ALLOWED_ORIGINS', default='')
+# Remover comillas si están presentes
+CORS_ORIGINS_STR = CORS_ORIGINS_STR.strip('"').strip("'")
+CORS_ALLOWED_ORIGINS = [o.strip() for o in CORS_ORIGINS_STR.split(',') if o.strip()]
 
 CSRF_TRUSTED_ORIGINS = ['https://limpiezapozossepticos.com', 'https://www.pozosscz.com', 'https://pozosscz.com']
 
