@@ -21,6 +21,7 @@ import type { DataPrice } from "./types/types";
 import { cotizando } from "./utils/cotizando.ts";
 import { postData } from "./utils/postCliente.ts";
 import { mensajeWapp } from "./utils/utils.ts";
+import "../../main/src/whatsapp-bubble.ts";
 
 declare global {
   interface Window {
@@ -127,6 +128,243 @@ function onMapClick(e: LeafletMouseEvent) {
   // Control de localización locateOptions esta en el archivo UtilsLeaflet.astro
   const locateControl = new LocateControl(locateOptions);
   locateControl.addTo(map);
+
+  // Tooltip animado para el botón de localización
+  function mostrarTooltipLocalizacion() {
+    // Esperar a que el control se renderice completamente
+    setTimeout(() => {
+      // Buscar el botón específico con las clases leaflet-bar-part leaflet-bar-part-single
+      const locateButtonPart = document.querySelector('.leaflet-control-locate .leaflet-bar-part.leaflet-bar-part-single') as HTMLElement;
+      const locateControl = document.querySelector('.leaflet-control-locate') as HTMLElement;
+      
+      if (!locateButtonPart || !locateControl) return;
+
+      // Obtener la posición del botón relativa al contenedor del mapa
+      const buttonRect = locateButtonPart.getBoundingClientRect();
+      const mapContainer = map.getContainer();
+      const mapRect = mapContainer.getBoundingClientRect();
+      const viewportWidth = window.innerWidth;
+      const isMobile = viewportWidth < 640;
+
+      // Crear el tooltip
+      const tooltip = document.createElement('div');
+      tooltip.id = 'tooltip-location-help';
+      tooltip.className = 'z-[10001]';
+      
+      // Calcular posición: al lado derecho del botón
+      // En móviles, ajustar para que no se salga del viewport
+      let tooltipLeft = buttonRect.right - mapRect.left + 10;
+      let tooltipTop = buttonRect.top - mapRect.top + (buttonRect.height / 2);
+      let tooltipTransform = 'translateY(-50%)';
+      let tooltipAnimation = 'tooltipMove 3s ease-in-out infinite, tooltipFadeOut 10s forwards';
+      
+      // Verificar si el tooltip cabe a la derecha, si no, ponerlo arriba o abajo en móviles
+      const estimatedTooltipWidth = isMobile ? 200 : 280;
+      const spaceRight = mapRect.right - buttonRect.right;
+      
+      // Si no hay espacio suficiente a la derecha en móviles, ajustar posición
+      if (isMobile && spaceRight < estimatedTooltipWidth + 20) {
+        tooltipLeft = buttonRect.left - mapRect.left - estimatedTooltipWidth - 20;
+        // Si tampoco cabe a la izquierda, ponerlo centrado debajo del botón
+        if (tooltipLeft < 10) {
+          tooltipLeft = buttonRect.left - mapRect.left - (estimatedTooltipWidth / 2) + (buttonRect.width / 2);
+          tooltipTop = buttonRect.bottom - mapRect.top + 10;
+          tooltipTransform = 'translateX(-50%)';
+          tooltipAnimation = 'tooltipMoveVertical 3s ease-in-out infinite, tooltipFadeOut 10s forwards';
+        }
+      }
+
+      tooltip.style.cssText = `
+        position: absolute;
+        top: ${tooltipTop}px;
+        left: ${tooltipLeft}px;
+        transform: ${tooltipTransform};
+        pointer-events: none;
+        animation: ${tooltipAnimation};
+        opacity: 1;
+        z-index: 10001;
+      `;
+
+      // Crear el contenedor del tooltip con DaisyUI y flecha
+      const tooltipContainer = document.createElement('div');
+      tooltipContainer.className = 'tooltip-with-arrow bg-primary text-primary-content px-3 py-2 sm:px-4 sm:py-2 rounded-lg shadow-xl text-xs sm:text-sm font-medium border-2 border-primary-focus relative';
+      
+      // Determinar si mostrar la flecha (no mostrarla si está debajo del botón)
+      const showArrow = tooltipTransform !== 'translateX(-50%)';
+      
+      tooltipContainer.innerHTML = `
+        ${showArrow ? '<div class="tooltip-arrow absolute left-[-8px] sm:left-[-8px] top-1/2 -translate-y-1/2 w-0 h-0 border-t-[6px] sm:border-t-[8px] border-t-transparent border-b-[6px] sm:border-b-[8px] border-b-transparent border-r-[6px] sm:border-r-[8px]" style="border-right-color: var(--color-primary);"></div>' : ''}
+        <div class="flex items-center gap-1 sm:gap-2 flex-wrap sm:flex-nowrap">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5 animate-pulse flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+          <span class="text-xs sm:text-sm">¡Haz clic aquí para ubicarte en el mapa!</span>
+        </div>
+      `;
+      tooltip.appendChild(tooltipContainer);
+
+      // Agregar estilos de animación
+      if (!document.getElementById('tooltip-location-styles')) {
+        const style = document.createElement('style');
+        style.id = 'tooltip-location-styles';
+        style.textContent = `
+          @keyframes tooltipMove {
+            0%, 100% {
+              transform: translateY(-50%) translateX(0);
+            }
+            25% {
+              transform: translateY(-50%) translateX(-5px);
+            }
+            50% {
+              transform: translateY(-50%) translateX(0);
+            }
+            75% {
+              transform: translateY(-50%) translateX(5px);
+            }
+          }
+          @keyframes tooltipMoveVertical {
+            0%, 100% {
+              transform: translateX(-50%) translateY(0);
+            }
+            25% {
+              transform: translateX(-50%) translateY(-5px);
+            }
+            50% {
+              transform: translateX(-50%) translateY(0);
+            }
+            75% {
+              transform: translateX(-50%) translateY(5px);
+            }
+          }
+          @keyframes tooltipFadeOut {
+            0% {
+              opacity: 1;
+            }
+            85% {
+              opacity: 1;
+            }
+            100% {
+              opacity: 0;
+              visibility: hidden;
+            }
+          }
+          #tooltip-location-help {
+            max-width: 280px;
+            width: max-content;
+          }
+          .tooltip-with-arrow {
+            position: relative;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+          }
+          .tooltip-arrow {
+            display: block;
+          }
+          @media (max-width: 640px) {
+            #tooltip-location-help {
+              max-width: calc(100vw - 80px);
+              min-width: 160px;
+            }
+            .tooltip-with-arrow {
+              font-size: 0.75rem;
+              padding: 0.5rem 0.75rem;
+            }
+            .tooltip-with-arrow span {
+              line-height: 1.3;
+            }
+          }
+          @media (max-width: 400px) {
+            #tooltip-location-help {
+              max-width: calc(100vw - 60px);
+            }
+            .tooltip-with-arrow {
+              font-size: 0.7rem;
+              padding: 0.4rem 0.6rem;
+            }
+          }
+        `;
+        document.head.appendChild(style);
+      }
+
+      // Función para actualizar la posición del tooltip
+      const updateTooltipPosition = () => {
+        const buttonRect = locateButtonPart.getBoundingClientRect();
+        const mapRect = mapContainer.getBoundingClientRect();
+        const viewportWidth = window.innerWidth;
+        const isMobile = viewportWidth < 640;
+        
+        let newTooltipLeft = buttonRect.right - mapRect.left + 10;
+        const newTooltipTop = buttonRect.top - mapRect.top + (buttonRect.height / 2);
+        
+        const estimatedTooltipWidth = isMobile ? 200 : 280;
+        const spaceRight = mapRect.right - buttonRect.right;
+        
+        // Si no hay espacio suficiente a la derecha en móviles, ajustar posición
+        if (isMobile && spaceRight < estimatedTooltipWidth + 20) {
+          newTooltipLeft = buttonRect.left - mapRect.left - estimatedTooltipWidth - 20;
+          // Si tampoco cabe a la izquierda, ponerlo centrado debajo del botón
+          if (newTooltipLeft < 10) {
+            newTooltipLeft = buttonRect.left - mapRect.left - (estimatedTooltipWidth / 2) + (buttonRect.width / 2);
+            tooltip.style.top = `${buttonRect.bottom - mapRect.top + 10}px`;
+            tooltip.style.transform = 'translateX(-50%)';
+            tooltip.style.animation = 'tooltipMoveVertical 3s ease-in-out infinite, tooltipFadeOut 10s forwards';
+            // Ocultar flecha cuando está debajo (o cambiar su posición)
+            const arrow = tooltip.querySelector('.tooltip-arrow') as HTMLElement;
+            if (arrow) {
+              arrow.style.display = 'none';
+            }
+          } else {
+            tooltip.style.top = `${newTooltipTop}px`;
+            tooltip.style.transform = 'translateY(-50%)';
+            tooltip.style.animation = 'tooltipMove 3s ease-in-out infinite, tooltipFadeOut 10s forwards';
+            const arrow = tooltip.querySelector('.tooltip-arrow') as HTMLElement;
+            if (arrow) arrow.style.display = 'block';
+          }
+        } else {
+          tooltip.style.top = `${newTooltipTop}px`;
+          tooltip.style.transform = 'translateY(-50%)';
+          tooltip.style.animation = 'tooltipMove 3s ease-in-out infinite, tooltipFadeOut 10s forwards';
+          const arrow = tooltip.querySelector('.tooltip-arrow') as HTMLElement;
+          if (arrow) arrow.style.display = 'block';
+        }
+        
+        tooltip.style.left = `${newTooltipLeft}px`;
+      };
+
+      // Agregar el tooltip al contenedor del mapa
+      mapContainer.style.position = 'relative';
+      mapContainer.appendChild(tooltip);
+
+      // Actualizar posición en resize
+      const resizeHandler = () => {
+        if (tooltip.parentNode) {
+          updateTooltipPosition();
+        }
+      };
+      window.addEventListener('resize', resizeHandler);
+
+      // Remover el tooltip después de 10 segundos
+      const removeTooltip = () => {
+        window.removeEventListener('resize', resizeHandler);
+        if (tooltip.parentNode) {
+          tooltip.remove();
+        }
+      };
+      
+      setTimeout(removeTooltip, 10000);
+
+      // También remover el tooltip si el usuario hace clic en el botón de localización
+      locateButtonPart.addEventListener('click', () => {
+        removeTooltip();
+      }, { once: true });
+    }, 800);
+  }
+
+  // Mostrar el tooltip cuando el mapa esté listo
+  map.whenReady(() => {
+    mostrarTooltipLocalizacion();
+  });
 
   // Escucha el evento 'locationfound' para obtener lat y lon
   map.on("locationfound", function (e: LocationEvent) {
