@@ -135,6 +135,8 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
+    # Deshabilitar formato suffix para evitar conflictos con múltiples routers
+    'URL_FORMAT_OVERRIDE': None,
 }
 
 DEFAULT_META = {
