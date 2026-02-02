@@ -15,9 +15,15 @@ urlpatterns = [
 ]
 
 if settings.DEBUG:
-    urlpatterns += [
-        path("__reload__/", include("django_browser_reload.urls")),
-    ]
+    # Agregar django_browser_reload solo si está disponible
+    try:
+        import django_browser_reload
+        urlpatterns += [
+            path("__reload__/", include("django_browser_reload.urls")),
+        ]
+    except ImportError:
+        # django_browser_reload no está instalado, continuar sin él
+        pass
     urlpatterns += staticfiles_urlpatterns()
     urlpatterns += static(
         settings.STATIC_URL, document_root=settings.STATIC_ROOT
