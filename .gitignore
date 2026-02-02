@@ -15,3 +15,8 @@ db.sqlite3
 node_modules/
 main/src/node_modules/
 maps/src/node_modules/
+
+# Backups de base de datos
+backups/
+*.sql
+*.sql.gz
