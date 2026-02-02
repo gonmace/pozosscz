@@ -93,10 +93,12 @@ def cotiza(request):
         'celular': datos_generales.celular,
         'mensaje_cotizar': datos_generales.mensaje_cotizar
     }
+    celular = datos_generales.celular
     slug = get_slug_from_request(request)
     meta = get_meta_for_slug(slug, request)
     return render(request, 'cotiza.html', 
                   {'datos_generales': datos_dict,
+                   'celular': celular,
                    'meta': meta
                    })
 
