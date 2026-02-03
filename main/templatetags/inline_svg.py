@@ -33,7 +33,8 @@ def inline_svg_from_media(media_url_path):
 @register.simple_tag
 def inline_svg_from_static(static_path):
     """
-    Incluye el contenido de un archivo SVG ubicado en STATIC_ROOT, a partir de una ruta relativa como 'icons/archivo.svg'.
+    Incluye el contenido de un archivo SVG ubicado en STATIC_ROOT o STATICFILES_DIRS, 
+    a partir de una ruta relativa como 'icons/archivo.svg'.
     """
     # Asegurarse que la ruta no comience con /static/
     if static_path.startswith(settings.STATIC_URL):
@@ -41,15 +42,27 @@ def inline_svg_from_static(static_path):
     else:
         relative_path = static_path.lstrip("/")
 
-    # Asegurar que STATIC_ROOT sea string
-    static_root = str(settings.STATIC_ROOT) if hasattr(settings, 'STATIC_ROOT') else ''
-    full_path = os.path.join(static_root, relative_path)
+    # Buscar primero en STATIC_ROOT (producción)
+    static_root = str(settings.STATIC_ROOT) if hasattr(settings, 'STATIC_ROOT') and settings.STATIC_ROOT else ''
+    if static_root:
+        full_path = os.path.join(static_root, relative_path)
+        if os.path.exists(full_path) and full_path.endswith(".svg"):
+            try:
+                with open(full_path, "r", encoding="utf-8") as f:
+                    return mark_safe(f.read())
+            except Exception as e:
+                pass  # Continuar buscando en STATICFILES_DIRS
 
-    if os.path.exists(full_path) and full_path.endswith(".svg"):
-        try:
-            with open(full_path, "r", encoding="utf-8") as f:
-                return mark_safe(f.read())
-        except Exception as e:
-            return f"<!-- Error al leer SVG: {e} -->"
+    # Si no se encuentra en STATIC_ROOT, buscar en STATICFILES_DIRS (desarrollo)
+    if hasattr(settings, 'STATICFILES_DIRS') and settings.STATICFILES_DIRS:
+        for static_dir in settings.STATICFILES_DIRS:
+            static_dir_str = str(static_dir)
+            full_path = os.path.join(static_dir_str, relative_path)
+            if os.path.exists(full_path) and full_path.endswith(".svg"):
+                try:
+                    with open(full_path, "r", encoding="utf-8") as f:
+                        return mark_safe(f.read())
+                except Exception as e:
+                    return f"<!-- Error al leer SVG: {e} -->"
 
     return f"<!-- SVG no encontrado: {relative_path} -->"
