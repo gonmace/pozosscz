@@ -1,6 +1,12 @@
 # flake8: noqa
 from .base import *
 
+# Aplicar parche para convertir Path objects a strings en templates
+try:
+    from . import path_fix
+except ImportError:
+    pass
+
 # Leer DEBUG del .env - acepta True/False, 1/0, yes/no, on/off
 # python-decouple puede tener problemas con cast=bool, así que lo hacemos manualmente
 DEBUG_STR = str(config('DJANGO_DEBUG', default='False')).strip().lower()

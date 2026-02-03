@@ -7,6 +7,13 @@ import os
 BASE_DIR_PATH = Path(__file__).resolve().parent.parent
 BASE_DIR = str(BASE_DIR_PATH)
 
+# Aplicar parche para convertir Path objects a strings en templates
+# Esto corrige el error TypeError cuando Django intenta hacer join() con Path objects
+try:
+    from . import path_fix
+except ImportError:
+    pass
+
 SECRET_KEY = config('SECRET_KEY', default='your secret key')
 
 INSTALLED_APPS = [
@@ -57,10 +64,15 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'config.urls'
 
+# Asegurar que TEMPLATES DIRS sea una lista de strings explícitos
+TEMPLATE_DIRS = [os.path.join(BASE_DIR, 'templates')]
+# Forzar conversión a string para evitar problemas con Path objects
+TEMPLATE_DIRS = [str(d) for d in TEMPLATE_DIRS]
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        "DIRS": [os.path.join(BASE_DIR, 'templates')],
+        "DIRS": TEMPLATE_DIRS,
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -119,14 +131,15 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+# Asegurar que todos los paths sean strings explícitos
+STATIC_ROOT = str(os.path.join(BASE_DIR, 'staticfiles'))
 
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),
+    str(os.path.join(BASE_DIR, 'static')),
 ]
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_ROOT = str(os.path.join(BASE_DIR, 'media'))
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
