@@ -5,7 +5,7 @@ PROBLEMA: DefaultRouter.get_urls() internamente llama a format_suffix_patterns()
 que registra el convertidor 'drf_format_suffix'. Cuando hay múltiples routers,
 cada uno intenta registrar el mismo convertidor, causando ValueError.
 
-SOLUCIÓN: Usar un router que capture el ValueError y retorne URLs sin format_suffix_patterns.
+SOLUCIÓN: Usar BaseRouter.get_urls() directamente sin aplicar format_suffix_patterns.
 """
 from rest_framework import routers
 
@@ -14,42 +14,17 @@ class SafeDefaultRouter(routers.DefaultRouter):
     """
     Router que evita el registro múltiple del convertidor de formato suffix.
     
-    DefaultRouter.get_urls() internamente aplica format_suffix_patterns().
-    Si el convertidor ya está registrado (por otro router), capturamos
-    el ValueError y retornamos las URLs sin aplicar format_suffix_patterns nuevamente.
+    Usa BaseRouter.get_urls() directamente (que construye las URLs correctamente)
+    pero evita aplicar format_suffix_patterns para prevenir el error de registro múltiple.
     """
     def get_urls(self):
         """
-        Sobrescribe get_urls para capturar ValueError cuando el convertidor ya está registrado.
+        Sobrescribe get_urls para construir URLs usando BaseRouter pero sin format_suffix_patterns.
         """
-        try:
-            # Intentar llamar al método padre (que aplica format_suffix_patterns)
-            return super().get_urls()
-        except ValueError as e:
-            # Si el convertidor 'drf_format_suffix' ya está registrado
-            if "drf_format_suffix" in str(e):
-                # Obtener URLs directamente sin aplicar format_suffix_patterns
-                # Esto es lo que hace BaseRouter.get_urls() antes de aplicar format_suffix_patterns
-                urls = []
-                for prefix, viewset, basename in self.registry:
-                    lookup = self.get_lookup_regex(viewset)
-                    routes = self.get_routes(viewset)
-                    
-                    for route in routes:
-                        mapping = self.get_method_map(viewset, route.mapping)
-                        if not mapping:
-                            continue
-                        
-                        url_path = route.url.replace('{prefix}', prefix)
-                        url_path = url_path.replace('{lookup}', lookup)
-                        
-                        view = viewset.as_view(mapping, **route.initkwargs)
-                        name = route.name.format(basename=basename)
-                        
-                        from django.urls import path
-                        urls.append(path(url_path, view, name=name))
-                
-                return urls
-            else:
-                # Re-lanzar si es otro tipo de ValueError
-                raise
+        # Llamar al método de BaseRouter directamente (padre de DefaultRouter)
+        # Esto construye las URLs correctamente sin aplicar format_suffix_patterns
+        urls = super(routers.DefaultRouter, self).get_urls()
+        
+        # NO aplicar format_suffix_patterns para evitar el error de registro múltiple
+        # Las URLs funcionarán sin el formato suffix (.json, .xml, etc.)
+        return urls
