@@ -24,6 +24,10 @@ def robots_txt(request):
     ]
     return HttpResponse("\n".join(lines), content_type="text/plain")
 
+def ads_txt(request):
+    content = "google.com, pub-9612645510546880, DIRECT, f08c47fec0942fa0"
+    return HttpResponse(content, content_type="text/plain")
+
 
 def home_page(request):
     # Obtener o crear datos generales
