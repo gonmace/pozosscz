@@ -94,17 +94,28 @@ def cotiza(request):
         'mensaje_cotizar': datos_generales.mensaje_cotizar
     }
     celular = datos_generales.celular
+    mensaje_whatsapp = datos_generales.mensaje_whatsapp
     slug = get_slug_from_request(request)
     meta = get_meta_for_slug(slug, request)
     return render(request, 'cotiza.html', 
                   {'datos_generales': datos_dict,
                    'celular': celular,
+                   'mensaje_whatsapp': mensaje_whatsapp,
                    'meta': meta
                    })
 
 def mapa(request):
+    datos_generales = DatosGenerales.objects.first()
+    if not datos_generales:
+        datos_generales = DatosGenerales.objects.create()
     basecamiones = BaseCamion.objects.filter(deleted=False)
-    return render(request, 'mapa.html', {'basecamiones': basecamiones})
+    celular = datos_generales.celular
+    mensaje_whatsapp = datos_generales.mensaje_whatsapp
+    return render(request, 'mapa.html', {
+        'basecamiones': basecamiones,
+        'celular': celular,
+        'mensaje_whatsapp': mensaje_whatsapp
+    })
 
 class ContratarAPIView(APIView):
     permission_classes = [AllowAny]

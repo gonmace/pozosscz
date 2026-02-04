@@ -46,6 +46,7 @@ def home_page(request):
     tipos_clientes = TipoCliente.objects.filter(is_active=True)
 
     celular = datos_generales.celular
+    mensaje_whatsapp = datos_generales.mensaje_whatsapp
     
     slug = get_slug_from_request(request)
     meta = get_meta_for_slug(slug, request)
@@ -55,6 +56,7 @@ def home_page(request):
         'alcances': alcances,
         'tipos_clientes': tipos_clientes,
         'celular': celular,
+        'mensaje_whatsapp': mensaje_whatsapp,
         'meta': meta
     })
 
@@ -63,6 +65,7 @@ def calcula(request):
     if not datos_generales:
         datos_generales = DatosGenerales.objects.create()
     celular = datos_generales.celular
+    mensaje_whatsapp = datos_generales.mensaje_whatsapp
     
     slug = get_slug_from_request(request)
     meta = get_meta_for_slug(slug, request)
@@ -82,6 +85,7 @@ def calcula(request):
     
     return render(request, 'calcula.html', {
         'celular': celular,
+        'mensaje_whatsapp': mensaje_whatsapp,
         'meta': meta
     })
 
@@ -102,6 +106,7 @@ def contact(request):
     datos_generales = DatosGenerales.objects.first()
     correo = datos_generales.correo
     celular = datos_generales.celular
+    mensaje_whatsapp = datos_generales.mensaje_whatsapp
     
     slug = get_slug_from_request(request)
     meta = get_meta_for_slug(slug, request)
@@ -110,6 +115,7 @@ def contact(request):
         'form': form,
         'correo': correo,
         'celular': celular,
+        'mensaje_whatsapp': mensaje_whatsapp,
         'meta': meta
     })
 

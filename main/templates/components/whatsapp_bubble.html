@@ -4,7 +4,7 @@
      z_index: valor de z-index (por defecto: 10001)
 -->
 <div id="wapp" class="fixed group {% if position_class %}{{ position_class }}{% else %}bottom-6 right-6{% endif %} {% if z_index %}z-[{{ z_index }}]{% else %}z-[10001]{% endif %}" style="opacity: 0;">
-    <a href="https://wa.me/{{ celular }}" target="_blank" rel="noopener noreferrer"
+    <a href="https://wa.me/{{ celular }}{% if mensaje_whatsapp %}?text={{ mensaje_whatsapp|urlencode }}{% endif %}" target="_blank" rel="noopener noreferrer"
     class="transition duration-300 relative">
     <!-- Tooltip -->
     <div class="absolute -left-40 top-1/2 -translate-y-1/2 bg-gray-800 text-white text-sm px-3 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
