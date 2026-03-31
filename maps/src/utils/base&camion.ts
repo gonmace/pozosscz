@@ -1,3 +1,15 @@
+function getCsrfToken(): string {
+  const name = 'csrftoken';
+  const cookies = document.cookie.split(';');
+  for (const cookie of cookies) {
+    const c = cookie.trim();
+    if (c.startsWith(name + '=')) {
+      return decodeURIComponent(c.substring(name.length + 1));
+    }
+  }
+  return '';
+}
+
 // Helper function to extract coordinates from different formats
 export function extractCoordinates(input: string): [number, number] | null {
     try {
@@ -33,7 +45,8 @@ export function extractCoordinates(input: string): [number, number] | null {
     const response = await fetch('/api/v1/basecamion/', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCsrfToken(),
       },
       body: JSON.stringify({
         name: name,
@@ -47,7 +60,8 @@ export function extractCoordinates(input: string): [number, number] | null {
     const response = await fetch(`/api/v1/basecamion/${camionId}/`, {
       method: 'PATCH',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCsrfToken(),
       },
       body: JSON.stringify({
         available: checked
@@ -60,7 +74,8 @@ export function extractCoordinates(input: string): [number, number] | null {
     const response = await fetch(`/api/v1/basecamion/${camionId}/`, {
       method: 'PATCH',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCsrfToken(),
       },
       body: JSON.stringify({
         deleted: true

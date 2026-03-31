@@ -5,7 +5,10 @@
 
 # Cargar variables de entorno desde .env
 if [ -f .env ]; then
-    export $(cat .env | grep -v '^#' | xargs)
+    set -a
+    # shellcheck source=.env
+    source .env
+    set +a
 else
     echo "Error: Archivo .env no encontrado"
     exit 1

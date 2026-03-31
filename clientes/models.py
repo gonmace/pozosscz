@@ -47,7 +47,12 @@ class Cliente(models.Model):
 
     class Meta:
         verbose_name = "Cliente"
-        verbose_name_plural = "Cientes"
+        verbose_name_plural = "Clientes"
+        indexes = [
+            models.Index(fields=['status']),
+            models.Index(fields=['created_at']),
+            models.Index(fields=['service']),
+        ]
 
     def __str__(self):
         return self.tel1 if self.tel1 else '--------'

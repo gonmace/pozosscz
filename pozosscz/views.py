@@ -10,7 +10,8 @@ from .serializers import (
     BaseCamionSerializer
 )
 from django.http import Http404
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.throttling import AnonRateThrottle
 
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
@@ -23,19 +24,24 @@ from django.http import HttpResponse
 class PreciosPozosSCZViewSet(viewsets.ModelViewSet):
     queryset = PreciosPozosSCZ.objects.all()
     serializer_class = PreciosPozosSCZSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
+    pagination_class = None
 
 class AreasFactorViewSet(viewsets.ModelViewSet):
     queryset = AreasFactor.objects.all()
     serializer_class = AreasFactorSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
+    pagination_class = None
 
 class BaseCamionViewSet(viewsets.ModelViewSet):
     queryset = BaseCamion.objects.all()
     serializer_class = BaseCamionSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
+    pagination_class = None
 
 class CustomAuthToken(ObtainAuthToken):
+    throttle_classes = [AnonRateThrottle]
+
     def post(self, request, *args, **kwargs):
         username = request.data.get('username')
         password = request.data.get('password')

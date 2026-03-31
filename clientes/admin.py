@@ -44,6 +44,8 @@ class ClienteAdmin(ImportExportModelAdmin):
         'status', 'service', 'name', 'tel1', 'cod', 'cost','address'
     )
     list_display_links = ('format_created_at', )
+    list_filter = ('status', 'service', 'user')
+    search_fields = ('name', 'tel1', 'tel2', 'address', 'cod')
 
     def format_created_at(self, obj):
         return obj.created_at.strftime('%d-%m-%Y, %H:%M')

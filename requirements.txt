@@ -25,3 +25,4 @@ crispy-tailwind==1.0.3
 
 django-meta==2.5.0
 geopy==2.4.1
+polyline>=2.0.0

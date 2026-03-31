@@ -14,7 +14,7 @@
 }
 @import "tailwindcss-animated";
 
-@source "../../../**/*.{html,py,js,ts}";
+@source "../../**/*.{html,py,js,ts}";
 /* @source "../../../pozosscz/maps/src/utils/SliderControl.js"; */
 /* @source "../../main/src/index-main.ts";
 @source "../../maps/src/index-maps-admin.ts"; */

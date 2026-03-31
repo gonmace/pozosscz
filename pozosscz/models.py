@@ -135,6 +135,9 @@ class AreasFactor(models.Model):
         ordering = ['my_order']
         verbose_name = "Área y Factor"
         verbose_name_plural = "Áreas y Factores"
+        indexes = [
+            models.Index(fields=['is_main']),
+        ]
 
 
 def default_img_alt():
@@ -150,3 +153,10 @@ class BaseCamion(models.Model):
 
     def __str__(self):
         return self.name
+
+    class Meta:
+        verbose_name = "Base de Camión"
+        verbose_name_plural = "Bases de Camiones"
+        indexes = [
+            models.Index(fields=['available', 'deleted']),
+        ]

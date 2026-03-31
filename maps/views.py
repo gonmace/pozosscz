@@ -6,6 +6,9 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import AllowAny
 import math
+import logging
+
+logger = logging.getLogger(__name__)
 from typing import Tuple, List
 from geopy.distance import geodesic
 from .utils import calculate_route_metrics
@@ -183,11 +186,23 @@ class ContratarAPIView(APIView):
         
         # Calcular rutas al cliente con punto intermedio si es necesario.
         distances, times, origins, geometries = async_to_sync(calculate_route_metrics)(lat, lon, bases, waypoint)
-        
+
+        if not distances:
+            return Response(
+                {"error": "No se pudo calcular la ruta. El servicio de enrutamiento no está disponible."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE
+            )
+
         # Calcular ruta del cliente a SAGUAPAC
         distance_saguapac, time_saguapac, origin_saguapac, geometry_saguapac = async_to_sync(calculate_route_metrics)(
             SAGUAPAC_BASE[0], SAGUAPAC_BASE[1], [(lon, lat, "cliente")], waypoint)
-        
+
+        if not distance_saguapac:
+            return Response(
+                {"error": "No se pudo calcular la ruta de retorno a Saguapac."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE
+            )
+
         # Find shortest route
         min_index = distances.index(min(distances))
 
@@ -196,64 +211,44 @@ class ContratarAPIView(APIView):
         
         # Costo de Ida
         costo_ida_km = ((distances[min_index] / 1000) / p.consumo_diesel_km["vacio"]) * p.precio_diesel
-        print("costo_ida_km", costo_ida_km)
         costo_ida_min = ((times[min_index] * p.factor_tiempo / 60 / 60) * p.consumo_diesel_hr) * p.precio_diesel
-        print("costo_ida_min", costo_ida_min)
         costo_ida = max(costo_ida_km, costo_ida_min)
-        print("costo_ida", costo_ida)
-        
+
         # Costo de Trabajo
         costo_trabajo = p.tiempo_trabajo / 60 * p.consumo_diesel_hr * p.precio_diesel
-        print("costo_trabajo", costo_trabajo)
-        
+
         # Costo de Retorno a Saguapac
         costo_retorno_km = ((distance_saguapac[0] / 1000) / p.consumo_diesel_km["lleno"]) * p.precio_diesel
-        print("costo_retorno_km", costo_retorno_km)
         costo_retorno_min = ((time_saguapac[0] * p.factor_tiempo / 60 / 60) * p.consumo_diesel_hr) * p.precio_diesel
-        print("costo_retorno_min", costo_retorno_min)
         costo_retorno = max(costo_retorno_km, costo_retorno_min)
-        print("costo_retorno", costo_retorno)
-        
+
         costo_adicional_km_retorno = 0
         if (distance_saguapac[0] / 1000) > 20:
             costo_adicional_km_retorno = (distance_saguapac[0] / 1000) * p.costo_adicional_km_retorno
-            print("costo_adicional_km_retorno", costo_adicional_km_retorno)
-        
+
         # Costo de Mantenimiento
         costo_mantenimiento = p.costo_mantenimiento / 100 * (costo_ida + costo_trabajo + costo_retorno + costo_adicional_km_retorno)
-        print("costo_mantenimiento", costo_mantenimiento)
-        
+
         # Costo Tratamiento de Agua en Saguapac Panta
         costo_saguapac_panta = p.costo_saguapac_planta
-        print("costo_saguapac_panta", costo_saguapac_panta)
-        
+
         costo_total = costo_ida + costo_trabajo + costo_retorno + costo_mantenimiento + costo_saguapac_panta + costo_adicional_km_retorno
-        print("costo_total", costo_total)
 
         utilidad_km_ida = (p.utilidad_km * 0.5) * distances[min_index] / 1000
-        print("utilidad_km_ida", utilidad_km_ida)
-        
         utilidad_km_retorno = (p.utilidad_km * 0.5) * distance_saguapac[0] / 1000
-        print("utilidad_km_retorno", utilidad_km_retorno)
-        
         utilidad_km = utilidad_km_ida + utilidad_km_retorno
-        print("utilidad_km", utilidad_km)
-        
         utilidad_base = p.utilidad_base
-        print("utilidad_base", utilidad_base)
-        
-        print("Factor Zona", combined_factor)
-        
+
         utilidad_total = (utilidad_km + utilidad_base) * (1 if combined_factor==0 else combined_factor)
-        print("utilidad_total", utilidad_total)
-        
+
         chofer = (costo_total + utilidad_total) * (p.personal_camion / 100)
-        print("chofer", chofer)
-        
-        print("distancia_scz", distance_scz)
-        
+
         precio = (costo_total + utilidad_total + chofer) * p.factor_global
-        print("precio", precio)
+
+        logger.debug(
+            "cotizacion lat=%s lon=%s dist_scz=%.2f factor_zona=%s costo=%.2f precio=%.2f",
+            lat, lon, distance_scz, combined_factor, costo_total, precio
+        )
         
         return Response(
             {

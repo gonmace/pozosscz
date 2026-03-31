@@ -9,7 +9,7 @@ RUN apt-get update \
     libpq-dev \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
-    
+
 RUN pip install --upgrade pip
 
 WORKDIR /app
@@ -23,5 +23,10 @@ COPY . /app/
 RUN chmod +x ./entrypoint.sh
 
 RUN python manage.py collectstatic --noinput
+
+RUN useradd --no-create-home --shell /bin/false appuser \
+    && chown -R appuser:appuser /app
+
+USER appuser
 
 EXPOSE 8000

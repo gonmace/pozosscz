@@ -36,8 +36,8 @@ class ContactForm(forms.Form):
         min_length=20,
         validators=[
             RegexValidator(
-                regex=r'^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s.,]+$',
-                message='El mensaje solo debe contener letras'
+                regex=r'^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9\s.,\-_@#()]+$',
+                message='El mensaje contiene caracteres no permitidos'
             )
         ],
         widget=forms.Textarea(attrs={

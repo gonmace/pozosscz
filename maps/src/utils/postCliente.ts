@@ -2,6 +2,18 @@ import { Marker } from "leaflet";
 
 const urlPost = "/api/v1/clientes/";
 
+function getCsrfToken(): string {
+  const name = 'csrftoken';
+  const cookies = document.cookie.split(';');
+  for (const cookie of cookies) {
+    const c = cookie.trim();
+    if (c.startsWith(name + '=')) {
+      return decodeURIComponent(c.substring(name.length + 1));
+    }
+  }
+  return '';
+}
+
 export async function postData(
   name: string,
   phone: string,
@@ -27,7 +39,7 @@ export async function postData(
     headers: {
       "Accept": "application/json, text/plain, */*",
       "Content-Type": "application/json",
-      "User-Agent": "BE pzosSCZ",
+      "X-CSRFToken": getCsrfToken(),
     },
   })
     .then((res) => {

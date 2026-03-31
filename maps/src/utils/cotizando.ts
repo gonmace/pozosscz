@@ -1,6 +1,18 @@
 import { Marker } from "leaflet";
 import { DataPrice } from "../types/types";
 
+function getCsrfToken(): string {
+    const name = 'csrftoken';
+    const cookies = document.cookie.split(';');
+    for (const cookie of cookies) {
+        const c = cookie.trim();
+        if (c.startsWith(name + '=')) {
+            return decodeURIComponent(c.substring(name.length + 1));
+        }
+    }
+    return '';
+}
+
 export const cotizando = async (marker: Marker): Promise<DataPrice> => {
     let data: DataPrice = {
         error: null,
@@ -25,7 +37,8 @@ export const cotizando = async (marker: Marker): Promise<DataPrice> => {
         const response = await fetch(`/api/v1/contratar/`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken(),
             },
             body: JSON.stringify({
                 lat: marker.getLatLng().lat.toFixed(6),
@@ -33,12 +46,14 @@ export const cotizando = async (marker: Marker): Promise<DataPrice> => {
             })
         });
         if (!response.ok) {
-            throw new Error('Failed to fetch routes');
+            const body = await response.json().catch(() => ({}));
+            data.error = body.error || `Error ${response.status}: servicio de rutas no disponible`;
+            return data;
         }
         data = await response.json();
 
     } catch (error) {
-        console.error('Error fetching routes:', error);
+        data.error = 'No se pudo conectar con el servidor. Intente nuevamente.';
     }
     return data;
 }

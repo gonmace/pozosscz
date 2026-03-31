@@ -56,7 +56,7 @@ const map = new Map("map", {
   zoomControl: false,
 });
 
-const osm = tileLayer("https://{s}.tile.osm.org/{z}/{x}/{y}.png", {
+const osm = tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   maxZoom: 19,
   attribution:
     '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
@@ -401,6 +401,11 @@ function onMapClick(e: LeafletMouseEvent) {
     overlay.classList.remove("invisible");
     dataPrice = await cotizando(marker);
     overlay.classList.add("invisible");
+    if (dataPrice.error) {
+      parrafo.innerHTML = dataPrice.error;
+      modalPrecio.showModal();
+      return;
+    }
     precioFinal = Math.round(dataPrice.precio / 10) * 10;
     if (dataPrice.distance_scz < dataPrice.distancia_maxima_cotizar && dataPrice.factor_zona == 0) {
       parrafo.innerHTML = `<b>Bs.${precioFinal}</b> ${DATOS_GENERALES.mensaje_cotizar} <span class=" italic">Precio referencial, sujeto a confirmación. Contáctanos para más detalles.</span>` ;

@@ -105,7 +105,7 @@ map.on("moveend", () => {
   );
 });
 
-const osm = tileLayer("https://{s}.tile.osm.org/{z}/{x}/{y}.png", {
+const osm = tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   maxZoom: 19,
   attribution:
     '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
@@ -144,6 +144,10 @@ const cotiza = control.custom({
       overlay.classList.remove("invisible");
       dataPrice = await cotizando(marker);
       overlay.classList.add("invisible");
+      if (dataPrice.error) {
+        createToast("cotiza", "map", dataPrice.error, "top", "error");
+        return;
+      }
       modalPrecio(dataPrice, colorPath, marker, map);
     },
   },

@@ -53,8 +53,6 @@
     
     if (response.ok) {
       window.location.href = '/?message=Successfully logged out';
-    } else {
-      console.error("Error logging out");
     }
   }
          
@@ -81,10 +79,8 @@
     const navbar = document.getElementById("navbar");
     if (window.scrollY > window.innerHeight/3) {
       navbar.classList.add('scrolled');
-      console.log('scrolled');
     } else {
       navbar.classList.remove('scrolled');
-      console.log('not scrolled');
     }
   };
   window.addEventListener("scroll", handleScroll);
