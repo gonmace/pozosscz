@@ -99,6 +99,7 @@ control
 .addTo(map);
 
 const botonCotiza = document.getElementById("cotiza") as HTMLButtonElement;
+let modalAbortController: AbortController | null = null;
 
 function onMapClick(e: LeafletMouseEvent) {
     // Obtener el elemento nav
@@ -407,6 +408,7 @@ function onMapClick(e: LeafletMouseEvent) {
       return;
     }
     precioFinal = Math.round(dataPrice.precio / 10) * 10;
+    botonConfirmar.textContent = "Guardar";
     if (dataPrice.distance_scz < dataPrice.distancia_maxima_cotizar && dataPrice.factor_zona == 0) {
       parrafo.innerHTML = `<b>Bs.${precioFinal}</b> ${DATOS_GENERALES.mensaje_cotizar} <span class=" italic">Precio referencial, sujeto a confirmación. Contáctanos para más detalles.</span>` ;
       botonConfirmar.textContent = "Contáctanos";
@@ -418,6 +420,14 @@ function onMapClick(e: LeafletMouseEvent) {
       botonConfirmar.textContent = "Contáctanos";
     }
     modalPrecio.showModal();
+
+    // Cancelar listeners de cotizaciones anteriores antes de agregar los nuevos
+    if (modalAbortController) {
+      modalAbortController.abort();
+    }
+    modalAbortController = new AbortController();
+    const { signal } = modalAbortController;
+
     botonConfirmar.addEventListener("click", async () => {
       let codigo = generarCodigo(precioFinal);
       let celular = DATOS_GENERALES.celular;
@@ -432,7 +442,7 @@ function onMapClick(e: LeafletMouseEvent) {
       ¡Hola!, Requiero el servicio de limpieza en la siguiente ubicación:%0D%0A
       https://maps.google.com/maps?q=${marker.getLatLng().lat.toFixed(7)}%2C${marker.getLatLng().lng.toFixed(7)}&z=17&hl=es`;
       mensajeWapp(menLatLon, celular);
-    });
+    }, { signal });
 
     const botonesCancelar = [modalPrecioClose, modalPrecioCancelar];
     botonesCancelar.forEach(async (boton) => {
@@ -443,9 +453,9 @@ function onMapClick(e: LeafletMouseEvent) {
         } else {
           await postData("pozosscz.com", "", precioFinal, marker, "COT", "CLX").then(() => {
             console.log("Cancelado - Cliente guardado");
-          });          
+          });
         }
-      });
+      }, { signal });
     });
     
   }
