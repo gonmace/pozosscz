@@ -4,8 +4,19 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.views.generic import RedirectView
+from django.http import HttpResponse
+
+
+def service_worker(request):
+    content = "self.addEventListener('install',()=>self.skipWaiting());self.addEventListener('activate',(e)=>e.waitUntil(self.clients.claim()));"
+    response = HttpResponse(content, content_type='application/javascript')
+    response['Cache-Control'] = 'no-store, max-age=0'
+    response['Service-Worker-Allowed'] = '/'
+    return response
+
 
 urlpatterns = [
+    path('sw.js', service_worker, name='service_worker'),
     path('admin/', admin.site.urls),
     path('', include('main.urls')),
     path('', include('maps.urls')),

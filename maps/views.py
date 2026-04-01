@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from django.http import JsonResponse
 from main.utils import get_meta_for_slug, get_slug_from_request
 from pozosscz.models import AreasFactor, BaseCamion, PreciosPozosSCZ, DatosGenerales
 from rest_framework.views import APIView
@@ -6,7 +7,9 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import AllowAny
 import math
+import re
 import logging
+import requests as http_requests
 
 logger = logging.getLogger(__name__)
 from typing import Tuple, List
@@ -273,4 +276,32 @@ class ContratarAPIView(APIView):
             },
             status=status.HTTP_200_OK
         )
+
+
+def resolve_maps_url(request):
+    short_url = request.GET.get('url', '')
+    if not short_url:
+        return JsonResponse({'error': 'No URL'}, status=400)
+    try:
+        resp = http_requests.head(short_url, allow_redirects=True, timeout=5,
+                                  headers={'User-Agent': 'Mozilla/5.0'})
+        final_url = resp.url
+
+        lat, lon = None, None
+
+        m = re.search(r'@(-?\d+\.\d+),(-?\d+\.\d+)', final_url)
+        if m:
+            lat, lon = m.group(1), m.group(2)
+        else:
+            m = re.search(r'!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)', final_url)
+            if m:
+                lat, lon = m.group(1), m.group(2)
+            else:
+                m = re.search(r'[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)', final_url)
+                if m:
+                    lat, lon = m.group(1), m.group(2)
+
+        return JsonResponse({'final_url': final_url, 'lat': lat, 'lon': lon})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
         

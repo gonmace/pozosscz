@@ -1,6 +1,8 @@
 {
   "name": "pozosscz",
   "short_name": "pozosscz",
+  "start_url": "/mapa/",
+  "scope": "/",
   "icons": [
     {
       "src": "/web-app-manifest-192x192.png",
@@ -17,5 +19,12 @@
   ],
   "theme_color": "#ffffff",
   "background_color": "#ffffff",
-  "display": "standalone"
+  "display": "standalone",
+  "share_target": {
+    "action": "/mapa/",
+    "method": "GET",
+    "params": {
+      "url": "share_url"
+    }
+  }
 }

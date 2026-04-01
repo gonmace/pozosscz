@@ -202,4 +202,47 @@
 
 {% block js %}
 <script type="module" src="{% static 'maps/maps_admin.js' %}"></script>
+<script>
+(function() {
+  var params = new URLSearchParams(window.location.search);
+  var sharedUrl = params.get('share_url');
+  if (!sharedUrl) return;
+
+  window.addEventListener('load', function() {
+    var input = document.getElementById('URLwhatsapp');
+    if (!input) return;
+
+    function populateAndLocate(url) {
+      input.value = url;
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      var btn = document.getElementById('putMarker');
+      if (btn && !btn.disabled) btn.click();
+    }
+
+    if (sharedUrl.includes('maps.app.goo.gl') || sharedUrl.includes('goo.gl/maps')) {
+      fetch('/api/resolve-maps/?url=' + encodeURIComponent(sharedUrl))
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data.lat && data.lon) {
+            populateAndLocate(data.lat + ',' + data.lon);
+          } else if (data.final_url) {
+            populateAndLocate(data.final_url);
+          } else {
+            input.value = sharedUrl;
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+            input.focus();
+          }
+        })
+        .catch(function() {
+          input.value = sharedUrl;
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+          input.focus();
+        });
+    } else {
+      populateAndLocate(sharedUrl);
+    }
+  });
+})();
+</script>
 {% endblock %}
