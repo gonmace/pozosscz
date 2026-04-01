@@ -19,7 +19,7 @@ class MetaTag(models.Model):
             "title": self.title,
             "description": self.description,
             "use_og": True,
-            "use_twitter": True,
+            "use_twitter": False,
             "use_facebook": True,
         }
         if self.image and request:

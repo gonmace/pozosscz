@@ -166,12 +166,21 @@ REST_FRAMEWORK = {
 }
 
 DEFAULT_META = {
-    "TITLE": "Limpieza de pozos sépticos Santa Cruz",
-    "DESCRIPTION": "Expertos en limpieza y succión de pozos sépticos, rápido y seguro.",
-    "KEYWORDS": ["pozos", "limpieza", "succión", "servicio sanitario", "pozos sépticos", "limpieza de pozos", "succión de pozos", "destranque", "cámara séptica", "pozos", "destranque", "cámara séptica"],
+    "TITLE": "Limpieza de Pozos Sépticos en Santa Cruz, Bolivia | PozosSCZ",
+    "DESCRIPTION": "Servicio profesional de limpieza y succión de pozos sépticos en Santa Cruz de la Sierra. Precio online al instante, sin sorpresas. Atendemos hogares y empresas.",
+    "KEYWORDS": [
+        "limpieza de pozos sépticos Santa Cruz",
+        "succión de pozos sépticos Santa Cruz",
+        "limpieza pozo séptico Bolivia",
+        "servicio sanitario Santa Cruz",
+        "destranque cámara séptica",
+        "pozos sépticos Santa Cruz de la Sierra",
+        "limpieza pozos Bolivia",
+        "empresa limpieza pozos SCZ",
+    ],
     "IMAGE": "/static/img/default-og.jpg",
     "USE_OG": True,
-    "USE_TWITTER": True,
+    "USE_TWITTER": False,
     "USE_FACEBOOK": True,
     "EXTRA_PROPS": {
         'viewport': 'width=device-width, initial-scale=1.0, minimum-scale=1.0'
@@ -179,3 +188,5 @@ DEFAULT_META = {
 }
 
 META_SITE_DOMAIN = "pozosscz.com"
+META_SITE_PROTOCOL = "https"
+META_USE_OG_PROPERTIES = True

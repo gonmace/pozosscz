@@ -5,13 +5,15 @@
   <head>
     <meta charset="utf-8" />
     {% include "meta/meta.html" %}
+    <meta name="robots" content="index, follow" />
+    <meta name="referrer" content="origin" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <link rel="canonical" href="https://pozosscz.com{{ request.path }}" />
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9612645510546880"
      crossorigin="anonymous"></script>
      <!-- Content MApa de calor -->
      <script src="https://t.contentsquare.net/uxa/7a05b5f9edd25.js"></script>
      <!-- End Content MApa de calor -->
-    <meta name="referrer" content="origin" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 
     {% block head %}
 
@@ -38,6 +40,67 @@
     {% endblock %}
 
     <title>{{ meta.title }}</title>
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "LocalBusiness",
+      "name": "PozosSCZ - Limpieza de Pozos Sépticos",
+      "description": "Servicio profesional de limpieza y succión de pozos sépticos en Santa Cruz de la Sierra, Bolivia. Precio online al instante.",
+      "url": "https://pozosscz.com",
+      "telephone": "+59171011118",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Santa Cruz de la Sierra",
+        "addressRegion": "Santa Cruz",
+        "addressCountry": "BO"
+      },
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": -17.7833,
+        "longitude": -63.1821
+      },
+      "areaServed": {
+        "@type": "GeoCircle",
+        "geoMidpoint": {
+          "@type": "GeoCoordinates",
+          "latitude": -17.7833,
+          "longitude": -63.1821
+        },
+        "geoRadius": "100000"
+      },
+      "openingHoursSpecification": {
+        "@type": "OpeningHoursSpecification",
+        "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"],
+        "opens": "08:30",
+        "closes": "18:30"
+      },
+      "priceRange": "$$",
+      "serviceType": "Limpieza de pozos sépticos",
+      "hasOfferCatalog": {
+        "@type": "OfferCatalog",
+        "name": "Servicios de limpieza de pozos sépticos",
+        "itemListElement": [
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Limpieza de pozo séptico residencial",
+              "description": "Limpieza y succión de pozos sépticos para hogares en Santa Cruz"
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Limpieza de pozo séptico comercial",
+              "description": "Servicio de limpieza para empresas, condominios y negocios"
+            }
+          }
+        ]
+      }
+    }
+    </script>
   </head>
 
   <body class="{% block body_class %}{% endblock %} h-fit">

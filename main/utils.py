@@ -28,12 +28,11 @@ def get_meta_for_slug(slug, request=None):
             "description": default.get("DESCRIPTION", ""),
             "keywords": default.get("KEYWORDS", []),
             "use_og": default.get("USE_OG", True),
-            "use_twitter": default.get("USE_TWITTER", True),
+            "use_twitter": False,
             "use_facebook": default.get("USE_FACEBOOK", True),
             "extra_props": default.get("EXTRA_PROPS", {
                 'viewport': 'width=device-width, initial-scale=1'
             }),
-            
         }
 
         image = default.get("IMAGE")
