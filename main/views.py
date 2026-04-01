@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import logout, authenticate, login
-from .models import Banner, Alcance, Contacto, TipoCliente
+from .models import Banner, Alcance, Contacto, TipoCliente, Testimonio, PreguntaFrecuente
 from pozosscz.models import DatosGenerales
 from .forms import ContactForm
 from django.contrib import messages
@@ -49,6 +49,9 @@ def home_page(request):
     # Obtener o crear tipos de clientes
     tipos_clientes = TipoCliente.objects.filter(is_active=True)
 
+    testimonios = Testimonio.objects.filter(is_active=True)
+    preguntas_frecuentes = PreguntaFrecuente.objects.filter(is_active=True)
+
     celular = datos_generales.celular
     mensaje_whatsapp = datos_generales.mensaje_whatsapp
     
@@ -59,6 +62,8 @@ def home_page(request):
         'banner': active_banner,
         'alcances': alcances,
         'tipos_clientes': tipos_clientes,
+        'testimonios': testimonios,
+        'preguntas_frecuentes': preguntas_frecuentes,
         'celular': celular,
         'mensaje_whatsapp': mensaje_whatsapp,
         'meta': meta

@@ -12,7 +12,7 @@
         {% endfor %}
         {% else %}
         <h1 id="titulo" class="py-1 md:py-2 bg-white bg-opacity-65 uppercase tracking-wide md:tracking-wider xl:tracking-widest text-center text-xl sm:text-4xl lg:text-5xl text-primary" style="opacity: 0;">
-          LIMPIEZA DE POZOS
+          TU POZO LIMPIO. HOY MISMO.
         </h1>
         {% endif %}
       </div>
@@ -68,13 +68,14 @@
       </svg>
     </div>
   
-    <div id="contratanos" class="absolute left-1/2 bottom-0 transform -translate-x-1/2 text-center pb-1">
-      <p class="text-lg lg:text-xl sombra">¿ya nos conoces?</p>
+    <div id="contratanos" class="absolute left-1/2 bottom-0 transform -translate-x-1/2 text-center pb-2 w-full px-4">
+      <p class="text-base sm:text-lg lg:text-xl sombra">¿ya nos conoces?</p>
       <a
         type="button"
         href="{% url 'cotiza' %}"
-        class="btn btn-secondary shadow opacity-0">
-        Contrátanos
+        class="btn btn-primary shadow opacity-0 w-full sm:w-auto">
+        Ver precio y contratar
       </a>
+      <p class="text-xs sombra text-white mt-1">Servicio profesional · Sin sorpresas en el precio</p>
     </div>
   </section>

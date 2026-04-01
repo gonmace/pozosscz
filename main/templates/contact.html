@@ -2,54 +2,125 @@
 {% load crispy_forms_tags %}
 {% load static %}
 
-{% block body_class %}bg-gradient-to-b from-primary via-white to-primary{% endblock %}
+{% block body_class %}bg-base-100{% endblock %}
 
 {% block content %}
-<div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative">
-    <div class="w-full max-w-md mx-auto bg-white/20 rounded-xl shadow-md overflow-hidden md:max-w-2xl p-8 z-20 sombra">
-        <div class="text-center mb-8">
-            <h2 class="text-2xl font-bold text-gray-900 mb-2">Contáctanos</h2>
-        </div>
+<main>
+    <!-- Header -->
+    <nav class="w-full fixed z-50 rounded-2xl left-1/2 transform -translate-x-1/2">
+        {% include 'components/header.html' with class_nav='max-w-7xl mx-auto rounded-2xl' %}
+    </nav>
 
-        {% if messages %}
-        <div class="mb-8">
-            {% for message in messages %}
-            <div class="p-4 {% if message.tags == 'success' %}bg-green-100 text-green-700{% else %}bg-blue-100 text-blue-700{% endif %} rounded-lg">
-                {{ message }}
-            </div>
-            {% endfor %}
-        </div>
-        {% endif %}
+    <!-- Hero -->
+    <div class="bg-primary pt-24 pb-12 px-4 text-center">
+        <h1 class="text-3xl sm:text-4xl font-bold text-primary-content mb-3">Contáctanos</h1>
+        <p class="text-primary-content/80 text-base sm:text-lg max-w-xl mx-auto">
+            Estamos para ayudarte. Respondemos rápido por WhatsApp o podés dejarnos tu mensaje aquí.
+        </p>
+    </div>
 
-        <form method="post" class="space-y-6">
-            {% csrf_token %}
-            {% crispy form %}
-        </form>
+    <div class="max-w-5xl mx-auto px-4 py-10">
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
 
-        <div class="mt-4 pt-4 border-t border-gray-200">
-            <div class="flex items-center justify-center space-x-6">
-                <a href="https://wa.me/{{ celular }}" target="_blank" rel="noopener noreferrer">
-                <div class="flex items-center">
-                    <svg class="h-6 w-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
-                    </svg>
-                    <span class="ml-2 text-gray-800">Llámanos</span>
-                </div>
-                </a>    
-                <a href="mailto:{{ correo }}" target="_blank" rel="noopener noreferrer">
-                <div class="flex items-center">
-                    <svg class="h-6 w-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                    </svg>
-                        <span class="ml-2 text-gray-800">Escríbenos</span>
+            <!-- Info de contacto -->
+            <div class="lg:col-span-2 flex flex-col gap-4">
+                <div class="card bg-base-200 shadow">
+                    <div class="card-body gap-5">
+                        <h2 class="card-title text-lg">Canales de atención</h2>
+
+                        <a href="https://wa.me/{{ celular }}" target="_blank" rel="noopener noreferrer"
+                           class="flex items-center gap-4 p-3 rounded-xl bg-base-300 hover:bg-success/10 transition-colors group">
+                            <div class="w-10 h-10 flex items-center justify-center flex-shrink-0">
+                                <svg class="w-10 h-10" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M28 16C28 22.6274 22.6274 28 16 28C13.4722 28 11.1269 27.2184 9.19266 25.8837L5.09091 26.9091L6.16576 22.8784C4.80092 20.9307 4 18.5589 4 16C4 9.37258 9.37258 4 16 4C22.6274 4 28 9.37258 28 16Z" fill="url(#wa_contact)"/>
+                                    <path fill-rule="evenodd" clip-rule="evenodd" d="M16 30C23.732 30 30 23.732 30 16C30 8.26801 23.732 2 16 2C8.26801 2 2 8.26801 2 16C2 18.5109 2.661 20.8674 3.81847 22.905L2 30L9.31486 28.3038C11.3014 29.3854 13.5789 30 16 30ZM16 27.8462C22.5425 27.8462 27.8462 22.5425 27.8462 16C27.8462 9.45755 22.5425 4.15385 16 4.15385C9.45755 4.15385 4.15385 9.45755 4.15385 16C4.15385 18.5261 4.9445 20.8675 6.29184 22.7902L5.23077 26.7692L9.27993 25.7569C11.1894 27.0746 13.5046 27.8462 16 27.8462Z" fill="white"/>
+                                    <path d="M12.5 9.49989C12.1672 8.83131 11.6565 8.8905 11.1407 8.8905C10.2188 8.8905 8.78125 9.99478 8.78125 12.05C8.78125 13.7343 9.52345 15.578 12.0244 18.3361C14.438 20.9979 17.6094 22.3748 20.2422 22.3279C22.875 22.2811 23.4167 20.0154 23.4167 19.2503C23.4167 18.9112 23.2062 18.742 23.0613 18.696C22.1641 18.2654 20.5093 17.4631 20.1328 17.3124C19.7563 17.1617 19.5597 17.3656 19.4375 17.4765C19.0961 17.8018 18.4193 18.7608 18.1875 18.9765C17.9558 19.1922 17.6103 19.083 17.4665 19.0015C16.9374 18.7892 15.5029 18.1511 14.3595 17.0426C12.9453 15.6718 12.8623 15.2001 12.5959 14.7803C12.3828 14.4444 12.5392 14.2384 12.6172 14.1483C12.9219 13.7968 13.3426 13.254 13.5313 12.9843C13.7199 12.7145 13.5702 12.305 13.4803 12.05C13.0938 10.953 12.7663 10.0347 12.5 9.49989Z" fill="white"/>
+                                    <defs>
+                                        <linearGradient id="wa_contact" x1="26.5" y1="7" x2="4" y2="28" gradientUnits="userSpaceOnUse">
+                                            <stop stop-color="#5BD066"/><stop offset="1" stop-color="#27B43E"/>
+                                        </linearGradient>
+                                    </defs>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-sm">WhatsApp</p>
+                                <p class="text-xs opacity-60">Respuesta inmediata</p>
+                            </div>
+                            <i class="fas fa-arrow-right ml-auto opacity-40 group-hover:opacity-100 transition-opacity"></i>
+                        </a>
+
+                        <a href="mailto:{{ correo }}" target="_blank" rel="noopener noreferrer"
+                           class="flex items-center gap-4 p-3 rounded-xl bg-base-300 hover:bg-primary/10 transition-colors group">
+                            <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-envelope text-primary text-lg"></i>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-sm">Correo electrónico</p>
+                                <p class="text-xs opacity-60">{{ correo }}</p>
+                            </div>
+                            <i class="fas fa-arrow-right ml-auto opacity-40 group-hover:opacity-100 transition-opacity"></i>
+                        </a>
+
+                        <div class="divider my-0"></div>
+
+                        <div class="flex items-start gap-3 text-sm">
+                            <i class="fas fa-clock text-primary mt-0.5 flex-shrink-0"></i>
+                            <div>
+                                <p class="font-semibold">Horario de atención</p>
+                                <p class="opacity-60">Lunes a sábado · 8:30 – 18:30</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3 text-sm">
+                            <i class="fas fa-location-dot text-primary mt-0.5 flex-shrink-0"></i>
+                            <div>
+                                <p class="font-semibold">Cobertura</p>
+                                <p class="opacity-60">Santa Cruz de la Sierra y zonas hasta 100 km</p>
+                            </div>
+                        </div>
                     </div>
-                </a>
+                </div>
             </div>
+
+            <!-- Formulario -->
+            <div class="lg:col-span-3">
+                <div class="card bg-base-200 shadow-xl">
+                    <div class="card-body">
+                        <h2 class="card-title text-lg mb-2">Envianos un mensaje</h2>
+
+                        {% if messages %}
+                        <div class="mb-4">
+                            {% for message in messages %}
+                            <div class="alert {% if message.tags == 'success' %}alert-success{% else %}alert-info{% endif %}">
+                                <i class="fas {% if message.tags == 'success' %}fa-check-circle{% else %}fa-info-circle{% endif %}"></i>
+                                <span>{{ message }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        <form method="post" class="space-y-4">
+                            {% csrf_token %}
+                            {% crispy form %}
+                        </form>
+                    </div>
+                </div>
+            </div>
+
         </div>
+
+        <!-- CTA -->
+        <section class="py-10 px-6 text-center bg-primary rounded-2xl mt-10 mb-4">
+            <h2 class="text-xl sm:text-2xl font-bold text-primary-content mb-2">¿Preferís cotizar directo?</h2>
+            <p class="text-primary-content/80 mb-6 text-sm sm:text-base">Usá el mapa y obtené tu precio al instante, sin esperar respuesta.</p>
+            <a href="{% url 'cotiza' %}" class="btn btn-lg bg-white text-primary hover:bg-base-200 shadow-xl w-full sm:w-auto">
+                Ver mi precio ahora
+            </a>
+        </section>
     </div>
-    <div class="absolute bottom-0 w-full">
-        {% include 'components/footer.html' %}
-    </div>
-</div>
+
+    {% include 'components/whatsapp_bubble.html' %}
+</main>
+
+{% include 'components/footer.html' %}
 
 {% endblock %}

@@ -7,7 +7,7 @@
 {% block css %}
 {% endblock %}
 
-{% block body_class %}bg-gradient-to-b from-primary via-white to-primary{% endblock %}
+{% block body_class %}bg-base-100{% endblock %}
 
 {% block content %}
 <main>
@@ -19,29 +19,132 @@
     <!-- Banner -->
     {% include 'components/Banner.html' %}
 
-    <div class="max-w-7xl mx-auto">
-        <section class="mt-10">
+    <div class="max-w-7xl mx-auto px-4">
+
+        <!-- Stats Bar -->
+        <section class="py-6 border-b border-base-300">
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div class="bg-base-200 rounded-xl py-4 flex flex-col items-center">
+                    <span class="text-3xl font-bold text-primary">500+</span>
+                    <span class="text-xs opacity-60 mt-1 text-center">Servicios realizados</span>
+                </div>
+                <div class="bg-base-200 rounded-xl py-4 flex flex-col items-center">
+                    <span class="text-3xl font-bold text-primary">10+</span>
+                    <span class="text-xs opacity-60 mt-1 text-center">Años de experiencia</span>
+                </div>
+                <div class="bg-base-200 rounded-xl py-4 flex flex-col items-center">
+                    <span class="text-3xl font-bold text-primary">100km</span>
+                    <span class="text-xs opacity-60 mt-1 text-center">Radio de cobertura</span>
+                </div>
+                <div class="bg-base-200 rounded-xl py-4 flex flex-col items-center">
+                    <span class="text-3xl font-bold text-primary">98%</span>
+                    <span class="text-xs opacity-60 mt-1 text-center">Clientes satisfechos</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- ¿Cómo funciona? -->
+        <section class="py-10 text-center">
+            <h2 class="text-2xl lg:text-3xl font-bold mb-8">¿Cómo funciona?</h2>
+            <ul class="steps steps-vertical md:steps-horizontal w-full">
+                <li class="step step-primary">
+                    <div class="text-left md:text-center px-3 max-w-[200px] md:max-w-none">
+                        <p class="font-bold">Cotizá en línea</p>
+                        <p class="text-sm opacity-70">Ingresá tu dirección en el mapa y recibí tu precio al instante</p>
+                    </div>
+                </li>
+                <li class="step step-primary">
+                    <div class="text-left md:text-center px-3 max-w-[200px] md:max-w-none">
+                        <p class="font-bold">Confirmás el servicio</p>
+                        <p class="text-sm opacity-70">Elegís el día y horario que más te convenga</p>
+                    </div>
+                </li>
+                <li class="step">
+                    <div class="text-left md:text-center px-3 max-w-[200px] md:max-w-none">
+                        <p class="font-bold">Listo ✓</p>
+                        <p class="text-sm opacity-70">Nuestro equipo llega puntual y deja todo funcionando</p>
+                    </div>
+                </li>
+            </ul>
+            <a href="{% url 'cotiza' %}" class="btn btn-primary btn-lg mt-8 shadow-lg w-full sm:w-auto">
+                Cotizá ahora — es gratis
+            </a>
+        </section>
+
+        <!-- Alcance / ¿Quiénes somos? -->
+        <section class="mt-4">
             <div class="text-center py-10">
-                <p class="text-lg lg:text-xl mb-3">
+                <p class="text-lg lg:text-xl mb-3 opacity-70">
                     ¿aún no nos conoces?
                 </p>
-                
-                <h1 id="titulo" class="text-2xl sm:text-3xl lg:text-4xl text-gray-900 mb-4">Limpieza de pozos sépticos Santa Cruz</h1>
-                <p class="text-lg lg:text-xl leading-relaxed xl:w-2/4 lg:w-3/4 mx-auto text-gray-600">
+                <h1 class="text-2xl sm:text-3xl lg:text-4xl mb-4">Limpieza de pozos sépticos Santa Cruz</h1>
+                <p class="text-lg lg:text-xl leading-relaxed xl:w-2/4 lg:w-3/4 mx-auto opacity-70">
                     Somos querendones de nuestra tierra... La queremos verde y con el "suelo" más puro de América.
                 </p>
             </div>
 
-            <div class="flex flex-wrap gap-1 md:flex-row">
+            <div class="flex flex-wrap gap-6 md:flex-row">
                 <!-- Card Alcance -->
                 {% for alcance in alcances %}
                     {% include 'components/card_alcance.html' with titulo=alcance.titulo descripcion=alcance.descripcion svg=alcance.img_svg %}
-                {% endfor %}            
+                {% endfor %}
             </div>
         </section>
 
-        <section class="mt-10">
-            <p class="text-center text-base sm:text-lg lg:text-xl mb-3 text-black">
+        <!-- ¿Cuánto cuesta NO limpiar? -->
+        <section class="py-10">
+            <div class="card bg-base-200 shadow-xl">
+                <div class="card-body">
+                    <h2 class="card-title text-2xl justify-center mb-4 flex-wrap">
+                        ¿Cuánto cuesta <span class="text-error mx-1">NO</span> limpiar tu pozo?
+                    </h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
+                        <div class="p-4 rounded-xl bg-error/10 border border-error/30">
+                            <p class="text-2xl sm:text-3xl font-bold text-error">Bs 2.000+</p>
+                            <p class="mt-2 text-sm">Reparación de cañerías dañadas por desborde</p>
+                        </div>
+                        <div class="p-4 rounded-xl bg-error/10 border border-error/30">
+                            <p class="text-2xl sm:text-3xl font-bold text-error">Bs 5.000+</p>
+                            <p class="mt-2 text-sm">Daño al sistema séptico por falta de mantenimiento</p>
+                        </div>
+                        <div class="p-4 rounded-xl bg-error/10 border border-error/30">
+                            <p class="text-2xl sm:text-3xl font-bold text-error">Multa</p>
+                            <p class="mt-2 text-sm">Sanciones municipales por contaminación del suelo</p>
+                        </div>
+                    </div>
+                    <p class="text-center mt-6 text-lg">La limpieza preventiva <strong class="text-primary">cuesta mucho menos</strong> que la reparación.</p>
+                    <div class="card-actions justify-center mt-4">
+                        <a href="{% url 'cotiza' %}" class="btn btn-primary shadow">Ver mi precio ahora</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Garantías -->
+        <section class="py-8">
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div class="flex items-center gap-2 bg-base-200 rounded-xl px-4 py-3">
+                    <i class="fas fa-shield text-primary text-lg flex-shrink-0"></i>
+                    <span class="text-sm">Precio fijo sin sorpresas</span>
+                </div>
+                <div class="flex items-center gap-2 bg-base-200 rounded-xl px-4 py-3">
+                    <i class="fas fa-clock text-primary text-lg flex-shrink-0"></i>
+                    <span class="text-sm">Servicio el mismo día</span>
+                </div>
+                <div class="flex items-center gap-2 bg-base-200 rounded-xl px-4 py-3">
+                    <i class="fas fa-leaf text-primary text-lg flex-shrink-0"></i>
+                    <span class="text-sm">Disposición ecológica</span>
+                </div>
+                <div class="flex items-center gap-2 bg-base-200 rounded-xl px-4 py-3">
+                    <i class="fas fa-star text-primary text-lg flex-shrink-0"></i>
+                    <span class="text-sm">10 años de experiencia</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- ¿A quiénes atendemos? -->
+        <section class="mt-4">
+            <p class="text-center text-base sm:text-lg lg:text-xl mb-3 opacity-70">
                 ¿A quienes atendemos?
             </p>
             <div class="flex flex-wrap-reverse">
@@ -49,8 +152,56 @@
                 {% for tipo_cliente in tipos_clientes %}
                     {% include 'components/tipo_clientes.html' with nombre=tipo_cliente.nombre svg=tipo_cliente.img_svg %}
                 {% endfor %}
-                
             </div>
+        </section>
+
+        <!-- Testimonios -->
+        {% if testimonios %}
+        <section class="py-10">
+            <h2 class="text-2xl lg:text-3xl font-bold text-center mb-8">Lo que dicen nuestros clientes</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for t in testimonios %}
+                <div class="card bg-base-200 shadow">
+                    <div class="card-body">
+                        <div class="flex gap-1 mb-2">
+                            <i class="fas fa-star text-warning text-sm"></i>
+                            <i class="fas fa-star text-warning text-sm"></i>
+                            <i class="fas fa-star text-warning text-sm"></i>
+                            <i class="fas fa-star text-warning text-sm"></i>
+                            <i class="fas fa-star text-warning text-sm"></i>
+                        </div>
+                        <p class="italic opacity-80">"{{ t.texto }}"</p>
+                        <p class="font-bold mt-3 text-sm">— {{ t.nombre }}{% if t.lugar %}, {{ t.lugar }}{% endif %}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- FAQ -->
+        {% if preguntas_frecuentes %}
+        <section class="py-10">
+            <h2 class="text-2xl lg:text-3xl font-bold text-center mb-8">Preguntas frecuentes</h2>
+            <div class="max-w-2xl mx-auto flex flex-col gap-2">
+                {% for faq in preguntas_frecuentes %}
+                <div class="collapse collapse-arrow bg-base-200">
+                    <input type="radio" name="faq" {% if forloop.first %}checked{% endif %} />
+                    <div class="collapse-title font-semibold">{{ faq.pregunta }}</div>
+                    <div class="collapse-content text-sm opacity-80">{{ faq.respuesta }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- CTA Final -->
+        <section class="py-10 px-6 text-center bg-primary rounded-2xl mb-10">
+            <h2 class="text-xl sm:text-2xl lg:text-3xl font-bold text-primary-content mb-3">¿Listo para tener tu pozo limpio?</h2>
+            <p class="text-primary-content/80 mb-6 text-sm sm:text-base">Cotizá online en 30 segundos. Sin compromiso.</p>
+            <a href="{% url 'cotiza' %}" class="btn btn-lg bg-white text-primary hover:bg-base-200 shadow-xl w-full sm:w-auto">
+                Ver mi precio ahora
+            </a>
         </section>
 
     <!-- WhatsApp Bubble -->

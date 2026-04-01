@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.utils.html import mark_safe
-from .models import Banner, Alcance, TipoCliente, Contacto, MetaTag
+from .models import Banner, Alcance, TipoCliente, Contacto, MetaTag, Testimonio, PreguntaFrecuente
 from adminsortable2.admin import SortableAdminMixin
 
 @admin.register(MetaTag)
@@ -56,6 +56,28 @@ class TipoClienteAdmin(SortableAdminMixin, admin.ModelAdmin):
         return "No SVG"
     preview_svg.short_description = 'SVG Preview'
     
+@admin.register(Testimonio)
+class TestimonioAdmin(SortableAdminMixin, admin.ModelAdmin):
+    list_display = ('nombre', 'lugar', 'texto_corto', 'is_active')
+    list_display_links = ('nombre',)
+    list_editable = ('is_active',)
+
+    def texto_corto(self, obj):
+        return obj.texto[:80] + '…' if len(obj.texto) > 80 else obj.texto
+    texto_corto.short_description = 'Testimonio'
+
+
+@admin.register(PreguntaFrecuente)
+class PreguntaFrecuenteAdmin(SortableAdminMixin, admin.ModelAdmin):
+    list_display = ('pregunta', 'respuesta_corta', 'is_active')
+    list_display_links = ('pregunta',)
+    list_editable = ('is_active',)
+
+    def respuesta_corta(self, obj):
+        return obj.respuesta[:80] + '…' if len(obj.respuesta) > 80 else obj.respuesta
+    respuesta_corta.short_description = 'Respuesta'
+
+
 @admin.register(Contacto)
 class ContactoAdmin(admin.ModelAdmin):
     list_display = ('nombre', 'telefono', 'mensaje', 'created_at', 'is_read')

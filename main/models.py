@@ -77,6 +77,37 @@ class TipoCliente(models.Model):
         verbose_name_plural = 'Tipos de Clientes'
         ordering = ['order']
         
+class Testimonio(models.Model):
+    nombre = models.CharField("Nombre", max_length=100)
+    lugar = models.CharField("Lugar / Barrio", max_length=100, blank=True)
+    texto = models.TextField("Testimonio")
+    is_active = models.BooleanField(default=True)
+    order = models.PositiveIntegerField(default=0, blank=False, null=False)
+
+    def __str__(self):
+        return f"{self.nombre} – {self.lugar}"
+
+    class Meta:
+        verbose_name = 'Testimonio'
+        verbose_name_plural = 'Testimonios'
+        ordering = ['order']
+
+
+class PreguntaFrecuente(models.Model):
+    pregunta = models.CharField("Pregunta", max_length=255)
+    respuesta = models.TextField("Respuesta")
+    is_active = models.BooleanField(default=True)
+    order = models.PositiveIntegerField(default=0, blank=False, null=False)
+
+    def __str__(self):
+        return self.pregunta
+
+    class Meta:
+        verbose_name = 'Pregunta Frecuente'
+        verbose_name_plural = 'Preguntas Frecuentes'
+        ordering = ['order']
+
+
 class Contacto(models.Model):
     nombre = models.CharField(max_length=255)
     telefono = models.CharField(max_length=255)
