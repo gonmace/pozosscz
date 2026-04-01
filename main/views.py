@@ -1,6 +1,8 @@
+from datetime import date
 from django.shortcuts import render, redirect
 from django.contrib.auth import logout, authenticate, login
 from .models import Banner, Alcance, Contacto, TipoCliente, Testimonio, PreguntaFrecuente
+from clientes.models import Cliente
 from pozosscz.models import DatosGenerales
 from .forms import ContactForm
 from django.contrib import messages
@@ -49,6 +51,9 @@ def home_page(request):
     # Obtener o crear tipos de clientes
     tipos_clientes = TipoCliente.objects.filter(is_active=True)
 
+    total_clientes = Cliente.objects.count()
+    años_experiencia = date.today().year - 2019
+
     testimonios = Testimonio.objects.filter(is_active=True)
     preguntas_frecuentes = PreguntaFrecuente.objects.filter(is_active=True)
 
@@ -59,6 +64,8 @@ def home_page(request):
     meta = get_meta_for_slug(slug, request)
 
     return render(request, 'HomePage.html', {
+        'total_clientes': total_clientes,
+        'años_experiencia': años_experiencia,
         'banner': active_banner,
         'alcances': alcances,
         'tipos_clientes': tipos_clientes,
