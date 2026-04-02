@@ -210,49 +210,63 @@ class ContratarAPIView(APIView):
         min_index = distances.index(min(distances))
 
         p = PreciosPozosSCZ.objects.first()
-        
-        
-        # Costo de Ida
-        costo_ida_km = ((distances[min_index] / 1000) / p.consumo_diesel_km["vacio"]) * p.precio_diesel
-        costo_ida_min = ((times[min_index] * p.factor_tiempo / 60 / 60) * p.consumo_diesel_hr) * p.precio_diesel
-        costo_ida = max(costo_ida_km, costo_ida_min)
 
-        # Costo de Trabajo
-        costo_trabajo = p.tiempo_trabajo / 60 * p.consumo_diesel_hr * p.precio_diesel
+        # Tiempos ajustados al camión (más lento que un auto)
+        factor_camion  = p.factor_tiempo    # 1.25 → camión 25% más lento
+        factor_cargado = p.factor_cargado   # 1.05 → 5% más lento en retorno cargado
 
-        # Costo de Retorno a Saguapac
-        costo_retorno_km = ((distance_saguapac[0] / 1000) / p.consumo_diesel_km["lleno"]) * p.precio_diesel
-        costo_retorno_min = ((time_saguapac[0] * p.factor_tiempo / 60 / 60) * p.consumo_diesel_hr) * p.precio_diesel
-        costo_retorno = max(costo_retorno_km, costo_retorno_min)
+        tiempo_ida_seg     = times[min_index] * factor_camion
+        tiempo_retorno_seg = time_saguapac[0] * factor_camion * factor_cargado
+        tiempo_trabajo_seg = p.tiempo_trabajo * 60
 
-        costo_adicional_km_retorno = 0
-        if (distance_saguapac[0] / 1000) > 20:
-            costo_adicional_km_retorno = (distance_saguapac[0] / 1000) * p.costo_adicional_km_retorno
+        tiempo_total = tiempo_ida_seg + tiempo_retorno_seg + tiempo_trabajo_seg
+        tiempo_cobro = max(tiempo_total, p.tiempo_minimo_cobro * 60)
 
-        # Costo de Mantenimiento
-        costo_mantenimiento = p.costo_mantenimiento / 100 * (costo_ida + costo_trabajo + costo_retorno + costo_adicional_km_retorno)
+        # Si el tiempo mínimo se activa, el exceso se distribuye proporcionalmente al viaje
+        tiempo_viaje_seg   = tiempo_ida_seg + tiempo_retorno_seg
+        tiempo_trabajo_cobro = tiempo_trabajo_seg
+        if tiempo_cobro > tiempo_total:
+            tiempo_viaje_seg += tiempo_cobro - tiempo_total
 
-        # Costo Tratamiento de Agua en Saguapac Panta
+        # Costo de combustible: viaje y trabajo con consumos distintos
+        costo_combustible = (
+            (tiempo_viaje_seg   / 3600) * p.consumo_viaje_hr   +
+            (tiempo_trabajo_cobro / 3600) * p.consumo_trabajo_hr
+        ) * p.precio_diesel
+        costo_mantenimiento = (p.costo_mantenimiento / 100) * costo_combustible
         costo_saguapac_panta = p.costo_saguapac_planta
 
-        costo_total = costo_ida + costo_trabajo + costo_retorno + costo_mantenimiento + costo_saguapac_panta + costo_adicional_km_retorno
+        subtotal_costos = costo_combustible + costo_mantenimiento + costo_saguapac_panta
 
-        utilidad_km_ida = (p.utilidad_km * 0.5) * distances[min_index] / 1000
-        utilidad_km_retorno = (p.utilidad_km * 0.5) * distance_saguapac[0] / 1000
-        utilidad_km = utilidad_km_ida + utilidad_km_retorno
-        utilidad_base = p.utilidad_base
+        dist_ida_km = distances[min_index] / 1000
+        dist_sag_km = distance_saguapac[0] / 1000
 
-        utilidad_total = (utilidad_km + utilidad_base) * (1 if combined_factor==0 else combined_factor)
+        # Utilidad por km de retorno a Saguapac (todos los km)
+        costo_adicional_km_retorno = dist_sag_km * p.costo_adicional_km_retorno
 
-        chofer = (costo_total + utilidad_total) * (p.personal_camion / 100)
+        # Utilidad: por km de ida + base fija, ajustada por zona
+        utilidad_km_ida = p.utilidad_km * dist_ida_km
+        factor          = combined_factor if combined_factor != 0 else 1
+        utilidad_total  = (utilidad_km_ida + p.utilidad_base) * factor
 
-        precio = (costo_total + utilidad_total + chofer) * p.factor_global
+        subtotal = (subtotal_costos + utilidad_total + costo_adicional_km_retorno) * p.factor_global
+
+        # Precio sin factor de zona (para comparación)
+        utilidad_sin_zona  = (utilidad_km_ida + p.utilidad_base) * 1
+        subtotal_sin_zona  = (subtotal_costos + utilidad_sin_zona + costo_adicional_km_retorno) * p.factor_global
+
+        # Chofer = % del precio final (no del subtotal)
+        tasa_chofer     = p.personal_camion / 100
+        precio          = subtotal / (1 - tasa_chofer)
+        chofer          = precio - subtotal
+        precio          = round(precio / 10) * 10  # múltiplo de 10
+        precio_sin_zona = round(subtotal_sin_zona / (1 - tasa_chofer) / 10) * 10
 
         logger.debug(
-            "cotizacion lat=%s lon=%s dist_scz=%.2f factor_zona=%s costo=%.2f precio=%.2f",
-            lat, lon, distance_scz, combined_factor, costo_total, precio
+            "cotizacion lat=%s lon=%s dist_scz=%.2f factor_zona=%s combustible=%.2f precio=%.2f",
+            lat, lon, distance_scz, combined_factor, costo_combustible, precio
         )
-        
+
         return Response(
             {
                 "distances": distances,
@@ -263,16 +277,28 @@ class ContratarAPIView(APIView):
                 "time_saguapac": time_saguapac,
                 "origin_saguapac": origin_saguapac,
                 "path_saguapac": geometry_saguapac,
-                
+
                 "distance_scz": distance_scz,
                 "distancia_maxima_cotizar": p.distancia_maxima_cotizar,
                 "origen": min_index,
-                "costo": costo_total,
+                "costo_combustible": costo_combustible,
+                "costo_otros": costo_mantenimiento + costo_saguapac_panta + costo_adicional_km_retorno,
+                "detalle_otros": {
+                    "mantenimiento": round(costo_mantenimiento, 1),
+                    "saguapac": costo_saguapac_panta,
+                    "retorno_saguapac": round(costo_adicional_km_retorno, 1),
+                },
                 "costo_adicional_retorno": costo_adicional_km_retorno,
                 "utilidad": utilidad_total,
                 "factor_zona": combined_factor,
+                "tiempo_real_min": round(tiempo_total / 60, 1),
+                "tiempo_cobro_min": round(tiempo_cobro / 60, 1),
+                "factor_camion": factor_camion,
+                "factor_cargado": factor_cargado,
+                "factor_global": p.factor_global,
                 "chofer": chofer,
                 "precio": precio,
+                "precio_sin_zona": precio_sin_zona,
             },
             status=status.HTTP_200_OK
         )

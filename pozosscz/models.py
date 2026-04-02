@@ -36,18 +36,15 @@ class PreciosPozosSCZ(SingletonModel):
         help_text="Precio del diesel en Bs/L"
     )
 
-    def default_consumo_km():
-        return {"vacio": 4, "lleno": 3}
-
-    consumo_diesel_hr = models.FloatField(
-        "Consumo Diesel (L/Hr)",
-        default=12,
-        help_text="Consumo de diesel en L/Hr"
+    consumo_viaje_hr = models.FloatField(
+        "Consumo viaje (L/Hr)",
+        default=10,
+        help_text="Consumo de diesel durante el viaje (sin bomba activa) en L/Hr"
     )
-    consumo_diesel_km = models.JSONField(
-        "Consumo Diesel (Km/L)",
-        default=default_consumo_km,
-        help_text="Consumo de diesel en Km/L (camión vacío y lleno)"
+    consumo_trabajo_hr = models.FloatField(
+        "Consumo trabajo (L/Hr)",
+        default=16,
+        help_text="Consumo de diesel durante el trabajo en sitio (bomba activa) en L/Hr"
     )
     tiempo_trabajo = models.FloatField(
         "Tiempo de trabajo (min)",
@@ -56,14 +53,24 @@ class PreciosPozosSCZ(SingletonModel):
     )
     personal_camion = models.IntegerField(
         "Personal %",
-        default=20,
-        help_text="Costo de personal en %"
+        default=15,
+        help_text="% del precio final para el operador"
     )
 
     factor_tiempo = models.FloatField(
-        "Factor tiempo Camion/auto (min)",
+        "Factor velocidad camión vs auto",
         default=1.25,
-        help_text="Factor tiempo en min"
+        help_text="El camión tarda este factor más que un auto (ej: 1.25 = 25% más lento)"
+    )
+    factor_cargado = models.FloatField(
+        "Factor retorno cargado",
+        default=1.05,
+        help_text="Factor adicional de tiempo cuando el camión va cargado en retorno (ej: 1.05 = 5% más lento)"
+    )
+    tiempo_minimo_cobro = models.FloatField(
+        "Tiempo mínimo de cobro (min)",
+        default=90,
+        help_text="Tiempo mínimo facturable en minutos, aunque el servicio sea más corto"
     )
     costo_saguapac_planta = models.IntegerField(
         "Costo Saguapac Panta",
@@ -77,21 +84,21 @@ class PreciosPozosSCZ(SingletonModel):
     )
     
     utilidad_km = models.FloatField(
-        "Utilidad Km 50% de ida y 50% retorno",
+        "Utilidad recorrido de ida (Bs/Km)",
         default=5,
-        help_text="Utilidad en Bs/Km"
+        help_text="Utilidad en Bs/Km por el recorrido de ida a la ubicación del cliente"
     )
-    
+
     utilidad_base = models.IntegerField(
         "Utilidad base (Bs)",
         default=160,
         help_text="Utilidad base en Bs."
     )
-    
+
     costo_adicional_km_retorno = models.FloatField(
-        "Costo adicional Km > 20 km",
+        "Utilidad retorno a Saguapac (Bs/Km)",
         default=1,
-        help_text="Costo adicional de retorno (>20km) en Bs/Km."
+        help_text="Utilidad en Bs/Km por el recorrido de retorno a Saguapac"
     )
     distancia_maxima_cotizar = models.IntegerField(
         "Distancia máxima para cotizar (Km)",
