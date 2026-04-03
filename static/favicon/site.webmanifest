@@ -2,7 +2,7 @@
   "name": "pozosscz",
   "short_name": "pozosscz",
   "start_url": "/mapa/",
-  "scope": "/",
+  "scope": "/mapa/",
   "icons": [
     {
       "src": "/web-app-manifest-192x192.png",

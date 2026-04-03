@@ -157,82 +157,68 @@ cotiza.addTo(map);
 const botonCotiza = document.getElementById("cotiza") as HTMLButtonElement;
 botonCotiza.disabled = true;
 
-putMarker.onclick = () => {
+async function resolveAndPlaceMarker(mensaje: string) {
   let latitud: number = 0, longitud: number = 0;
-  const mensaje = URLwhatsapp.value;
   let encontrado = false;
 
-  try {
-    // 1. Coordenadas directas: -17.77,-63.18 o similares
-    let match = mensaje.match(/(-?\d+\.\d+)[,\s]+(-?\d+\.\d+)/);
+  // 1. Cualquier URL de Google Maps → proxy local → microservicio
+  if (!encontrado && (mensaje.includes("google.com/maps") || mensaje.includes("maps.app.goo.gl") || mensaje.includes("goo.gl/maps"))) {
+    const res = await fetch("/api/v1/shortlink/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query: mensaje.trim() }),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.lat && data.lon) {
+        latitud = data.lat;
+        longitud = data.lon;
+        encontrado = true;
+      }
+    }
+  }
+
+  // 2. Coordenadas directas: -17.77,-63.18
+  if (!encontrado) {
+    const match = mensaje.match(/(-?\d+\.\d+)[,\s]+(-?\d+\.\d+)/);
     if (match) {
       latitud = parseFloat(match[1]);
       longitud = parseFloat(match[2]);
       encontrado = true;
     }
+  }
 
-    // 2. Enlace con q= (ej: maps.google.com/?q=-17.77,-63.18)
-    if (!encontrado) {
-      match = mensaje.match(/q=(?:\(|%28)?(-?\d+\.\d+)[,%2C\s]+(-?\d+\.\d+)(?:\)|%29)?/);
-      if (match) {
-        latitud = parseFloat(match[1]);
-        longitud = parseFloat(match[2]);
-        encontrado = true;
-      }
-    }
+  if (!encontrado) {
+    alert("No se encontraron coordenadas válidas.");
+    return;
+  }
 
-    // 3. Enlace con @lat,lon
-    if (!encontrado) {
-      match = mensaje.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
-      if (match) {
-        latitud = parseFloat(match[1]);
-        longitud = parseFloat(match[2]);
-        encontrado = true;
-      }
-    }
+  URLwhatsapp.value = "";
 
-    // 4. Enlace con !3d<lat>!4d<lon>
-    if (!encontrado) {
-      match = mensaje.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/);
-      if (match) {
-        latitud = parseFloat(match[1]);
-        longitud = parseFloat(match[2]);
-        encontrado = true;
-      }
-    }
+  if (marker) {
+    map.removeLayer(marker);
+  } else {
+    botonCotiza.disabled = false;
+  }
 
-    // 5. Coordenadas tipo shortlink ya resuelto (maps.app.goo.gl debe estar resuelto antes en backend o no se podrá acceder desde el navegador por CORS)
-    // Aquí solo intentamos detectar coordenadas después de redirección
-    if (!encontrado && mensaje.includes("maps.app.goo.gl")) {
-      alert("Shortlinks de maps.app.goo.gl no es posible resolver el link.");
-      return;
-    }
+  map.flyTo([latitud, longitud], 16);
+  marker = new Marker([latitud, longitud], { icon: iconRed }).addTo(map);
+  putMarker.disabled = true;
+}
 
-    if (!encontrado) {
-      alert("No se encontraron coordenadas válidas.");
-      return;
-    }
-
-    // Reiniciar campo
-    URLwhatsapp.value = "";
-
-    // Mostrar marcador
-    if (marker) {
-      map.removeLayer(marker);
-    } else {
-      botonCotiza.disabled = false;
-    }
-
-    map.flyTo([latitud, longitud], 16);
-    marker = new Marker([latitud, longitud], {
-      icon: iconRed,
-    }).addTo(map);
-
-    putMarker.disabled = true;
+putMarker.onclick = async () => {
+  const mensaje = URLwhatsapp.value;
+  putMarker.disabled = true;
+  putMarker.innerHTML = '<span class="loading loading-spinner loading-xs"></span>';
+  try {
+    await resolveAndPlaceMarker(mensaje);
   } catch (err) {
     alert("Algo salió mal al intentar extraer las coordenadas.");
     console.error(err);
     URLwhatsapp.value = "";
+  } finally {
+    putMarker.disabled = false;
+    putMarker.textContent = "UBICAR GMAPS";
   }
 };
 
@@ -241,37 +227,50 @@ const GuardarBaseMarker = document.getElementById(
   "GuardarBaseMarker"
 ) as HTMLButtonElement;
 let coordinates: [number, number] | null = null;
+let baseMarkerMode = false;
+
+function placeBaseMarker(latLng: LatLng) {
+  coordinates = [latLng.lat, latLng.lng];
+  if (markerCamion) {
+    map.removeLayer(markerCamion);
+  }
+  markerCamion = new Marker(latLng, { icon: iconCamion }).addTo(map);
+  GuardarBaseMarker.disabled = false;
+}
+
+function setBaseMarkerMode(active: boolean) {
+  baseMarkerMode = active;
+  if (active) {
+    map.getContainer().style.cursor = "crosshair";
+    BaseMarker.classList.add("btn-active");
+  } else {
+    map.getContainer().style.cursor = "";
+    BaseMarker.classList.remove("btn-active");
+  }
+}
 
 // Añadir base / camion al mapa
 BaseMarker.addEventListener("click", () => {
   const coordinatesInput = document.getElementById(
     "coordinates"
   ) as HTMLInputElement;
-  coordinates = extractCoordinates(coordinatesInput.value);
 
-  if (!coordinates) {
-    createToast(
-      "coordinates",
-      "map",
-      "Formato de coordenadas inválido. Use lat,lon o un link de Google Maps.",
-      "top",
-      "error"
-    );
-    return;
+  // Si hay coordenadas en el input, usarlas directamente
+  if (coordinatesInput.value.trim()) {
+    const parsed = extractCoordinates(coordinatesInput.value);
+    if (parsed) {
+      placeBaseMarker(new LatLng(parsed[0], parsed[1]));
+      map.flyTo(new LatLng(parsed[0], parsed[1]), 13);
+      setBaseMarkerMode(false);
+      return;
+    }
   }
 
-  const [lat, lon] = coordinates;
-  const latLng = new LatLng(lat, lon);
-
-  if (markerCamion) {
-    map.removeLayer(markerCamion);
+  // Activar/desactivar modo selección en mapa
+  setBaseMarkerMode(!baseMarkerMode);
+  if (baseMarkerMode) {
+    createToast("coordinates", "map", "Haz clic en el mapa para colocar la base", "top", "success");
   }
-
-  markerCamion = new Marker(latLng, {
-    icon: iconCamion,
-  }).addTo(map);
-  map.flyTo(latLng, 13);
-  GuardarBaseMarker.disabled = false;
 });
 
 // Guardar base / camion en la DB
@@ -431,6 +430,13 @@ function onMapClick(e: LeafletMouseEvent) {
     sliderContainer &&
     !sliderContainer.contains(e.originalEvent.target as Node)
   ) {
+    // Si está activo el modo de selección de base, colocar marcador de base
+    if (baseMarkerMode) {
+      placeBaseMarker(e.latlng);
+      setBaseMarkerMode(false);
+      return;
+    }
+
     if (marker) {
       map.removeLayer(marker);
     } else {
@@ -513,6 +519,7 @@ map.addControl(drawControl);
 
 // Desactivar el click listener cuando comienza el dibujo
 map.on(Draw.Event.DRAWSTART, function () {
+  setBaseMarkerMode(false);
   map.off("click", onMapClick);
 });
 

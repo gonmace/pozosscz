@@ -1,6 +1,10 @@
 {% extends 'base.html' %}
 {% load static %}
 
+{% block head %}
+<link rel="manifest" href="{% static 'favicon/site.webmanifest' %}" />
+{% endblock %}
+
 {% block css %}
 <link rel="stylesheet" href="{% static 'maps/maps_admin.css' %}">
 {% endblock %}
@@ -17,169 +21,146 @@
  
       </div>
 
-    <div class="mx-1 sm:mx-2 sm:w-60 overflow-y-auto">
-        <div class="my-2 text-center">
-          <input
-            id="URLwhatsapp"
-            type="text"
-            placeholder="Whatsapp"
-            class="input input-bordered input-md input-success"
-          />
-          <button id="putMarker" class="my-2 btn btn-primary">
-            UBICAR GMAPS
-          </button>
-          <hr class="divide-y"/>
-        </div>
+    <!-- Panel derecho -->
+    <div class="sm:w-64 flex-shrink-0 flex flex-col bg-base-200 border-l border-base-300 overflow-y-auto">
 
-        <!-- Colocar Base / Camion -->
-        <div class="text-center">
-          Base / Camion
-        </div>
-        <div class="join">
-          <div>
-            <label class="input input-info input-sm validator join-item">
-              <input id="coordinates" type="text" placeholder="Lat, Lon" required />
-            </label>
-            <div class="validator-hint hidden">Coordenadas inválidas</div>
-          </div>
+      <!-- Sección: Ubicar -->
+      <div class="p-3 border-b border-base-300">
+        <p class="text-xs font-semibold uppercase tracking-widest text-base-content/50 mb-2">Ubicar cliente</p>
+        <input
+          id="URLwhatsapp"
+          type="text"
+          placeholder="Link o coordenadas Google Maps"
+          class="input input-sm input-bordered w-full mb-1"
+        />
+        <button id="putMarker" class="btn btn-sm btn-primary w-full">
+          Ubicar
+        </button>
+      </div>
 
-          <button id="BaseMarker" class="btn btn-neutral btn-sm join-item p-0 sombra">
-            <svg width="27" height="27" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-              <!-- Círculo central (vehículo) -->
-              <circle cx="50" cy="50" r="10" fill="#007BFF" />
-            
-              <!-- Anillo pulsante 1 -->
-              <circle cx="50" cy="50" r="10" fill="none" stroke="#007BFF" stroke-width="2">
-                <animate attributeName="r" from="10" to="50" dur="1.8s" repeatCount="indefinite" />
-                <animate attributeName="opacity" from="1" to="0" dur="1.8s" repeatCount="indefinite" />
+      <!-- Sección: Base / Camión -->
+      <div class="p-3 border-b border-base-300">
+        <p class="text-xs font-semibold uppercase tracking-widest text-base-content/50 mb-2">Base / Camión</p>
+
+        <!-- Fila: coordenadas + activar modo mapa -->
+        <div class="flex gap-1 mb-1">
+          <input id="coordinates" type="text" placeholder="Lat, Lon (opcional)"
+            class="input input-sm input-bordered flex-1 min-w-0" />
+          <button id="BaseMarker" title="Seleccionar en mapa"
+            class="btn btn-sm btn-neutral shrink-0 px-2">
+            <svg width="22" height="22" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="50" cy="50" r="10" fill="#3b82f6"/>
+              <circle cx="50" cy="50" r="10" fill="none" stroke="#3b82f6" stroke-width="3">
+                <animate attributeName="r" from="10" to="46" dur="1.8s" repeatCount="indefinite"/>
+                <animate attributeName="opacity" from="1" to="0" dur="1.8s" repeatCount="indefinite"/>
               </circle>
-            
-              <!-- Anillo pulsante 2 (desfasado para efecto continuo) -->
-              <circle cx="50" cy="50" r="10" fill="none" stroke="#007BFF" stroke-width="2">
-                <animate attributeName="r" from="10" to="50" begin="0.9s" dur="1.8s" repeatCount="indefinite" />
-                <animate attributeName="opacity" from="1" to="0" begin="0.9s" dur="1.8s" repeatCount="indefinite" />
+              <circle cx="50" cy="50" r="10" fill="none" stroke="#3b82f6" stroke-width="3">
+                <animate attributeName="r" from="10" to="46" begin="0.9s" dur="1.8s" repeatCount="indefinite"/>
+                <animate attributeName="opacity" from="1" to="0" begin="0.9s" dur="1.8s" repeatCount="indefinite"/>
               </circle>
             </svg>
           </button>
         </div>
 
-        <div class="join mt-1">
-          <div>
-            <label class="input input-secondary input-sm validator join-item">
-              <input id="nameCamion" type="text" placeholder="Nombre" required />
-            </label>
-            <div class="validator-hint hidden">Nombre inválido</div>
-          </div>
-        <button id="GuardarBaseMarker" class="btn btn-secondary btn-sm join-item p-1">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="#fff">
-            <path d="M17 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a1 1 0 0 0 1-1V7l-3-4zM12 19a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm3-10H5V5h10v4z"/>
-          </svg>            
-        </button>
+        <!-- Fila: nombre + guardar -->
+        <div class="flex gap-1">
+          <input id="nameCamion" type="text" placeholder="Nombre del camión"
+            class="input input-sm input-bordered flex-1 min-w-0" />
+          <button id="GuardarBaseMarker" title="Guardar base"
+            class="btn btn-sm btn-secondary shrink-0 px-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M17 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a1 1 0 0 0 1-1V7l-3-4zM12 19a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm3-10H5V5h10v4z"/>
+            </svg>
+          </button>
         </div>
-        
-        <!-- Lista de Bases/Camiones -->
-        <div class="mt-1">
-          <div id="listaCamiones">
-            <table class="table table-xs table-compact w-full">
-              <thead>
-                <tr class="bg-base-200">
-                  <th class="!p-1 text-xs">Nombre</th>
-                  <th class="!p-1 text-center text-xs">Disp.</th>
-                  <th class="!p-1 text-center text-xs"></th>
-                  <th class="!p-1 text-center text-xs"></th>
-                </tr>
-              </thead>
-              <tbody class="text-xs">
-                {% for camion in basecamiones %}
-                <tr class="hover:bg-base-200">
-                  <td class="!p-1">{{ camion.name }}</td>
-                  <td class="!p-1 text-center">
-                    <input type="checkbox" class="toggle toggle-success toggle-xs checkbox-camion" 
-                           {% if camion.available %}checked{% endif %}
-                           data-camion-id="{{ camion.id }}" />
-                  </td>
-                  <td class="!p-1 text-center">
-                    <input type="hidden" class="camion-coords" value="{{ camion.coordinates }}">
-                    <input type="hidden" class="camion-id" value="{{ camion.id }}">
-                    <button class="btn btn-xs btn-info btn-square h-4 min-h-4 w-4 p-0 locate-camion">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                        <circle cx="12" cy="10" r="3"></circle>
-                      </svg>
-                    </button>
-                  </td>
-                  <td class="!p-1 text-center">
-                    <button class="btn btn-xs btn-error btn-square h-4 min-h-4 w-4 p-0 delete-camion">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M3 6h18"></path>
-                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-                      </svg>
-                    </button>
-                  </td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
-        </div>
-        <hr class="divide-y my-2"/>
 
-        <!-- Campo de entrada para coordenadas del polígono -->
-        <form
-          id="savePolygon"
-          action="/api/v1/areasfactor/"
-          method="POST"
-        >
-          <div class="input-container text-center">
-            <textarea
-              id="polygon-coordinates"
-              name="polygon"
-              placeholder="Ingrese las coordenadas"
-              class="textarea textarea-bordered w-full h-24"></textarea>
-              <div class="flex justify-between">
-            <button
-              type="button"
-              id="submit-coordinates"
-              class="btn btn-sm btn-success mt-1">
-              Dibujar Poly
+        <!-- Lista de bases -->
+        <div id="listaCamiones" class="mt-2">
+          {% if basecamiones %}
+          <table class="table table-xs w-full">
+            <thead>
+              <tr class="text-base-content/50">
+                <th class="!px-1 !py-1">Nombre</th>
+                <th class="!px-1 !py-1 text-center">Disp.</th>
+                <th class="!px-1 !py-1"></th>
+                <th class="!px-1 !py-1"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for camion in basecamiones %}
+              <tr class="hover:bg-base-300 transition-colors">
+                <td class="!px-1 !py-1 text-xs font-medium">{{ camion.name }}</td>
+                <td class="!px-1 !py-1 text-center">
+                  <input type="checkbox" class="toggle toggle-success toggle-xs checkbox-camion"
+                    {% if camion.available %}checked{% endif %}
+                    data-camion-id="{{ camion.id }}" />
+                </td>
+                <td class="!px-1 !py-1 text-center">
+                  <input type="hidden" class="camion-coords" value="{{ camion.coordinates }}">
+                  <input type="hidden" class="camion-id" value="{{ camion.id }}">
+                  <button title="Ver en mapa" class="btn btn-xs btn-info btn-square locate-camion">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+                    </svg>
+                  </button>
+                </td>
+                <td class="!px-1 !py-1 text-center">
+                  <button title="Eliminar base" class="btn btn-xs btn-error btn-outline btn-square delete-camion">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                      <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                      <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                    </svg>
+                  </button>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% else %}
+          <p class="text-xs text-base-content/40 text-center py-2">Sin bases registradas</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Sección: Zonas / Polígonos -->
+      <div class="p-3">
+        <p class="text-xs font-semibold uppercase tracking-widest text-base-content/50 mb-2">Zonas</p>
+        <form id="savePolygon" action="/api/v1/areasfactor/" method="POST">
+          <textarea
+            id="polygon-coordinates"
+            name="polygon"
+            placeholder="Coordenadas del polígono"
+            class="textarea textarea-bordered textarea-sm w-full h-20 text-xs mb-1"></textarea>
+
+          <div class="flex gap-1 mb-2">
+            <button type="button" id="submit-coordinates" class="btn btn-xs btn-outline btn-success flex-1">
+              Dibujar
             </button>
-            <button
-              type="button"
-              id="find-clients"
-              class="btn btn-sm btn-success mt-1">
-              Clientes 
+            <button type="button" id="find-clients" class="btn btn-xs btn-outline btn-info flex-1">
+              Clientes
             </button>
           </div>
-          <div id="client-results" class="mt-2 hidden">
-            <div class="text-sm font-semibold">Clientes encontrados: <span id="client-count">0</span></div>
-            <div id="client-list" class="mt-1 max-h-40 overflow-y-auto"></div>
-          </div>
-            <div class="mt-4 flex">
-              <input
-                type="text"
-                id="name"
-                name="name"
-                placeholder="Zona"
-                class="input input-sm w-full mr-2"
-              />
-              <input
-                type="text"
-                id="factor"
-                name="factor"
-                placeholder="Factor"
-                class="input input-sm w-full"
-              />
+
+          <div id="client-results" class="hidden mb-2">
+            <div class="text-xs font-semibold text-base-content/70">
+              Encontrados: <span id="client-count" class="text-success">0</span>
             </div>
-            <button
-              type="submit"
-              id="add-area"
-              class="btn btn-secondary btn-sm mt-2">
-              Agregar Zona a DB
-            </button>
           </div>
+
+          <div class="flex gap-1 mb-1">
+            <input type="text" id="name" name="name" placeholder="Zona"
+              class="input input-xs input-bordered flex-1 min-w-0" />
+            <input type="text" id="factor" name="factor" placeholder="Factor"
+              class="input input-xs input-bordered w-16" />
+          </div>
+
+          <button type="submit" id="add-area" class="btn btn-xs btn-secondary w-full">
+            Guardar zona
+          </button>
         </form>
       </div>
+
+    </div>
     </div>
 
     {% include 'modal_precio.html' %}
@@ -203,6 +184,14 @@
 {% block js %}
 <script type="module" src="{% static 'maps/maps_admin.js' %}"></script>
 <script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+      navigator.serviceWorker.register('/sw.js', { scope: '/mapa/' })
+        .catch(function(e) { console.warn('SW:', e); });
+    });
+  }
+</script>
+<script>
 (function() {
   var params = new URLSearchParams(window.location.search);
   var sharedUrl = params.get('share_url');
@@ -220,14 +209,16 @@
       if (btn && !btn.disabled) btn.click();
     }
 
-    if (sharedUrl.includes('maps.app.goo.gl') || sharedUrl.includes('goo.gl/maps')) {
-      fetch('/api/resolve-maps/?url=' + encodeURIComponent(sharedUrl))
+    if (sharedUrl.includes('google.com/maps') || sharedUrl.includes('maps.app.goo.gl') || sharedUrl.includes('goo.gl/maps')) {
+      fetch('/api/v1/shortlink/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: sharedUrl })
+      })
         .then(function(r) { return r.json(); })
         .then(function(data) {
           if (data.lat && data.lon) {
             populateAndLocate(data.lat + ',' + data.lon);
-          } else if (data.final_url) {
-            populateAndLocate(data.final_url);
           } else {
             input.value = sharedUrl;
             input.dispatchEvent(new Event('input', { bubbles: true }));

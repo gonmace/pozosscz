@@ -3,7 +3,8 @@ from config.router_helper import SafeDefaultRouter
 from pozosscz.views import (
     PreciosPozosSCZViewSet,
     AreasFactorViewSet,
-    BaseCamionViewSet
+    BaseCamionViewSet,
+    shortlink_proxy,
 )
 from . import views
 
@@ -14,4 +15,5 @@ router.register(r'areasfactor', AreasFactorViewSet, 'areasfactor')
 
 urlpatterns = [
     path('api/v1/', include(router.urls)),
+    path('api/v1/shortlink/', shortlink_proxy, name='shortlink_proxy'),
 ]

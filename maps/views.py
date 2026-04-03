@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from main.utils import get_meta_for_slug, get_slug_from_request
 from pozosscz.models import AreasFactor, BaseCamion, PreciosPozosSCZ, DatosGenerales
@@ -110,6 +111,7 @@ def cotiza(request):
                    'meta': meta
                    })
 
+@login_required
 def mapa(request):
     datos_generales = DatosGenerales.objects.first()
     if not datos_generales:
@@ -304,11 +306,19 @@ class ContratarAPIView(APIView):
         )
 
 
+_ALLOWED_MAP_DOMAINS = {
+    'maps.app.goo.gl', 'goo.gl', 'google.com', 'www.google.com', 'maps.google.com',
+}
+
 def resolve_maps_url(request):
+    from urllib.parse import urlparse
     short_url = request.GET.get('url', '')
     if not short_url:
         return JsonResponse({'error': 'No URL'}, status=400)
     try:
+        parsed = urlparse(short_url)
+        if parsed.netloc not in _ALLOWED_MAP_DOMAINS:
+            return JsonResponse({'error': 'Dominio no permitido'}, status=400)
         resp = http_requests.head(short_url, allow_redirects=True, timeout=5,
                                   headers={'User-Agent': 'Mozilla/5.0'})
         final_url = resp.url

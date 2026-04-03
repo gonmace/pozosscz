@@ -18,7 +18,36 @@ from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from django.contrib.auth.models import User
 
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
+from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_exempt
+import urllib.request
+import json
+
+
+@csrf_exempt
+@require_POST
+def shortlink_proxy(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "Autenticación requerida"}, status=401)
+    try:
+        body = json.loads(request.body)
+        query = body.get("query", "")
+        if not query:
+            return JsonResponse({"error": "query requerida"}, status=400)
+
+        payload = json.dumps({"query": query}).encode()
+        req = urllib.request.Request(
+            "https://ms.magoreal.com/shortlink",
+            data=payload,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            data = json.loads(resp.read())
+        return JsonResponse(data)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
 
 
 class PreciosPozosSCZViewSet(viewsets.ModelViewSet):
