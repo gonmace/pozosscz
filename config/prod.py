@@ -75,7 +75,8 @@ CORS_ALLOWED_ORIGINS = [o.strip() for o in CORS_ORIGINS_STR.split(',') if o.stri
 CSRF_TRUSTED_ORIGINS = ['https://limpiezapozossepticos.com', 'https://www.pozosscz.com', 'https://pozosscz.com']
 
 # Security headers
-SECURE_SSL_REDIRECT = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SECURE_SSL_REDIRECT = False  # nginx maneja el redirect HTTP→HTTPS
 SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
