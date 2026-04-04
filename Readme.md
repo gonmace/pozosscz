@@ -58,6 +58,25 @@ docker exec -it pozosscz_app python manage.py makemigrations --settings=config.p
 docker exec -it pozosscz_app python manage.py migrate --settings=config.prod
 ```
 
+### Despliegue inicial en nuevo VPS
+
+```bash
+# 1. Clonar y configurar .env
+git clone <repo> && cd pozosscz
+cp .env.sample .env  # completar variables
+
+# 2. Crear la base de datos en el PostgreSQL del host
+sudo -u postgres psql -c "CREATE USER magoreal WITH PASSWORD 'tu_password';"
+sudo -u postgres psql -c "CREATE DATABASE pozosscz OWNER magoreal;"
+
+# 3. Autorizar conexiones desde la red Docker en pg_hba.conf
+echo "host    all    magoreal    192.168.0.0/16    scram-sha-256" | sudo tee -a /etc/postgresql/*/main/pg_hba.conf
+sudo systemctl reload postgresql@*-main
+
+# 4. Levantar servicios
+docker compose up -d --build
+```
+
 ### Datos
 
 ```bash
@@ -81,10 +100,10 @@ SECRET_KEY=
 DJANGO_DEBUG=False
 DJANGO_ALLOWED_HOSTS=pozosscz.com,www.pozosscz.com
 
-POSTGRES_DB=
+POSTGRES_DB=pozosscz
 POSTGRES_USER=
 POSTGRES_PASSWORD=
-POSTGRES_HOST=
+POSTGRES_HOST=host.docker.internal   # PostgreSQL instalado en el host VPS
 
 REDIS_URL=redis://redis:6379/0
 CELERY_BROKER_URL=redis://redis:6379/0
@@ -99,6 +118,8 @@ EMAIL_HOST_USER=
 EMAIL_HOST_PASSWORD=
 DEFAULT_FROM_EMAIL=
 ```
+
+> **Nota:** PostgreSQL no corre como contenedor. El servicio Django se conecta al PostgreSQL del host via `host.docker.internal`. La red Docker tiene subred fija `192.168.64.0/24`.
 
 ## PWA
 
