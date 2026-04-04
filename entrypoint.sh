@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Espera a que el contenedor de PostgreSQL esté disponible en el puerto 5432
-while ! nc -z postgres 5432; do
+while ! nc -z host.docker.internal 5432; do
   echo "Esperando a que PostgreSQL arranque..."
   sleep 1
 done
