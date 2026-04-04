@@ -1,22 +1,5 @@
 # docker-compose.yml
 services:
-  postgres:
-    image: postgres:15-alpine
-    container_name: pozosscz_db
-    ports:
-      - "5435:5432"
-    env_file:
-      - .env
-    volumes:
-      - postgres_data:/var/lib/postgresql/data/
-    networks:
-      - pozos_network
-    deploy:
-      resources:
-        limits:
-          cpus: '1'
-          memory: 512M
-
   redis:
     image: redis:alpine
     container_name: pozosscz_redis
@@ -34,6 +17,8 @@ services:
       dockerfile: Dockerfile
     container_name: pozosscz_app
     command: ./entrypoint.sh
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - ./staticfiles:/app/staticfiles
       - ./media:/app/media
@@ -42,7 +27,6 @@ services:
     env_file:
       - .env
     depends_on:
-      - postgres
       - redis
     networks:
       - pozos_network
@@ -53,7 +37,6 @@ services:
           memory: 512M
 
 volumes:
-  postgres_data:
   static:
   media:
 
