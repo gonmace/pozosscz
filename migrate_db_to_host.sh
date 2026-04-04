@@ -13,7 +13,8 @@ set -a
 source .env
 set +a
 
-DB_NAME="${POSTGRES_DB:-base}"
+DB_NAME="${POSTGRES_DB:-pozosscz}"   # nombre destino en el host
+SOURCE_DB="${SOURCE_DB:-base}"        # nombre actual en el contenedor
 DB_USER="${POSTGRES_USER:-magoreal}"
 DB_PASS="${POSTGRES_PASSWORD}"
 CONTAINER="pozosscz_db"
@@ -35,9 +36,9 @@ echo "OK — contenedor ${CONTAINER} activo."
 
 # 2. Backup desde el contenedor
 echo ""
-echo "[2/6] Haciendo backup desde el contenedor..."
+echo "[2/6] Haciendo backup desde el contenedor (DB origen: '$SOURCE_DB')..."
 mkdir -p "$SCRIPT_DIR/backups"
-docker exec "$CONTAINER" pg_dump -U "$DB_USER" "$DB_NAME" > "$BACKUP_FILE"
+docker exec "$CONTAINER" pg_dump -U "$DB_USER" "$SOURCE_DB" > "$BACKUP_FILE"
 echo "OK — backup guardado en: $BACKUP_FILE"
 echo "     Tamaño: $(du -sh "$BACKUP_FILE" | cut -f1)"
 
