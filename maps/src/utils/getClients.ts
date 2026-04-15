@@ -78,62 +78,38 @@ function makePopupHtml(cd: ClienteEx): string {
   const rawDate = cd.created_at as unknown as string;
   const fecha = new Date(rawDate);
   const fechaFmt = `${fecha.getDate().toString().padStart(2,'0')}/${(fecha.getMonth()+1).toString().padStart(2,'0')}/${fecha.getFullYear()}`;
+  const precio = cd.cost ?? 0;
   const tel = cd.tel1?.toString() || '';
   const waLink = tel
     ? `<a href="https://wa.me/${tel.replace(/[^\d+]/g,'')}" target="_blank"
-           class="inline-flex items-center gap-1 text-xs" style="color:inherit;font-weight:400;"
+           class="inline-flex items-center gap-1" style="color:#374151;font-size:12px;"
            onclick="event.stopPropagation()">
          <span style="color:#25D366;flex-shrink:0;">${POPUP_WA}</span>${tel}
        </a>`
     : '';
-  const camiones = getCamiones();
-  const iniciales = cd.camion_iniciales || '';
-  const esMobile = window.innerWidth < 640;
-  const alertStyle = !iniciales && cd.status === 'PRG'
-    ? `background:#dc2626;color:#fff;border:1.5px solid #ef4444;${esMobile ? '' : 'animation:chofer-alert 1.2s ease-in-out infinite;'}`
-    : `background:rgba(255,255,255,0.95);border:1.5px solid rgba(0,0,0,0.08);color:rgba(0,0,0,0.75);box-shadow:0 0 0 2px var(--color-base-200,#1d2430);`;
-  const camionBtn = camiones.length > 0
-    ? `<button type="button" class="popup-camion-btn w-6 h-6 rounded-full flex items-center justify-center text-[8px] font-bold shrink-0"
-               style="${alertStyle}"
-               title="${cd.camion_nombre || iniciales || 'Asignar camión'}">${iniciales || '?'}</button>`
-    : (iniciales ? `<span class="w-6 h-6 rounded-full flex items-center justify-center text-[8px] font-bold shrink-0"
-                         style="background:rgba(255,255,255,0.95);border:1.5px solid rgba(0,0,0,0.08);color:rgba(0,0,0,0.75);">${iniciales}</span>` : '');
+
+  const comentario = (cd.address || '').trim();
+  const comentarioHtml = comentario
+    ? `<div class="status-sep" style="padding:3px 10px;color:#374151;font-size:11px;line-height:1.25;word-break:break-word;">${comentario}</div>`
+    : '';
 
   return `
-  <div class="status-card ${stClass} rounded-xl overflow-hidden" style="min-width:230px;font-size:14px;">
-    <div class="px-3 py-2.5">
-      <div class="flex items-center gap-1.5 mb-1.5">
-        ${camionBtn}
-        <p class="font-bold text-sm leading-snug flex-1 truncate">${cd.name || '(sin nombre)'}</p>
-      </div>
-      <div class="flex items-center gap-1 flex-wrap">
-        <div class="flex-1 min-w-0">${waLink}</div>
-        <select class="select select-xs font-bold popup-status-sel status-select ${stClass}" style="width:auto;min-width:5.5rem;">
-          <option value="PRG" ${cd.status==='PRG'?'selected':''}>Programado</option>
-          <option value="EJE" ${cd.status==='EJE'?'selected':''}>Ejecutado</option>
-          <option value="COT" ${cd.status==='COT'?'selected':''}>Cotizado</option>
-          <option value="CAN" ${cd.status==='CAN'?'selected':''}>Cancelado</option>
-          <option value="NEG" ${cd.status==='NEG'?'selected':''}>Negado</option>
-        </select>
-      </div>
+  <div class="status-card ${stClass} rounded-lg overflow-hidden"
+       style="min-width:180px;font-size:12px;background:#ffffff;box-shadow:0 8px 20px rgba(0,0,0,0.25),0 0 0 1px rgba(0,0,0,0.08);">
+    <div style="padding:4px 10px 2px;">
+      <p class="font-bold truncate" style="color:#111827;font-size:13px;line-height:1.15;margin:0;">
+        ${cd.name || '(sin nombre)'}
+      </p>
+      ${waLink ? `<div style="margin-top:1px;line-height:1.1;">${waLink}</div>` : ''}
     </div>
-    <div class="flex items-center gap-2 px-3 py-2 status-sep">
-      <span class="flex-1 text-xs line-clamp-1 min-w-0 cursor-text popup-comment-txt"
-            style="color:rgba(255,255,255,0.5);" title="Click para editar">
-        ${cd.address || '<span class="italic" style="color:rgba(255,255,255,0.25);">Sin comentario</span>'}
-      </span>
-      ${cd.precio_cotizado ? `<div class="flex items-center gap-0.5 shrink-0 rounded-md px-1.5 py-0.5" style="background:rgba(255,152,0,0.08);border:1px solid rgba(255,152,0,0.32);" title="Precio cotizado (sistema)">
-        <span class="text-[10px] font-semibold" style="color:rgba(255,152,0,0.6);">Bs.</span>
-        <span class="text-xs font-semibold" style="color:#FF9800;">${cd.precio_cotizado}</span>
-      </div>` : ''}
-      <div class="flex items-center gap-0.5 shrink-0 rounded-md px-1.5 py-0.5"
-           style="background:rgba(255,213,79,0.08);border:1px solid rgba(255,213,79,0.32);">
-        <span class="text-[10px] font-semibold" style="color:rgba(255,213,79,0.6);">Bs.</span>
-        <input type="number" min="0" step="100" class="input input-xs w-14 text-right font-bold border-0 bg-transparent p-0 popup-cost-inp"
-               value="${cd.cost ?? 0}" style="color:#FFD54F;outline:none;box-shadow:none;" />
+    <div class="flex items-center justify-between gap-2 status-sep" style="padding:3px 10px;">
+      <div class="flex items-baseline gap-0.5">
+        <span style="color:#b45309;font-size:10px;font-weight:600;">Bs.</span>
+        <span style="color:#b45309;font-size:13px;font-weight:700;">${precio}</span>
       </div>
-      <span class="text-[10px]" style="opacity:0.35;">${fechaFmt}</span>
+      <span style="color:#4b5563;font-size:11px;font-weight:500;">${fechaFmt}</span>
     </div>
+    ${comentarioHtml}
   </div>`;
 }
 

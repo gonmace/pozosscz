@@ -38,24 +38,24 @@ L.Control.SliderControl = L.Control.extend({
 
         var container = L.DomUtil.create('div', 'slider', this._container);
         container.innerHTML = `
-            <div id="leaflet-slider" class="bg-gray-100 w-full px-4 py-2 rounded-lg shadow-lg">
-                <div id="sliderTrackArea" style="position:relative;height:24px;user-select:none;touch-action:none;cursor:pointer;">
+            <div id="leaflet-slider" style="background:rgba(255,255,255,0.95);padding:6px 10px;border-radius:6px;box-shadow:0 1px 4px rgba(0,0,0,0.3);font-size:12px;color:#333;">
+                <div id="sliderTrackArea" style="position:relative;height:16px;user-select:none;touch-action:none;cursor:pointer;">
                     <!-- Track fondo -->
-                    <div id="sliderTrackBg" style="position:absolute;top:50%;left:0;right:0;transform:translateY(-50%);height:6px;background:#cbd5e1;border-radius:3px;pointer-events:none;">
-                        <div id="rangeTrack" style="position:absolute;height:100%;background:hsl(var(--a,210 100% 56%));border-radius:3px;"></div>
+                    <div id="sliderTrackBg" style="position:absolute;top:50%;left:0;right:0;transform:translateY(-50%);height:3px;background:#d1d5db;border-radius:2px;pointer-events:none;">
+                        <div id="rangeTrack" style="position:absolute;height:100%;background:#2563eb;border-radius:2px;"></div>
                     </div>
                     <!-- Thumbs -->
-                    <div id="thumbMin" style="position:absolute;top:50%;transform:translate(-50%,-50%);width:18px;height:18px;background:#6b7280;border:3px solid hsl(var(--p,262 80% 50%));border-radius:50%;cursor:grab;z-index:3;box-sizing:border-box;"></div>
-                    <div id="thumbMax" style="position:absolute;top:50%;transform:translate(-50%,-50%);width:18px;height:18px;background:#6b7280;border:3px solid hsl(var(--p,262 80% 50%));border-radius:50%;cursor:grab;z-index:3;box-sizing:border-box;"></div>
+                    <div id="thumbMin" style="position:absolute;top:50%;transform:translate(-50%,-50%);width:12px;height:12px;background:#2563eb;border:none;border-radius:50%;cursor:grab;z-index:3;box-sizing:border-box;"></div>
+                    <div id="thumbMax" style="position:absolute;top:50%;transform:translate(-50%,-50%);width:12px;height:12px;background:#2563eb;border:none;border-radius:50%;cursor:grab;z-index:3;box-sizing:border-box;"></div>
                 </div>
-                <div class="flex justify-between mt-1 text-black font-bold text-xs">
+                <div style="display:flex;justify-content:space-between;margin-top:3px;font-weight:600;font-size:11px;color:#333;">
                     <span id="startDate" title="Click para editar fecha" style="cursor:pointer;text-decoration:underline dotted;"></span>
                     <span id="endDate"></span>
                 </div>
             </div>`;
 
         const style = document.createElement('style');
-        style.textContent = `.slider { margin:0 0.5rem 0.5rem 0.5rem; width:clamp(200px,40vw,320px); }`;
+        style.textContent = `.slider { margin:0; width:clamp(180px,32vw,260px); }`;
         document.head.appendChild(style);
 
         this._trackArea     = container.querySelector('#sliderTrackArea');
@@ -88,6 +88,20 @@ L.Control.SliderControl = L.Control.extend({
                 }
                 idx++;
             });
+
+            // Ordenar por fecha ascendente (más antigua a la izquierda, más moderna a la derecha)
+            const pairs = options.markers.map((m, i) => ({ marker: m, date: this._dates[i] }));
+            pairs.sort((a, b) => {
+                const da = Date.parse(a.date);
+                const db = Date.parse(b.date);
+                if (isNaN(da) && isNaN(db)) return 0;
+                if (isNaN(da)) return 1;
+                if (isNaN(db)) return -1;
+                return da - db;
+            });
+            options.markers = pairs.map(p => p.marker);
+            this._dates = pairs.map(p => p.date);
+
             options.maxValue = idx - 1;
             this.options = options;
         }

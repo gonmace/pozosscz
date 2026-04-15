@@ -58,6 +58,21 @@ function fmtHora(raw: string | null): string {
 
 const WA_ICON = `<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M20.52 3.48A11.93 11.93 0 0 0 12 0C5.37 0 0 5.37 0 12c0 2.11.55 4.16 1.6 5.97L0 24l6.18-1.62A11.93 11.93 0 0 0 12 24c6.63 0 12-5.37 12-12 0-3.21-1.25-6.22-3.48-8.52zm-8.52 18.4a9.89 9.89 0 0 1-5.04-1.38l-.36-.22-3.67.96.98-3.58-.23-.37A9.93 9.93 0 0 1 2.07 12c0-5.48 4.46-9.93 9.93-9.93 2.65 0 5.15 1.03 7.02 2.91A9.88 9.88 0 0 1 21.93 12c0 5.48-4.45 9.93-9.93 9.93zm5.44-7.44c-.3-.15-1.77-.87-2.04-.97-.28-.1-.48-.15-.68.15-.2.3-.77.97-.94 1.17-.18.2-.35.22-.65.07-.3-.15-1.26-.46-2.4-1.47-.89-.79-1.49-1.76-1.66-2.06-.17-.3-.02-.46.13-.61.13-.13.3-.35.44-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.08-.15-.68-1.63-.93-2.23-.24-.58-.49-.5-.68-.51-.17 0-.37-.02-.57-.02s-.52.07-.8.37c-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.22 3.08c.15.2 2.1 3.2 5.1 4.49.71.31 1.27.49 1.7.63.72.23 1.37.2 1.88.12.57-.09 1.77-.72 2.02-1.42.25-.7.25-1.3.17-1.42-.07-.12-.27-.2-.57-.35z"/></svg>`;
 
+// Ocultar spinner del input number para que no coma ancho en vistas angostas
+(function injectActivosStyles() {
+  if (document.getElementById("__activos-no-spinner")) return;
+  const s = document.createElement("style");
+  s.id = "__activos-no-spinner";
+  s.textContent = `
+    .activo-cost-inp.no-spinner::-webkit-inner-spin-button,
+    .activo-cost-inp.no-spinner::-webkit-outer-spin-button {
+      -webkit-appearance: none; margin: 0;
+    }
+    .activo-cost-inp.no-spinner { -moz-appearance: textfield; }
+  `;
+  document.head.appendChild(s);
+})();
+
 const GRIP_ICON = `<svg class="activo-drag-handle shrink-0 cursor-grab active:cursor-grabbing" width="9" height="13" viewBox="0 0 9 13" fill="currentColor" style="opacity:0.3;" title="Arrastrar para reordenar">
   <circle cx="2" cy="1.5" r="1.5"/><circle cx="7" cy="1.5" r="1.5"/>
   <circle cx="2" cy="6.5" r="1.5"/><circle cx="7" cy="6.5" r="1.5"/>
@@ -198,7 +213,7 @@ export function initClientesActivosModal(map: Map) {
                style="background:#FFD54F18;border:1px solid #FFD54F50;">
             <span class="text-[10px] font-semibold" style="color:#FFD54F99;">Bs.</span>
             <input type="number" min="0" step="100"
-              class="input input-xs w-11 text-right font-bold border-0 bg-transparent p-0 activo-cost-inp"
+              class="input input-xs w-16 shrink-0 text-right font-bold border-0 bg-transparent p-0 activo-cost-inp no-spinner"
               data-id="${c.id}" value="${c.cost ?? 0}"
               style="color:#FFD54F;outline:none;box-shadow:none;" />
           </div>

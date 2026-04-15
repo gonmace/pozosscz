@@ -411,6 +411,14 @@ document.querySelectorAll(".checkbox-camion").forEach((checkbox) => {
     const checked = cb.checked;
     try {
       await updateTruckMarkers(camionId, checked);
+      const marker = truckMarkers[camionId];
+      if (marker) {
+        if (checked) {
+          marker.addTo(map);
+        } else {
+          map.removeLayer(marker);
+        }
+      }
     } catch (error) {
       createToast("camion", "map", "Hubo un error al actualizar la base", "top", "error");
       cb.checked = !checked; // revertir toggle si falla
@@ -819,6 +827,113 @@ async function fetchAreaFactor() {
 let polygonLayers: { label: string; layer: Polygon }[] = [];
 let groupCot, groupEje;
 
+let mcgLayerSupportGroup: any = null;
+const CLUSTER_RADIUS_KEY = "mapa.clusterRadiusKm";
+let clusterRadiusKm = (() => {
+  const raw = localStorage.getItem(CLUSTER_RADIUS_KEY);
+  const parsed = raw != null ? parseInt(raw, 10) : NaN;
+  return Number.isFinite(parsed) && parsed >= 0 && parsed <= 20 ? parsed : 2;
+})();
+let clusterRadiusPixels = 0;
+
+function kmToPixelsAtZoom(km: number, zoom: number, lat: number): number {
+  // Web Mercator meters-per-pixel
+  const metersPerPixel =
+    (156543.03392 * Math.cos((lat * Math.PI) / 180)) / Math.pow(2, zoom);
+  return (km * 1000) / metersPerPixel;
+}
+
+function recomputeClusterPixels() {
+  clusterRadiusPixels = kmToPixelsAtZoom(
+    clusterRadiusKm,
+    map.getZoom(),
+    map.getCenter().lat
+  );
+}
+
+const clusterOptions: any = {
+  spiderLegPolylineOptions: { weight: 0 },
+  spiderfyOnMaxZoom: true,
+  zoomToBoundsOnClick: false,
+  removeOutsideVisibleBounds: true,
+  showCoverageOnHover: true,
+  disableClusteringAtZoom: 18,
+  maxClusterRadius: () => clusterRadiusPixels,
+  spiderfyDistanceMultiplier: 1,
+  chunkedLoading: true,
+  chunkInterval: 100,
+  singleAddRemoveBufferDuration: 200,
+};
+
+function rebuildClusterGroup() {
+  if (!mcgLayerSupportGroup) return;
+  // MCG sólo construye el árbol si _topClusterLevel no existe. Para aplicar
+  // un nuevo maxClusterRadius: clearLayers() resetea el árbol (sin tocar
+  // _proxyLayerGroups del layerSupport), se muta la opción, y addLayers
+  // re-inserta los markers → se re-clusterizan con el radio nuevo.
+  const markers = mcgLayerSupportGroup.getLayers();
+  mcgLayerSupportGroup.clearLayers();
+  mcgLayerSupportGroup.options.maxClusterRadius = clusterOptions.maxClusterRadius;
+  mcgLayerSupportGroup.addLayers(markers);
+}
+
+function addClusterRadiusControl() {
+  const ctrl = control.custom({
+    position: "topright",
+    content: `
+      <div class="mb-2 sm:mb-1" style="position:relative;">
+        <button id="cluster-radius-btn" title="Radio cluster" class="btn btn-neutral btn-sm btn-square sombra">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sombra" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="9"/>
+            <circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/>
+          </svg>
+        </button>
+        <div id="cluster-radius-panel" style="display:none;position:absolute;right:calc(100% + 6px);top:0;background:rgba(255,255,255,0.95);padding:6px 10px;border-radius:6px;box-shadow:0 1px 4px rgba(0,0,0,0.3);align-items:center;gap:8px;font-size:12px;color:#333;white-space:nowrap;">
+          <label for="cluster-radius-slider" style="white-space:nowrap;font-weight:500;">Radio: <span id="cluster-radius-val">${clusterRadiusKm}</span> km</label>
+          <input id="cluster-radius-slider" type="range" min="0" max="20" step="1" value="${clusterRadiusKm}" style="width:140px;vertical-align:middle;" />
+        </div>
+      </div>
+    `,
+    classes: "",
+  });
+  ctrl.addTo(map);
+
+  const btn = document.getElementById("cluster-radius-btn") as HTMLButtonElement | null;
+  const panel = document.getElementById("cluster-radius-panel") as HTMLDivElement | null;
+  const slider = document.getElementById("cluster-radius-slider") as HTMLInputElement | null;
+  const valEl = document.getElementById("cluster-radius-val") as HTMLSpanElement | null;
+  if (!btn || !panel || !slider || !valEl) return;
+
+  btn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    panel.style.display = panel.style.display === "flex" ? "none" : "flex";
+  });
+
+  // Cerrar al click fuera del panel
+  document.addEventListener("click", (e) => {
+    const target = e.target as Node;
+    if (panel.style.display === "flex" && !panel.contains(target) && !btn.contains(target)) {
+      panel.style.display = "none";
+    }
+  });
+
+  let debounceId: number | undefined;
+  slider.addEventListener("input", (e) => {
+    const v = parseInt((e.target as HTMLInputElement).value, 10);
+    clusterRadiusKm = v;
+    valEl.textContent = String(v);
+    localStorage.setItem(CLUSTER_RADIUS_KEY, String(v));
+    recomputeClusterPixels();
+    if (debounceId) clearTimeout(debounceId);
+    debounceId = window.setTimeout(() => rebuildClusterGroup(), 80);
+  });
+
+  // Evitar que el mapa capture mousedown/wheel/dblclick del slider
+  ["mousedown", "dblclick", "wheel", "touchstart"].forEach((ev) => {
+    slider.addEventListener(ev, (e) => e.stopPropagation());
+  });
+}
+
 async function initializeAreas() {
   try {
     const areaFact = await fetchAreaFactor();
@@ -839,21 +954,8 @@ async function initializeAreas() {
 
     ({ groupEje, groupCot } = await fetchClients());
 
-    var options = {
-      spiderLegPolylineOptions: { weight: 0 },
-      spiderfyOnMaxZoom: true,
-      zoomToBoundsOnClick: false,
-      removeOutsideVisibleBounds: true,
-      showCoverageOnHover: true,
-      disableClusteringAtZoom: 18,
-      maxClusterRadius: 50,
-      spiderfyDistanceMultiplier: 1,
-      chunkedLoading: true,
-      chunkInterval: 100,
-      singleAddRemoveBufferDuration: 200,
-    };
-
-    var mcgLayerSupportGroup = markerClusterGroup.layerSupport(options);
+    recomputeClusterPixels();
+    mcgLayerSupportGroup = markerClusterGroup.layerSupport(clusterOptions);
     mcgLayerSupportGroup.addTo(map);
 
     mcgLayerSupportGroup.checkIn(groupCot);
@@ -977,6 +1079,8 @@ async function initializeAreas() {
 
     map.addControl(sliderControl);
     sliderControl.startSlider();
+
+    addClusterRadiusControl();
   } catch (error) {
     console.error("Error al obtener las áreas:", error);
   }
@@ -1160,7 +1264,8 @@ function crearIconoBase(nombre = ''): ReturnType<typeof divIcon> {
 }
 
 function markerGloboHtml(iniciales: string): string {
-  const fs = iniciales.length > 2 ? 9 : 11;
+  // El contenedor se escala 0.53, así que el font efectivo es fs * 0.53
+  const fs = iniciales.length > 2 ? 16 : 20;
   return `<div class="awesome-marker awesome-marker-icon-cadetblue"
     style="transform:scale(0.53);transform-origin:bottom center;width:35px;height:46px;position:relative;flex-shrink:0;">
     <span style="color:white;font-size:${fs}px;font-weight:700;display:block;
@@ -1254,9 +1359,19 @@ async function cargarCamiones(enfocar = false) {
 
     for (const c of camiones) {
       const estadoLabel = c.activo ? "🟢 Activo" : "🔴 Inactivo";
+      let tanqueTxt: string;
+      if (c.nivel_tanque == null) {
+        tanqueTxt = "Tanque: —";
+      } else {
+        const pct = Math.round(c.nivel_tanque * 100);
+        if (pct >= 100) tanqueTxt = "Tanque lleno";
+        else if (pct <= 0) tanqueTxt = "Tanque vacío";
+        else tanqueTxt = `Tanque: ${pct}%`;
+      }
+      const tanqueColor = nivelTanqueColor(c.nivel_tanque);
       const tooltipHtml = `
         <b>${c.operador}</b> ${estadoLabel}<br>
-        🚐 ${c.velocidad.toFixed(0)} km/h
+        🚐 ${c.velocidad.toFixed(0)} km/h · <span style="color:${tanqueColor};font-weight:700;">🛢️ ${tanqueTxt}</span>
         ${c.comentario ? `<br>📍 ${c.comentario}` : ""}
       `;
 
