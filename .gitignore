@@ -23,6 +23,12 @@ maps/src/node_modules/
 firebase-service-account.json
 pozosscz-firebase-adminsdk-*.json
 
+# Secretos montados como volumen en el contenedor (./secrets:/app/secrets:ro)
+# El directorio se conserva con .gitkeep; su contenido real queda fuera del repo.
+secrets/*
+!secrets/.gitkeep
+!secrets/README.md
+
 # Backups de base de datos
 backups/
 *.sql
