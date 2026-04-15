@@ -194,9 +194,9 @@ function onMapClick(e: LeafletMouseEvent) {
       const showArrow = tooltipTransform !== 'translateX(-50%)';
       
       tooltipContainer.innerHTML = `
-        ${showArrow ? '<div class="tooltip-arrow absolute left-[-8px] sm:left-[-8px] top-1/2 -translate-y-1/2 w-0 h-0 border-t-[6px] sm:border-t-[8px] border-t-transparent border-b-[6px] sm:border-b-[8px] border-b-transparent border-r-[6px] sm:border-r-[8px]" style="border-right-color: var(--color-primary);"></div>' : ''}
+        ${showArrow ? '<div class="tooltip-arrow absolute left-[-8px] sm:left-[-8px] top-1/2 -translate-y-1/2 w-0 h-0 border-t-6 sm:border-t-8 border-t-transparent border-b-6 sm:border-b-8 border-b-transparent border-r-6 sm:border-r-8" style="border-right-color: var(--color-primary);"></div>' : ''}
         <div class="flex items-center gap-1 sm:gap-2 flex-wrap sm:flex-nowrap">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5 animate-pulse flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5 animate-pulse shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
@@ -408,6 +408,41 @@ function onMapClick(e: LeafletMouseEvent) {
       return;
     }
     precioFinal = Math.round(dataPrice.precio / 10) * 10;
+
+    const distIda = dataPrice.distances[dataPrice.origen] / 1000;
+    const distRetorno = dataPrice.distance_saguapac[0] / 1000;
+
+    // Tabla 1: distancias de todas las bases (tiempos ajustados por factor camión)
+    const basesRows = dataPrice.origins.map((origen, i) => ({
+      base: origen,
+      'dist (km)': (dataPrice.distances[i] / 1000).toFixed(2),
+      'tiempo ida ajustado (min)': Math.round(dataPrice.times[i] * dataPrice.factor_camion / 60),
+      seleccionada: i === dataPrice.origen ? '✓' : '',
+    }));
+    console.table(basesRows);
+
+    // Tabla 2: desglose del precio
+    console.table([
+      { concepto: 'Origen seleccionado',  valor: dataPrice.origins[dataPrice.origen] },
+      { concepto: 'Dist. ida (km)',        valor: distIda.toFixed(2) },
+      { concepto: 'Dist. retorno (km)',    valor: distRetorno.toFixed(2) },
+      { concepto: 'Dist. SCZ (km)',        valor: dataPrice.distance_scz.toFixed(2) },
+      { concepto: 'Tiempo ida ajustado (min)',     valor: Math.round(dataPrice.times[dataPrice.origen] * dataPrice.factor_camion / 60) },
+      { concepto: 'Tiempo retorno Saguapac (min)', valor: Math.round(dataPrice.time_saguapac[0] * dataPrice.factor_camion * dataPrice.factor_cargado / 60) },
+      { concepto: 'Tiempo trabajo (min)',          valor: dataPrice.tiempo_trabajo_min },
+      { concepto: 'Tiempo real (min)',     valor: dataPrice.tiempo_real_min },
+      { concepto: 'Tiempo cobro (min)',    valor: dataPrice.tiempo_cobro_min },
+      { concepto: 'Costo combustible',    valor: `Bs. ${dataPrice.costo_combustible.toFixed(1)}` },
+      { concepto: 'Mantenimiento',        valor: `Bs. ${dataPrice.detalle_otros.mantenimiento}` },
+      { concepto: 'Saguapac planta',      valor: `Bs. ${dataPrice.detalle_otros.saguapac}` },
+      { concepto: 'Retorno Saguapac',     valor: `Bs. ${dataPrice.detalle_otros.retorno_saguapac}` },
+      { concepto: 'Utilidad',             valor: `Bs. ${dataPrice.utilidad.toFixed(1)}` },
+      { concepto: 'Factor zona',          valor: dataPrice.factor_zona },
+      { concepto: 'Factor global',        valor: dataPrice.factor_global },
+      { concepto: 'Chofer',              valor: `Bs. ${dataPrice.chofer.toFixed(1)}` },
+      { concepto: 'PRECIO FINAL',         valor: `Bs. ${precioFinal}` },
+    ]);
+
     botonConfirmar.textContent = "Guardar";
     if (dataPrice.distance_scz < dataPrice.distancia_maxima_cotizar && dataPrice.factor_zona == 0) {
       parrafo.innerHTML = `<b>Bs.${precioFinal}</b> ${DATOS_GENERALES.mensaje_cotizar} <span class=" italic">Precio referencial, sujeto a confirmación. Contáctanos para más detalles.</span>` ;

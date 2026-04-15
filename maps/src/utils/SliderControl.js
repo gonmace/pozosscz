@@ -3,9 +3,9 @@ L.Control.SliderControl = L.Control.extend({
         position: 'topright',
         layers: null,
         timeAttribute: 'time',
-        isEpoch: false,     
-        startTimeIdx: 0,    
-        timeStrLength: 19,  
+        isEpoch: false,
+        startTimeIdx: 0,
+        timeStrLength: 19,
         maxValue: -1,
         minValue: 0,
         showAllOnStart: false,
@@ -15,342 +15,311 @@ L.Control.SliderControl = L.Control.extend({
         sameDate: false,
         alwaysShowDate: false,
         rezoom: null,
-        minGap: 1 // Mínima diferencia entre los rangos
+        minGap: 1
     },
 
     initialize: function (options) {
         L.Util.setOptions(this, options);
         this._layer = this.options.layer;
-        this._dates = []; // Array para almacenar fechas
+        this._dates = [];
+        this._currentMin = 0;
+        this._currentMax = 0;
     },
 
-    extractTimestamp: function(time, options) {
+    extractTimestamp: function (time, options) {
         if (options.isEpoch) {
             time = (new Date(parseInt(time))).toString();
         }
         return time.substr(options.startTimeIdx, options.startTimeIdx + options.timeStrLength);
     },
 
-    setPosition: function (position) {
-        var map = this._map;
-
-        if (map) {
-            map.removeControl(this);
-        }
-
-        this.options.position = position;
-
-        if (map) {
-            map.addControl(this);
-        }
-        this.startSlider();
-        return this;
-    },
-
     onAdd: function (map) {
         this.options.map = map;
 
-        // Create a control sliderContainer with custom range input
-        var sliderContainer = L.DomUtil.create('div', 'slider', this._container);
-        var sliderContent = `
-            <div id="leaflet-slider" class="bg-gray-100 w-full max-w-md px-4 py-1 rounded-lg shadow-lg">
-                <div id="slider-timestamp" class="text-black font-bold mb-4 hidden"></div>
-                
-                <div class="relative mt-4 slider-container">
-                    <!-- Custom Range Inputs -->
-                    <input type="range" id="rangeMin" class="range-input">
-                    <input type="range" id="rangeMax" class="range-input">
-                    
-                    <!-- Custom Track -->
-                    <div class="relative w-full h-2 rounded-md bg-gray-300">
-                        <div id="rangeTrack" class="absolute h-2 bg-accent rounded-md"></div>
+        var container = L.DomUtil.create('div', 'slider', this._container);
+        container.innerHTML = `
+            <div id="leaflet-slider" class="bg-gray-100 w-full px-4 py-2 rounded-lg shadow-lg">
+                <div id="sliderTrackArea" style="position:relative;height:24px;user-select:none;touch-action:none;cursor:pointer;">
+                    <!-- Track fondo -->
+                    <div id="sliderTrackBg" style="position:absolute;top:50%;left:0;right:0;transform:translateY(-50%);height:6px;background:#cbd5e1;border-radius:3px;pointer-events:none;">
+                        <div id="rangeTrack" style="position:absolute;height:100%;background:hsl(var(--a,210 100% 56%));border-radius:3px;"></div>
                     </div>
+                    <!-- Thumbs -->
+                    <div id="thumbMin" style="position:absolute;top:50%;transform:translate(-50%,-50%);width:18px;height:18px;background:#6b7280;border:3px solid hsl(var(--p,262 80% 50%));border-radius:50%;cursor:grab;z-index:3;box-sizing:border-box;"></div>
+                    <div id="thumbMax" style="position:absolute;top:50%;transform:translate(-50%,-50%);width:18px;height:18px;background:#6b7280;border:3px solid hsl(var(--p,262 80% 50%));border-radius:50%;cursor:grab;z-index:3;box-sizing:border-box;"></div>
                 </div>
-                
-                <div class="flex justify-between mt-1 text-black font-bold">
-                    <span id="startDate"></span>
+                <div class="flex justify-between mt-1 text-black font-bold text-xs">
+                    <span id="startDate" title="Click para editar fecha" style="cursor:pointer;text-decoration:underline dotted;"></span>
                     <span id="endDate"></span>
                 </div>
             </div>`;
-        sliderContainer.innerHTML = sliderContent;
 
-        // Get elements
-        this._rangeMin = sliderContainer.querySelector('#rangeMin');
-        this._rangeMax = sliderContainer.querySelector('#rangeMax');
-        this._rangeTrack = sliderContainer.querySelector('#rangeTrack');
-        this._startDateSpan = sliderContainer.querySelector('#startDate');
-        this._endDateSpan = sliderContainer.querySelector('#endDate');
-        this._timestampDiv = sliderContainer.querySelector('#slider-timestamp');
+        const style = document.createElement('style');
+        style.textContent = `.slider { margin:0 0.5rem 0.5rem 0.5rem; width:clamp(200px,40vw,320px); }`;
+        document.head.appendChild(style);
 
-        // Prevent map panning/zooming while using the slider
-        sliderContainer.addEventListener('mousedown', () => {
-            map.dragging.disable();
-        });
+        this._trackArea     = container.querySelector('#sliderTrackArea');
+        this._rangeTrack    = container.querySelector('#rangeTrack');
+        this._thumbMin      = container.querySelector('#thumbMin');
+        this._thumbMax      = container.querySelector('#thumbMax');
+        this._startDateSpan = container.querySelector('#startDate');
+        this._endDateSpan   = container.querySelector('#endDate');
 
-        document.addEventListener('mouseup', () => {
-            map.dragging.enable();
-        });
-
-        // Initialize markers array
+        // Cargar marcadores
         var options = this.options;
-        this.options.markers = [];
-        this._dates = []; // Limpiar el array de fechas
+        options.markers = [];
+        this._dates = [];
 
         if (this._layer) {
-            var index_temp = 0;
+            var idx = 0;
             this._layer.eachLayer((layer) => {
-                options.markers[index_temp] = layer;
-                
-                // Extraer y guardar la fecha de cada marcador
+                options.markers[idx] = layer;
                 let timeValue;
-                if (layer.feature !== undefined && layer.feature.properties[this.options.timeAttribute]) {
+                if (layer.feature && layer.feature.properties[this.options.timeAttribute]) {
                     timeValue = layer.feature.properties[this.options.timeAttribute];
                 } else if (layer.options[this.options.timeAttribute]) {
                     timeValue = layer.options[this.options.timeAttribute];
                 }
-                
                 if (timeValue) {
                     const dateStr = this.extractTimestamp(timeValue, this.options);
-                    const dateShort = dateStr.split(' ')[0];
-                    this._dates[index_temp] = dateShort;
+                    this._dates[idx] = dateStr.split(' ')[0];
                 } else {
-                    this._dates[index_temp] = `Fecha ${index_temp}`;
+                    this._dates[idx] = `Fecha ${idx}`;
                 }
-                
-                ++index_temp;
+                idx++;
             });
-            options.maxValue = index_temp - 1;
+            options.maxValue = idx - 1;
             this.options = options;
-        } else {
-            console.log("Error: You have to specify a layer via new SliderControl({layer: your_layer});");
         }
 
-        // Add styles for the range inputs
-        const style = document.createElement('style');
-        style.textContent = `
-            .slider {
-                margin: 0.5rem;
-                min-width: 392px; /* 280px + 40% */
-            }
+        // Prevenir que el mapa reciba eventos del slider
+        L.DomEvent.disableClickPropagation(container);
+        L.DomEvent.disableScrollPropagation(container);
 
-            @media (max-width: 640px) {
-                .slider {
-                    min-width: 60vw;
-                }
-            }
-
-            .slider-container {
-                position: relative;
-                height: 18px;
-            }
-
-            /* Hide default range styling */
-            .range-input {
-                -webkit-appearance: none;
-                appearance: none;
-                width: 100%;
-                position: absolute;
-                background: transparent;
-                pointer-events: none;
-                z-index: 2;
-                color: red; /* Hide the value */
-            }
-
-            /* Custom track (hidden default) */
-            .range-input::-webkit-slider-runnable-track {
-                height: 2px;
-            }
-
-            /* Custom thumb styling (Centered) */
-            .range-input::-webkit-slider-thumb {
-                -webkit-appearance: none;
-                appearance: none;
-                width: 18px;
-                height: 18px;
-                background: gray;
-                border: 3px solid hsl(var(--p));
-                border-radius: 50%;
-                cursor: pointer;
-                pointer-events: auto;
-                position: relative;
-                z-index: 3;
-                transform: translateY(-30%);
-            }
-
-            .range-input::-moz-range-thumb {
-                width: 18px;
-                height: 18px;
-                background: gray;
-                border: 3px solid hsl(var(--p));
-                border-radius: 50%;
-                cursor: pointer;
-                pointer-events: auto;
-                z-index: 3;
-                transform: translateY(-30%);
-            }
-        `;
-        document.head.appendChild(style);
-
-        return sliderContainer;
+        return container;
     },
 
     onRemove: function (map) {
         for (var i = this.options.minValue; i <= this.options.maxValue; i++) {
-            map.removeLayer(this.options.markers[i]);
+            if (this.options.markers[i]) map.removeLayer(this.options.markers[i]);
         }
-        
-        document.removeEventListener('mouseup', this._handleMouseUp);
-        this._rangeMin.removeEventListener('input', this._handleMinInput);
-        this._rangeMax.removeEventListener('input', this._handleMaxInput);
     },
 
-    _updateRange: function(event) {
-        let min = parseInt(this._rangeMin.value);
-        let max = parseInt(this._rangeMax.value);
+    // ── Posición en px → valor del slider ─────────────────────────────────────
+    _pxToVal: function (clientX) {
+        const rect = this._trackArea.getBoundingClientRect();
+        const pct  = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+        const lo   = this.options.minValue;
+        const hi   = this.options.maxValue;
+        return Math.round(pct * (hi - lo) + lo);
+    },
 
-        // Ensure min & max have a gap of at least minGap
-        if (max - min < this.options.minGap) {
-            if (event && event.target === this._rangeMin) {
-                min = max - this.options.minGap;
-                this._rangeMin.value = min;
-            } else {
-                max = min + this.options.minGap;
-                this._rangeMax.value = max;
-            }
-        }
+    // ── Actualizar UI y marcadores a partir de _currentMin / _currentMax ───────
+    _applyValues: function (updateMarkers) {
+        const lo  = this.options.minValue;
+        const hi  = this.options.maxValue;
+        const min = this._currentMin;
+        const max = this._currentMax;
 
-        // Save range values to localStorage
+        const minPct = hi > lo ? ((min - lo) / (hi - lo)) * 100 : 0;
+        const maxPct = hi > lo ? ((max - lo) / (hi - lo)) * 100 : 100;
+
+        this._thumbMin.style.left  = minPct + '%';
+        this._thumbMax.style.left  = maxPct + '%';
+        this._rangeTrack.style.left  = minPct + '%';
+        this._rangeTrack.style.right = (100 - maxPct) + '%';
+
         localStorage.setItem('sliderRangeMin', min);
         localStorage.setItem('sliderRangeMax', max);
 
-        // Update visual track
-        const range = this.options.maxValue - this.options.minValue;
-        const minPercent = ((min - this.options.minValue) / range) * 100;
-        const maxPercent = ((max - this.options.minValue) / range) * 100;
-        
-        requestAnimationFrame(() => {
-            this._rangeTrack.style.left = minPercent + "%";
-            this._rangeTrack.style.right = (100 - maxPercent) + "%";
-        });
+        // Fechas
+        const mk0 = this.options.markers[min];
+        const mk1 = this.options.markers[max];
+        if (mk0) this._startDateSpan.textContent = this._dates[min] || '';
+        if (mk1) this._endDateSpan.textContent   = this._dates[max] || '';
 
-        // Update dates and markers
-        const startDate = this._updateTimestamp(this.options.markers[min]);
-        const endDate = this._updateTimestamp(this.options.markers[max]);
-        
-        if (startDate && endDate) {
-            const startDateShort = startDate.split(' ')[0];
-            const endDateShort = endDate.split(' ')[0];
-            
-            // Update the timestamp div with min-max values
-            this._timestampDiv.innerHTML = `${startDate} - ${endDate}`;
-            
-            // Update the bottom spans with date values
-            this._startDateSpan.textContent = this._dates[min] || startDateShort;
-            this._endDateSpan.textContent = this._dates[max] || endDateShort;
-        }
-
-        // Only update markers on mouseup for better performance
-        if (!event || event.type === 'mouseup') {
-            this._updateMarkers(min, max);
-        }
+        if (updateMarkers) this._updateMarkers(min, max);
     },
 
-    _updateTimestamp: function(marker) {
-        if (!marker) return;
-        
+    // ── Drag de un thumb ──────────────────────────────────────────────────────��
+    _setupThumbDrag: function (thumb, isMin) {
+        const lo  = this.options.minValue;
+        const hi  = this.options.maxValue;
+        const gap = this.options.minGap;
+
+        const onMove = (e) => {
+            e.preventDefault();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const val = this._pxToVal(clientX);
+            if (isMin) {
+                this._currentMin = Math.max(lo, Math.min(val, this._currentMax - gap));
+            } else {
+                this._currentMax = Math.min(hi, Math.max(val, this._currentMin + gap));
+            }
+            this._applyValues(false);
+        };
+
+        const onEnd = () => {
+            thumb.style.cursor = 'grab';
+            this.options.map.dragging.enable();
+            this._applyValues(true);
+            document.removeEventListener('mousemove', onMove);
+            document.removeEventListener('mouseup', onEnd);
+            document.removeEventListener('touchmove', onMove);
+            document.removeEventListener('touchend', onEnd);
+        };
+
+        const onStart = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            thumb.style.cursor = 'grabbing';
+            this.options.map.dragging.disable();
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('mouseup', onEnd);
+            document.addEventListener('touchmove', onMove, { passive: false });
+            document.addEventListener('touchend', onEnd);
+        };
+
+        thumb.addEventListener('mousedown', onStart);
+        thumb.addEventListener('touchstart', onStart, { passive: false });
+    },
+
+    // ── Click en la barra: mueve el thumb más cercano ─────────────────────────
+    _setupTrackClick: function () {
+        this._trackArea.addEventListener('click', (e) => {
+            // Ignorar si el click fue directamente en un thumb
+            if (e.target === this._thumbMin || e.target === this._thumbMax) return;
+
+            const lo  = this.options.minValue;
+            const hi  = this.options.maxValue;
+            const gap = this.options.minGap;
+            const val = this._pxToVal(e.clientX);
+
+            const distMin = Math.abs(val - this._currentMin);
+            const distMax = Math.abs(val - this._currentMax);
+
+            // Si click a la izquierda de min → mueve min
+            // Si click a la derecha de max → mueve max
+            // Si en medio → mueve el más cercano
+            if (val <= this._currentMin) {
+                this._currentMin = Math.max(lo, val);
+            } else if (val >= this._currentMax) {
+                this._currentMax = Math.min(hi, val);
+            } else if (distMin <= distMax) {
+                this._currentMin = Math.max(lo, Math.min(val, this._currentMax - gap));
+            } else {
+                this._currentMax = Math.min(hi, Math.max(val, this._currentMin + gap));
+            }
+            this._applyValues(true);
+        });
+    },
+
+    _updateTimestamp: function (marker) {
+        if (!marker) return null;
         let timeValue;
-        if (marker.feature !== undefined && marker.feature.properties[this.options.timeAttribute]) {
+        if (marker.feature && marker.feature.properties[this.options.timeAttribute]) {
             timeValue = marker.feature.properties[this.options.timeAttribute];
         } else if (marker.options[this.options.timeAttribute]) {
             timeValue = marker.options[this.options.timeAttribute];
-        } else {
-            console.error("Time property " + this.options.timeAttribute + " not found in data");
-            return;
         }
-        
+        if (!timeValue) return null;
         return this.extractTimestamp(timeValue, this.options);
     },
 
-    _updateMarkers: function(startValue, endValue) {
-        var map = this.options.map;
-        var fg = L.featureGroup();
-        
-        // Clear existing markers
-        for (var i = this.options.minValue; i <= this.options.maxValue; i++) {
-            if(this.options.markers[i]) map.removeLayer(this.options.markers[i]);
-        }
+    // ── Click en fecha izquierda: edición inline ──────────────────────────────
+    _setupDateEdit: function () {
+        this._startDateSpan.addEventListener('click', () => {
+            const current = this._dates[this._currentMin] || '';
+            // Normalizar a YYYY-MM-DD si viene en otro formato
+            const isoDate = current.length === 10 ? current : '';
 
-        // Add markers based on range
+            const input = document.createElement('input');
+            input.type = 'date';
+            input.value = isoDate;
+            input.style.cssText = 'font-size:0.75rem;font-weight:700;color:#000;border:none;background:transparent;outline:1px solid hsl(var(--p,262 80% 50%));border-radius:3px;padding:0 2px;width:100px;cursor:pointer;';
+
+            const span = this._startDateSpan;
+            span.textContent = '';
+            span.appendChild(input);
+            input.focus();
+            // Abrir picker inmediatamente en navegadores que lo soportan
+            try { input.showPicker(); } catch (_) {}
+
+            const commit = () => {
+                const val = input.value; // YYYY-MM-DD o ''
+                if (val) {
+                    // Buscar el índice más cercano a la fecha elegida
+                    const target = new Date(val).getTime();
+                    let bestIdx = this._currentMin;
+                    let bestDiff = Infinity;
+                    for (let i = this.options.minValue; i <= this.options.maxValue; i++) {
+                        const d = this._dates[i];
+                        if (!d || d.startsWith('Fecha')) continue;
+                        const diff = Math.abs(new Date(d).getTime() - target);
+                        if (diff < bestDiff) { bestDiff = diff; bestIdx = i; }
+                    }
+                    const lo = this.options.minValue;
+                    const gap = this.options.minGap;
+                    this._currentMin = Math.max(lo, Math.min(bestIdx, this._currentMax - gap));
+                }
+                this._applyValues(true);
+            };
+
+            input.addEventListener('change', () => { commit(); });
+            input.addEventListener('blur',   () => { commit(); });
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') { input.blur(); }
+                if (e.key === 'Escape') { this._applyValues(false); } // restaura sin cambiar
+            });
+        });
+    },
+
+    _updateMarkers: function (startValue, endValue) {
+        var map = this.options.map;
+        var fg  = L.featureGroup();
+        for (var i = this.options.minValue; i <= this.options.maxValue; i++) {
+            if (this.options.markers[i]) map.removeLayer(this.options.markers[i]);
+        }
         for (i = startValue; i <= endValue; i++) {
-            if(this.options.markers[i]) {
+            if (this.options.markers[i]) {
                 map.addLayer(this.options.markers[i]);
                 fg.addLayer(this.options.markers[i]);
             }
         }
-
-        if(this.options.rezoom) {
-            map.fitBounds(fg.getBounds(), {
-                maxZoom: this.options.rezoom
-            });
+        if (this.options.rezoom) {
+            map.fitBounds(fg.getBounds(), { maxZoom: this.options.rezoom });
         }
     },
 
     startSlider: function () {
-        // Setup initial values
-        this._rangeMin.min = this.options.minValue;
-        this._rangeMin.max = this.options.maxValue;
-        this._rangeMax.min = this.options.minValue;
-        this._rangeMax.max = this.options.maxValue;
+        const lo  = this.options.minValue;
+        const hi  = this.options.maxValue;
+        const gap = this.options.minGap;
 
-        // Try to get saved values from localStorage
+        // Restaurar desde localStorage clampeando siempre al rango actual
         const savedMin = localStorage.getItem('sliderRangeMin');
         const savedMax = localStorage.getItem('sliderRangeMax');
 
-        if(savedMin !== null && savedMax !== null) {
-            // Use saved values if they exist and are within valid range
-            const minValue = parseInt(savedMin);
-            const maxValue = parseInt(savedMax);
-            
-            if (minValue >= this.options.minValue && 
-                maxValue <= this.options.maxValue && 
-                maxValue - minValue >= this.options.minGap) {
-                this._rangeMin.value = minValue;
-                this._rangeMax.value = maxValue;
-            } else {
-                // If saved values are invalid, use default values
-                if(this.options.showAllOnStart) {
-                    this._rangeMin.value = this.options.minValue;
-                    this._rangeMax.value = this.options.maxValue;
-                } else {
-                    this._rangeMin.value = this.options.minValue;
-                    this._rangeMax.value = Math.floor((this.options.maxValue - this.options.minValue) / 2);
-                }
-            }
+        if (savedMin !== null && savedMax !== null) {
+            let rMin = Math.max(lo, Math.min(parseInt(savedMin), hi - gap));
+            let rMax = Math.min(hi, Math.max(parseInt(savedMax), lo + gap));
+            if (rMax - rMin < gap) { rMin = lo; rMax = hi; }
+            this._currentMin = rMin;
+            this._currentMax = rMax;
+        } else if (this.options.showAllOnStart) {
+            this._currentMin = lo;
+            this._currentMax = hi;
         } else {
-            // If no saved values exist, use default values
-            if(this.options.showAllOnStart) {
-                this._rangeMin.value = this.options.minValue;
-                this._rangeMax.value = this.options.maxValue;
-            } else {
-                this._rangeMin.value = this.options.minValue;
-                this._rangeMax.value = Math.floor((this.options.maxValue - this.options.minValue) / 2);
-            }
+            this._currentMin = lo;
+            this._currentMax = Math.floor((hi - lo) / 2) + lo;
         }
 
-        // Bind event handlers to update UI in real-time
-        this._rangeMin.addEventListener('input', (e) => this._updateRange(e));
-        this._rangeMax.addEventListener('input', (e) => this._updateRange(e));
-        
-        // Also update markers on mouseup for better performance
-        this._rangeMin.addEventListener('mouseup', (e) => this._updateRange(e));
-        this._rangeMax.addEventListener('mouseup', (e) => this._updateRange(e));
-        
-        // Touch events support for mobile
-        this._rangeMin.addEventListener('touchend', (e) => this._updateRange(e));
-        this._rangeMax.addEventListener('touchend', (e) => this._updateRange(e));
+        this._setupThumbDrag(this._thumbMin, true);
+        this._setupThumbDrag(this._thumbMax, false);
+        this._setupTrackClick();
+        this._setupDateEdit();
 
-        // Initial update
-        this._updateRange();
+        this._applyValues(true);
     }
 });
 

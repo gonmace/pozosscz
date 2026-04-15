@@ -21,9 +21,10 @@ export async function postData(
   marker: Marker,
   status: "COT" | "EJE" | "NEG" = "COT",
   user: "ADM" | "CLC" | "CLX" = "ADM",
-  cod: string = ""
+  cod: string = "",
+  precio_cotizado?: number,
 ) {
-  const data = {
+  const data: Record<string, unknown> = {
     name: name,
     tel1: phone,
     cost: cost,
@@ -33,6 +34,7 @@ export async function postData(
     user: user,
     cod: cod,
   };
+  if (typeof precio_cotizado === "number" && precio_cotizado > 0) data.precio_cotizado = precio_cotizado;
   return fetch(urlPost, {
     method: "POST",
     body: JSON.stringify(data),

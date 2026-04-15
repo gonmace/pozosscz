@@ -6,7 +6,7 @@ import "leaflet-draw/dist/leaflet.draw.css";
 import "leaflet.control.layers.tree/L.Control.Layers.Tree.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 import {
-  Map,
+  Map as LeafletMap,
   tileLayer,
   Marker,
   control,
@@ -15,12 +15,16 @@ import {
   Polygon,
   Draw,
   LatLng,
+  LatLngBounds,
   Layer,
   markerClusterGroup,
   LayerGroup,
+  divIcon,
+  polyline,
+  Polyline,
 } from "leaflet";
 import "./utils/leaflet.Control.Center";
-import { iconCamion, iconRed, locateOptions } from "./utils/ObjectLeaflet";
+import { iconRed, locateOptions } from "./utils/ObjectLeaflet";
 import "leaflet-control-custom";
 import "./types/leaflet-control-custom.d.ts";
 import "leaflet-draw";
@@ -33,8 +37,10 @@ import type {
   Path,
 } from "leaflet";
 import type { DataPrice, Poligonos } from "./types/types";
-import { createToast } from "./utils/toast";
+import { createToast, confirmDialog } from "./utils/toast";
 import { fetchClients } from "./utils/getClients";
+import { initClientesActivosModal, DatoCliente } from "./clientesActivosModal";
+import { showClientesResultadosModal } from "./clientesResultadosModal";
 import "leaflet.markercluster";
 import "leaflet.markercluster.layersupport";
 import { LocateControl } from "leaflet.locatecontrol";
@@ -51,7 +57,43 @@ import { modalPrecio } from "./utils/modalPrecio.ts";
 import "./utils/SliderControl";
 import { initializeSearchModal } from "./utils/findClients";
 import { tableModal } from "./utils/tableModel";
+import { cargarCamiones as cargarListaCamiones } from "./utils/camiones";
+import { initEventosCamionModal } from "./eventosCamionModal";
 import { findClientsInPolygon, parsePolygonCoordinates, fetchAllClients } from "./utils/findClientsInPolygon";
+import "leaflet.awesome-markers/dist/leaflet.awesome-markers.css";
+import "leaflet.awesome-markers";
+
+
+// Inyectar CSS de animaciones y correcciones de controles en el DOM
+(function injectStyles() {
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes prg-pulse {
+      0%   { opacity: 0.65; }
+      70%  { opacity: 0;    }
+      100% { opacity: 0;    }
+    }
+    /* Slider pegado al borde superior del mapa */
+    .leaflet-top.leaflet-right .slider { margin-top: 0 !important; }
+    /* Limitar ancho del control de capas para no bloquear el mapa */
+    .leaflet-control-layers {
+      max-width: clamp(160px, 35vw, 220px);
+    }
+    .leaflet-control-layers-list {
+      overflow-x: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      font-size: 12px;
+    }
+    @media (max-width: 639px) {
+      #div-dibujar,
+      #div-zona-factor,
+      #add-area,
+      #navbar { display: none !important; }
+    }
+  `;
+  document.head.appendChild(style);
+})();
 
 let marker: Marker;
 let markerCamion: Marker;
@@ -59,6 +101,10 @@ let paths: Path[] = [];
 let dataPrice: DataPrice;
 const colorPath = ["#FF8444", "#286d31", "#3357FF", "#A633FF"];
 const overlay = document.getElementById("overlay") as HTMLDivElement;
+
+// Tracking de markers de clientes de la jornada (id → Marker)
+const _clienteMarkers = new Map<number, Marker>();
+let _clientesJornada: DatoCliente[] = [];
 
 // Store truck markers with their IDs
 const truckMarkers: Record<string, Marker> = {};
@@ -78,12 +124,15 @@ const colores = [
   "#FF33A6",
 ];
 
-const map = new Map("map", {
+const map = new LeafletMap("map", {
   center: [-17.784071, -63.180522],
   zoom: 12,
   maxZoom: 20,
   zoomControl: false,
 });
+
+const _modalActivos = initClientesActivosModal(map);
+const _modalEventos = initEventosCamionModal(map);
 
 // Restore map view from localStorage if available
 const savedView = localStorage.getItem("mapView");
@@ -126,7 +175,7 @@ map.getContainer().style.cursor = "crosshair";
 const putMarker = document.getElementById("putMarker") as HTMLButtonElement;
 putMarker.disabled = true;
 const URLwhatsapp = document.getElementById("URLwhatsapp") as HTMLInputElement;
-URLwhatsapp.addEventListener("input", (e) => {
+URLwhatsapp.addEventListener("input", (_e) => {
   URLwhatsapp.value.length >= 20
     ? (putMarker.disabled = false)
     : (putMarker.disabled = true);
@@ -142,7 +191,7 @@ const cotiza = control.custom({
   events: {
     click: async () => {
       overlay.classList.remove("invisible");
-      dataPrice = await cotizando(marker);
+      dataPrice = await cotizando(marker, '/api/v1/contratar-admin/');
       overlay.classList.add("invisible");
       if (dataPrice.error) {
         createToast("cotiza", "map", dataPrice.error, "top", "error");
@@ -153,6 +202,7 @@ const cotiza = control.custom({
   },
 });
 cotiza.addTo(map);
+
 
 const botonCotiza = document.getElementById("cotiza") as HTMLButtonElement;
 botonCotiza.disabled = true;
@@ -234,7 +284,9 @@ function placeBaseMarker(latLng: LatLng) {
   if (markerCamion) {
     map.removeLayer(markerCamion);
   }
-  markerCamion = new Marker(latLng, { icon: iconCamion }).addTo(map);
+  const _nombre = (document.getElementById("nameCamion") as HTMLInputElement)?.value.trim() || "";
+  markerCamion = new Marker(latLng, { icon: crearIconoBase(_nombre) }).addTo(map);
+  markerCamion.bindTooltip(_nombre || '(sin nombre)', { permanent: false, direction: 'top' });
   GuardarBaseMarker.disabled = false;
 }
 
@@ -275,6 +327,16 @@ BaseMarker.addEventListener("click", () => {
 
 // Guardar base / camion en la DB
 GuardarBaseMarker.disabled = true;
+
+// Actualizar iniciales del marcador temporal al escribir el nombre
+(document.getElementById('nameCamion') as HTMLInputElement)?.addEventListener('input', () => {
+  if (markerCamion && coordinates) {
+    const nombre = (document.getElementById('nameCamion') as HTMLInputElement).value.trim();
+    markerCamion.setIcon(crearIconoBase(nombre));
+    markerCamion.bindTooltip(nombre || '(sin nombre)', { permanent: false, direction: 'top' });
+  }
+});
+
 GuardarBaseMarker.addEventListener("click", async () => {
   const nameInput = document.getElementById("nameCamion") as HTMLInputElement;
   const name = nameInput.value;
@@ -343,51 +405,29 @@ document.querySelectorAll(".locate-camion").forEach((button) => {
 });
 
 document.querySelectorAll(".checkbox-camion").forEach((checkbox) => {
-  checkbox.addEventListener("change", (e) => {
-    const row = (e.target as HTMLElement).closest("tr");
-    if (row) {
-      const checkbox = row.querySelector(
-        ".checkbox-camion"
-      ) as HTMLInputElement;
-      if (checkbox) {
-        const camionId = checkbox.dataset.camionId || "";
-        const checked = checkbox.checked;
-        try {
-          updateTruckMarkers(camionId, checked);
-        } catch (error) {
-          createToast(
-            "camion",
-            "map",
-            "Hubo un error al actualizar el camion",
-            "top",
-            "error"
-          );
-        }
-        // Update marker visibility
-        const marker = truckMarkers[camionId];
-        if (marker) {
-          if (checked) {
-            marker.addTo(map);
-          } else {
-            marker.removeFrom(map);
-          }
-        }
-      }
+  checkbox.addEventListener("change", async (e) => {
+    const cb = e.target as HTMLInputElement;
+    const camionId = cb.dataset.camionId || "";
+    const checked = cb.checked;
+    try {
+      await updateTruckMarkers(camionId, checked);
+    } catch (error) {
+      createToast("camion", "map", "Hubo un error al actualizar la base", "top", "error");
+      cb.checked = !checked; // revertir toggle si falla
     }
   });
 });
 
 document.querySelectorAll(".delete-camion").forEach((button) => {
   button.addEventListener("click", async (e) => {
-    const row = (e.target as HTMLElement).closest("tr");
+    const row = (e.target as HTMLElement).closest(".flex.items-center");
     if (row) {
       const camionId = row.querySelector(".camion-id") as HTMLInputElement;
-      const camionName = row.querySelector("td")?.textContent || "este camión";
+      const camionName = (row.querySelector("span.font-medium") as HTMLElement)?.textContent?.trim() || "esta base";
 
       if (camionId && camionId.value) {
-        // Show confirmation toast
-        const confirmDelete = confirm(
-          `¿Está seguro que desea eliminar ${camionName}?`
+        const confirmDelete = await confirmDialog(
+          `¿Está seguro que desea eliminar "${camionName}"?`
         );
 
         if (confirmDelete) {
@@ -457,9 +497,11 @@ function onMapClick(e: LeafletMouseEvent) {
 }
 map.on("click", onMapClick);
 
-// Control de localización del dispositivo
+// Control de localización del dispositivo (solo escritorio)
 const locateControl = new LocateControl(locateOptions);
-locateControl.addTo(map);
+if (window.innerWidth >= 640) {
+  locateControl.addTo(map);
+}
 
 // Escucha el evento 'locationfound' para obtener lat y lon
 map.on("locationfound", function (e: LocationEvent) {
@@ -515,7 +557,9 @@ const drawControl = new Control.Draw({
   },
 });
 
-map.addControl(drawControl);
+if (window.innerWidth >= 640) {
+  map.addControl(drawControl);
+}
 
 // Desactivar el click listener cuando comienza el dibujo
 map.on(Draw.Event.DRAWSTART, function () {
@@ -672,79 +716,8 @@ findClientsButton.addEventListener("click", async () => {
     // Find clients in polygon
     const clientsInPolygon = findClientsInPolygon(clients, coordinates);
 
-    // Update UI with results
-    const modal = document.getElementById("client-results-modal") as HTMLDialogElement;
-    const modalClientCount = document.getElementById("modal-client-count");
-    const modalClientList = document.getElementById("modal-client-list");
-
-    if (modal && modalClientCount && modalClientList) {
-      modalClientCount.textContent = clientsInPolygon.length.toString();
-      
-      // Clear previous results
-      modalClientList.innerHTML = "";
-      
-      // Add new results
-      clientsInPolygon.forEach(client => {
-        const clientItem = document.createElement("div");
-        clientItem.className = "text-sm p-2 hover:bg-base-200 border-b border-base-300";
-        clientItem.innerHTML = `
-          <div class="font-medium">${client.name || 'Sin nombre'}</div>
-          <div class="text-xs text-gray-400">${client.address || 'Sin dirección'}</div>
-          <div class="text-xs text-gray-300">
-            <span class="font-medium">Código:</span> ${client.cod || 'N/A'} | 
-            <span class="font-medium">Costo:</span> ${client.cost || 'N/A'} | 
-            <span class="font-medium">Servicio:</span> ${client.service || 'N/A'}
-          </div>
-          <div class="text-xs text-gray-400">
-            <span class="font-medium">Tel:</span> ${client.tel1 || 'N/A'} ${client.tel2 ? `| ${client.tel2}` : ''}
-          </div>
-          <div class="text-xs text-gray-400">
-            <span class="font-medium">Coords:</span> ${client.lat.toFixed(6)}, ${client.lon.toFixed(6)}
-          </div>
-        `;
-        modalClientList.appendChild(clientItem);
-      });
-
-      // Show modal
-      modal.showModal();
-
-      // Handle export to CSV
-      const exportButton = document.getElementById("export-csv");
-      if (exportButton) {
-        exportButton.onclick = () => {
-          const csvContent = [
-            // CSV Header
-            ['Nombre', 'Teléfono', 'Precio', 'Dirección', 'Fecha'].join(','),
-            // CSV Data
-            ...clientsInPolygon.map(client => [
-              `"${(client.name || '').replace(/"/g, '""')}"`,
-              `"${(client.tel1 || '').replace(/"/g, '""')}"`,
-              client.cost || '',
-              `"${(client.address || '').replace(/"/g, '""')}"`,
-              client.created_at ? new Date(client.created_at).toLocaleDateString() : ''
-            ].join(','))
-          ].join('\n');
-
-          // Create and download file
-          const blob = new Blob([`\ufeff${csvContent}`], { type: 'text/csv;charset=utf-8;' });
-          const link = document.createElement('a');
-          const url = URL.createObjectURL(blob);
-          link.setAttribute('href', url);
-          link.setAttribute('download', `clientes_${new Date().toISOString().split('T')[0]}.csv`);
-          link.style.visibility = 'hidden';
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-        };
-      }
-
-      // Handle close button
-      const closeButton = document.getElementById("close-client-modal");
-      if (closeButton) {
-        closeButton.onclick = () => {
-          modal.close();
-        };
-      }
+    if (clientsInPolygon.length >= 0) {
+      showClientesResultadosModal(clientsInPolygon, map);
 
       createToast(
         "clientes",
@@ -892,6 +865,7 @@ async function initializeAreas() {
 
     var baseTree = {
       label: "<strong>Capas Base</strong>",
+      collapsed: true,
       children: [
         { label: "OpenStreetMap", layer: osm },
         { label: "Esri World Imagery", layer: esri },
@@ -905,6 +879,7 @@ async function initializeAreas() {
         {
           label: " Factor por zona",
           selectAllCheckbox: true,
+          collapsed: true,
           children: polygonLayers,
         },
         {
@@ -971,10 +946,11 @@ async function initializeAreas() {
       ],
     };
 
+    const esMobile = window.innerWidth < 640;
     control.layers
       .tree(baseTree, overlayTree, {
-        position: "bottomleft",
-        collapsed: false,
+        position: esMobile ? "topleft" : "bottomleft",
+        collapsed: esMobile,
       })
       .addTo(map);
 
@@ -1007,8 +983,8 @@ async function initializeAreas() {
 
   const buscarCliente = control.custom({
     position: "topright",
-    content: `<div class="ml-18 mb-9 sm:mb-1">
-  <button id="buscarCliente" class="btn btn-accent btn-sm sombra flex items-center gap-2">
+    content: `<div class="mb-2 sm:mb-1">
+  <button id="buscarCliente" class="btn btn-accent btn-sm btn-square sombra">
     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sombra" fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 10a7 7 0 11-14 0 7 7 0 0114 0z" />
     </svg>
@@ -1024,8 +1000,8 @@ async function initializeAreas() {
 
   const tableClientes = control.custom({
     position: "topright",
-    content: `<div class="ml-18 mb-9 sm:mb-1">
-      <button id="tableClientes" class="btn btn-accent btn-sm sombra flex items-center gap-2">
+    content: `<div class="mb-2 sm:mb-1">
+      <button id="tableClientes" class="btn btn-accent btn-sm btn-square sombra">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sombra" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
         </svg>
@@ -1038,6 +1014,51 @@ async function initializeAreas() {
     },
   });
   tableClientes.addTo(map);
+
+  // Control: Clientes activos (abre modal)
+  const ctrlClientesActivos = control.custom({
+    position: "topright",
+    content: `<div class="mb-2 sm:mb-1">
+      <button id="ctrl-btn-clientes-activos" title="Clientes activos"
+          class="btn btn-info btn-sm btn-square sombra">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sombra" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+      </button>
+    </div>`,
+    events: {
+      click: () => {
+        const modal = document.getElementById("modal-clientes-activos") as HTMLDialogElement;
+        // Siempre abrir expandido
+        const content = document.getElementById("modalClientesActivosContent");
+        const collapseBtn = document.getElementById("modalClientesActivosCollapseBtn");
+        if (content) content.style.display = "";
+        if (collapseBtn) collapseBtn.textContent = "▼";
+        _modalActivos.render();
+        modal?.show();
+      },
+    },
+  });
+  ctrlClientesActivos.addTo(map);
+
+  // Control: Eventos camión (abre modal de tabla)
+  const ctrlEventosCamion = control.custom({
+    position: "topright",
+    content: `<div class="mb-2 sm:mb-1">
+      <button id="ctrl-btn-eventos-camion" title="Eventos camión"
+          class="btn btn-warning btn-sm btn-square sombra">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sombra" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
+        </svg>
+      </button>
+    </div>`,
+    events: {
+      click: () => _modalEventos.open(),
+    },
+  });
+  ctrlEventosCamion.addTo(map);
 }
 
 // Inicializar las áreas cuando se carga el mapa
@@ -1047,17 +1068,18 @@ function loadTruckMarkers() {
     if (coordsInput instanceof HTMLInputElement && coordsInput.value) {
       try {
         const coords = JSON.parse(coordsInput.value) as [number, number];
-        const row = coordsInput.closest("tr");
+        const row = coordsInput.closest(".flex.items-center");
         if (row) {
           const checkbox = row.querySelector(
             ".checkbox-camion"
           ) as HTMLInputElement;
           const camionId = checkbox?.dataset.camionId;
           if (camionId) {
-
+            const nombre = (row.querySelector('span.font-medium')?.textContent || '').trim();
             const marker = new Marker(coords, {
-              icon: iconCamion,
+              icon: crearIconoBase(nombre),
             });
+            marker.bindTooltip(nombre || '(sin nombre)', { permanent: false, direction: 'top' });
             if (checkbox.checked) {
               marker.addTo(map);
             }
@@ -1074,4 +1096,418 @@ function loadTruckMarkers() {
 // Call loadTruckMarkers after map initialization
 map.whenReady(() => {
   loadTruckMarkers();
+  actualizarBotonesBase();
 });
+
+// ─── Camiones activos ─────────────────────────────────────────────────────
+
+interface DatoCamion {
+  id: number;
+  operador: string;
+  lat: number;
+  lon: number;
+  velocidad: number;
+  direccion: number;
+  activo: boolean;
+  comentario: string;
+  nivel_tanque: number | null;
+  historial: [number, number][];
+}
+
+function nivelTanqueColor(n: number | null): string {
+  if (n == null) return "#FFFFFF";
+  if (n >= 0.99) return "#E53935";
+  if (n >= 0.60) return "#FDD835";
+  if (n >= 0.25) return "#43A047";
+  return "#ECEFF1";
+}
+
+const capasCamion = new Map<number, { marker: Marker; polyline: Polyline }>();
+
+function nivelTexto(nivel: number): string {
+  if (nivel >= 0.99) return "Lleno";
+  if (nivel >= 0.60) return "2/3";
+  if (nivel >= 0.25) return "1/3";
+  return "Vacío";
+}
+
+
+function crearIconoBase(nombre = ''): ReturnType<typeof divIcon> {
+  const iniciales = nombre
+    .split(' ')
+    .filter((w: string) => w.length > 0)
+    .map((w: string) => w[0].toUpperCase())
+    .join('') || '?';
+  const fs = iniciales.length > 2 ? 9 : 11;
+  // scale(0.8) over the original 35x46 marker → effective 28x37
+  // Shadow image included inline so it renders like standard Leaflet awesome-marker shadow
+  return divIcon({
+    className: '',
+    html: `<div style="position:relative;width:35px;height:46px;">
+      <img src="/static/maps/markers-shadow.png"
+        style="position:absolute;top:38px;left:-2px;width:32px;height:14px;pointer-events:none;opacity:0.6;" />
+      <div style="transform:scale(0.8);transform-origin:bottom center;width:35px;height:46px;position:absolute;top:0;left:0;">
+        <div class="awesome-marker awesome-marker-icon-cadetblue" style="width:35px;height:46px;position:relative;">
+          <span style="color:white;font-size:${fs}px;font-weight:700;display:block;text-align:center;line-height:38px;letter-spacing:0.5px;">${iniciales}</span>
+        </div>
+      </div>
+    </div>`,
+    iconSize: [35, 46],
+    iconAnchor: [17, 46],
+    popupAnchor: [1, -37],
+    tooltipAnchor: [0, -37],
+  });
+}
+
+function markerGloboHtml(iniciales: string): string {
+  const fs = iniciales.length > 2 ? 9 : 11;
+  return `<div class="awesome-marker awesome-marker-icon-cadetblue"
+    style="transform:scale(0.53);transform-origin:bottom center;width:35px;height:46px;position:relative;flex-shrink:0;">
+    <span style="color:white;font-size:${fs}px;font-weight:700;display:block;
+      text-align:center;line-height:38px;letter-spacing:0.5px;">${iniciales}</span>
+  </div>`;
+}
+
+/** Aplica el globo cadetblue al botón BaseMarker y a cada locate-camion */
+function actualizarBotonesBase(): void {
+  // Botón principal "Marcar en mapa"
+  const baseBtn = document.getElementById('BaseMarker') as HTMLButtonElement | null;
+  if (baseBtn) {
+    baseBtn.className = '';
+    baseBtn.style.cssText = 'background:rgba(255,255,255,0.92);border:1px solid rgba(0,0,0,0.12);border-radius:0.5rem;padding:0 0.75rem 0 0.25rem;width:100%;display:flex;align-items:flex-end;justify-content:center;gap:0.25rem;overflow:hidden;cursor:pointer;height:32px;margin-bottom:0.5rem;';
+    baseBtn.innerHTML = markerGloboHtml('+') + `<span style="color:rgba(0,0,0,0.75);font-size:12px;font-weight:600;line-height:32px;white-space:nowrap;">Marcar en mapa</span>`;
+  }
+
+  // Botones de cada fila de base (nueva estructura div)
+  document.querySelectorAll<HTMLButtonElement>('.locate-camion').forEach(btn => {
+    const row = btn.closest('.flex.items-center');
+    const nombre = (row?.querySelector('span.font-medium')?.textContent || '').trim();
+    const iniciales = nombre
+      .split(' ')
+      .filter((w: string) => w.length > 0)
+      .map((w: string) => w[0].toUpperCase())
+      .join('') || '?';
+    btn.className = '';
+    btn.style.cssText = 'background:none;border:none;border-radius:4px;padding:0;width:24px;height:24px;display:flex;align-items:flex-end;justify-content:center;overflow:hidden;cursor:pointer;flex-shrink:0;';
+    btn.innerHTML = markerGloboHtml(iniciales);
+  });
+}
+
+
+
+
+function crearIconoCamion(direccion: number, activo = true, velocidad = 0, nivelTanque: number | null = null): ReturnType<typeof divIcon> {
+  const op = activo ? 1 : 0.4;
+  const arrowColor = activo ? "#1565C0" : "#888";
+  const velTexto = `${Math.round(velocidad)} km/h`;
+  const bgTanque = `${nivelTanqueColor(nivelTanque)}80`;
+  const html = `
+    <div style="position:relative;width:44px;height:58px;opacity:${op};">
+      <div style="position:absolute;top:0;left:0;width:44px;height:44px;">
+        <div style="position:absolute;inset:0;transform:rotate(${direccion}deg);">
+          <div style="position:absolute;top:0;left:50%;transform:translateX(-50%);
+            width:0;height:0;
+            border-left:9px solid transparent;
+            border-right:9px solid transparent;
+            border-bottom:16px solid ${arrowColor};">
+          </div>
+        </div>
+        <div style="position:absolute;top:10px;left:10px;width:24px;height:24px;
+          border-radius:50%;background:${bgTanque};border:2px solid ${arrowColor};
+          display:flex;align-items:center;justify-content:center;overflow:hidden;
+          box-shadow:0 2px 4px rgba(0,0,0,0.3);">
+          <img src="/static/icons/logo.svg"
+            style="width:18px;height:11px;object-fit:contain;filter:brightness(0);"/>
+        </div>
+      </div>
+      <div style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);
+        background:${arrowColor};color:white;font-size:9px;font-weight:700;
+        padding:1px 5px;border-radius:8px;white-space:nowrap;
+        box-shadow:0 1px 3px rgba(0,0,0,0.3);">
+        ${velTexto}
+      </div>
+    </div>`;
+  return divIcon({
+    className: "",
+    html,
+    iconSize: [44, 58],
+    iconAnchor: [22, 29],
+  });
+}
+
+
+
+async function cargarCamiones(enfocar = false) {
+  try {
+    const resp = await fetch("/maps/api/camiones-activos/");
+    if (!resp.ok) return;
+    const camiones: DatoCamion[] = await resp.json();
+
+    // Remover camiones que ya no están activos
+    for (const [id, capas] of capasCamion) {
+      if (!camiones.find((c) => c.id === id)) {
+        capas.marker.remove();
+        capas.polyline.remove();
+        capasCamion.delete(id);
+      }
+    }
+
+    for (const c of camiones) {
+      const estadoLabel = c.activo ? "🟢 Activo" : "🔴 Inactivo";
+      const tooltipHtml = `
+        <b>${c.operador}</b> ${estadoLabel}<br>
+        🚐 ${c.velocidad.toFixed(0)} km/h
+        ${c.comentario ? `<br>📍 ${c.comentario}` : ""}
+      `;
+
+      if (capasCamion.has(c.id)) {
+        const capas = capasCamion.get(c.id)!;
+        capas.marker.setLatLng([c.lat, c.lon]);
+        capas.marker.setIcon(crearIconoCamion(c.direccion, c.activo, c.velocidad, c.nivel_tanque));
+        capas.marker.setTooltipContent(tooltipHtml);
+        capas.polyline.setLatLngs(c.historial);
+        capas.polyline.setStyle({ color: c.activo ? "#42A5F5" : "#9E9E9E", opacity: c.activo ? 0.7 : 0.35 });
+      } else {
+        const mk = new Marker([c.lat, c.lon], { icon: crearIconoCamion(c.direccion, c.activo, c.velocidad, c.nivel_tanque) })
+          .addTo(map)
+          .bindTooltip(tooltipHtml, { permanent: false, direction: "top" });
+        const pl = polyline(c.historial, {
+          color: c.activo ? "#42A5F5" : "#9E9E9E",
+          weight: 2,
+          opacity: c.activo ? 0.7 : 0.35,
+        }).addTo(map);
+        capasCamion.set(c.id, { marker: mk, polyline: pl });
+      }
+    }
+
+    // Si enfocar=true (llamada desde botón solicitar), centrar mapa en los camiones activos
+    if (enfocar && camiones.length > 0) {
+      if (camiones.length === 1) {
+        map.flyTo([camiones[0].lat, camiones[0].lon], Math.max(map.getZoom(), 14), { duration: 1.2 });
+      } else {
+        const bounds = new LatLngBounds(camiones.map((c) => [c.lat, c.lon] as [number, number]));
+        map.flyToBounds(bounds.pad(0.3), { duration: 1.2 });
+      }
+    }
+  } catch (e) {
+    console.error("[camiones]", e);
+  }
+}
+
+// ─── Clientes de la jornada ────────────────────────────────────────────────
+
+
+// Color de awesome-marker según status
+const amColorPorStatus: Record<string, string> = {
+  PRG: "blue",
+  EJE: "green",
+  CAN: "red",
+  COT: "orange",
+};
+
+function crearIconoCliente(status: string, cost: number | null = null, sinChofer = false): ReturnType<typeof divIcon> {
+  const amColor = amColorPorStatus[status] ?? "gray";
+  const isPRG = status === "PRG";
+  const pulseColor = isPRG && sinChofer ? "#dc2626" : "#2196F3";
+  const precioHtml = cost
+    ? `<span style="position:absolute;top:3px;left:0;right:0;line-height:33px;text-align:center;font-size:14px;font-weight:700;color:white;pointer-events:none;">${cost}</span>`
+    : "";
+  return divIcon({
+    className: "",
+    html: `<div style="position:relative;width:35px;height:46px;">
+      ${isPRG ? `<span style="position:absolute;top:16px;left:-13px;width:60px;height:60px;border-radius:50%;border:2.5px solid ${pulseColor};animation:prg-pulse 1.8s ease-out infinite;pointer-events:none;"></span>` : ""}
+      <img src="/static/maps/markers-shadow.png"
+        style="position:absolute;top:38px;left:-2px;width:32px;height:14px;pointer-events:none;opacity:0.6;" />
+      <div style="transform:scale(0.86);transform-origin:bottom center;width:35px;height:46px;position:absolute;top:0;left:0;">
+        <div class="awesome-marker awesome-marker-icon-${amColor}" style="width:35px;height:46px;position:relative;">
+          ${precioHtml}
+        </div>
+      </div>
+    </div>`,
+    iconSize: [35, 46],
+    iconAnchor: [17, 46],
+    popupAnchor: [1, -40],
+    tooltipAnchor: [0, -40],
+  });
+}
+
+async function cargarClientesJornada() {
+  try {
+    const resp = await fetch("/maps/api/clientes-jornada/");
+    if (!resp.ok) return;
+    const clientes: DatoCliente[] = await resp.json();
+    _modalActivos.setClientes(clientes);
+    _clientesJornada = clientes;
+    _clienteMarkers.forEach(m => map.removeLayer(m));
+    _clienteMarkers.clear();
+    for (const c of clientes) {
+      const m = _crearMarkerCliente(c);
+      m.addTo(map);
+      _clienteMarkers.set(c.id, m);
+    }
+    renderSidebarClientes(clientes);
+  } catch (e) {
+    console.error("[clientes-jornada]", e);
+  }
+}
+
+function _crearMarkerCliente(c: DatoCliente): Marker {
+  const label = ({ EJE: "Ejecutado", CAN: "Cancelado", COT: "Cotizado" } as Record<string, string>)[c.status] ?? "";
+  const precio = c.cost ? `Bs. ${c.cost}` : "";
+  const comentario = c.address?.trim() || "";
+  const hora = (() => {
+    if (!c.hora_programada) return "";
+    const dt = new Date(c.hora_programada);
+    if (!isNaN(dt.getTime()))
+      return dt.toLocaleString("es-BO", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false });
+    const parts = c.hora_programada.split(":");
+    return parts.length >= 2 ? `${parts[0].padStart(2,"0")}:${parts[1].padStart(2,"0")}` : c.hora_programada;
+  })();
+  const lineas = [`<b>${c.name ?? "(sin nombre)"}</b>`, hora ? `🕐 ${hora}` : "", label, precio, comentario].filter(Boolean).join("<br>");
+  return new Marker([c.lat, c.lon], { icon: crearIconoCliente(c.status, c.cost, !c.camion) })
+    .bindTooltip(lineas, { permanent: false, direction: "top" });
+}
+
+function renderSidebarClientes(clientes: DatoCliente[]) {
+  const sidebarList = document.getElementById("sidebar-clientes-list");
+  if (!sidebarList) return;
+  if (clientes.length === 0) {
+    sidebarList.innerHTML = `<p class="text-xs text-base-content/40 text-center py-2">Sin clientes hoy</p>`;
+  } else {
+    const STATUS_CLASS_SB: Record<string, string> = { PRG: "st-prg", EJE: "st-eje", CAN: "st-can", COT: "st-cot" };
+    const STATUS_ORDER_SB: Record<string, number> = { PRG: 0, EJE: 1, CAN: 2, COT: 3 };
+    const clientesOrdenados = [...clientes].sort((a, b) => {
+      const d = (STATUS_ORDER_SB[a.status] ?? 9) - (STATUS_ORDER_SB[b.status] ?? 9);
+      if (d !== 0) return d;
+      if (!a.hora_programada && !b.hora_programada) return 0;
+      if (!a.hora_programada) return 1;
+      if (!b.hora_programada) return -1;
+      return a.hora_programada.localeCompare(b.hora_programada);
+    });
+    const fmtHoraSB = (raw: string | null): string => {
+      if (!raw) return "";
+      const dt = new Date(raw);
+      if (!isNaN(dt.getTime()))
+        return dt.toLocaleString("es-BO", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", hour12: false });
+      return raw;
+    };
+    const fmtHoraSolo = (raw: string | null): string => {
+      if (!raw) return "";
+      const dt = new Date(raw);
+      if (!isNaN(dt.getTime()))
+        return dt.toLocaleString("es-BO", { hour: "2-digit", minute: "2-digit", hour12: false });
+      return "";
+    };
+    sidebarList.innerHTML = clientesOrdenados.map(c => {
+      const stClass = STATUS_CLASS_SB[c.status] ?? "";
+      const precio = c.cost ? `<span class="shrink-0 text-[10px] font-bold" style="color:#FFD54F;">Bs.${c.cost}</span>` : "";
+      const horaStr = fmtHoraSolo(c.hora_programada);
+      const horaFmt = fmtHoraSB(c.hora_programada);
+      return `
+      <div class="sidebar-cliente-row flex items-center gap-1 px-2 py-1.5 rounded-lg cursor-pointer hover:brightness-110 transition-all status-row ${stClass}"
+           data-lat="${c.lat}" data-lon="${c.lon}">
+        <div class="flex items-center gap-1 flex-1 min-w-0">
+          ${c.camion_iniciales
+            ? `<span class="shrink-0 inline-flex items-center justify-center w-5 h-5 rounded-full text-[8px] font-bold leading-none"
+                     title="${c.camion_nombre ?? c.camion_iniciales}"
+                     style="background:rgba(255,255,255,0.92);border:1.5px solid rgba(0,0,0,0.10);color:rgba(0,0,0,0.72);box-shadow:0 1px 3px rgba(0,0,0,0.25);">
+                 ${c.camion_iniciales}
+               </span>`
+            : c.status === "PRG"
+              ? `<span class="shrink-0 inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-black leading-none"
+                         title="Sin chofer asignado"
+                         style="background:#dc2626;color:#fff;border:1.5px solid #ef4444;${window.innerWidth >= 640 ? 'animation:chofer-alert 1.2s ease-in-out infinite;' : ''}">?</span>`
+              : `<span class="w-5 h-5 shrink-0"></span>`}
+          <span class="text-xs font-medium truncate">${c.name ?? "(sin nombre)"}</span>
+        </div>
+        <div class="shrink-0 w-10 text-center">
+          ${horaStr
+            ? `<button class="sb-clock-btn text-[9px] font-semibold opacity-70 hover:opacity-100 transition-opacity leading-none"
+                       data-hora="${horaFmt}" onclick="event.stopPropagation()" style="background:none;border:none;cursor:pointer;color:inherit;padding:0;">
+                   ${horaStr}
+                 </button>`
+            : ""}
+        </div>
+        <div class="flex items-center gap-1 shrink-0">
+          ${precio}
+          ${c.tel1
+            ? `<a href="https://wa.me/${c.tel1.replace(/[^\d+]/g, "")}" target="_blank" rel="noopener"
+                  class="shrink-0 flex items-center justify-center w-6 h-6 rounded-full transition-all hover:scale-110"
+                  style="color:#25D366;background:rgba(37,211,102,0.18);box-shadow:0 0 0 1px rgba(37,211,102,0.35);" onclick="event.stopPropagation()" title="${c.tel1}">
+                 <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M20.52 3.48A11.93 11.93 0 0 0 12 0C5.37 0 0 5.37 0 12c0 2.11.55 4.16 1.6 5.97L0 24l6.18-1.62A11.93 11.93 0 0 0 12 24c6.63 0 12-5.37 12-12 0-3.21-1.25-6.22-3.48-8.52zm-8.52 18.4a9.89 9.89 0 0 1-5.04-1.38l-.36-.22-3.67.96.98-3.58-.23-.37A9.93 9.93 0 0 1 2.07 12c0-5.48 4.46-9.93 9.93-9.93 2.65 0 5.15 1.03 7.02 2.91A9.88 9.88 0 0 1 21.93 12c0 5.48-4.45 9.93-9.93 9.93zm5.44-7.44c-.3-.15-1.77-.87-2.04-.97-.28-.1-.48-.15-.68.15-.2.3-.77.97-.94 1.17-.18.2-.35.22-.65.07-.3-.15-1.26-.46-2.4-1.47-.89-.79-1.49-1.76-1.66-2.06-.17-.3-.02-.46.13-.61.13-.13.3-.35.44-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.08-.15-.68-1.63-.93-2.23-.24-.58-.49-.5-.68-.51-.17 0-.37-.02-.57-.02s-.52.07-.8.37c-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.22 3.08c.15.2 2.1 3.2 5.1 4.49.71.31 1.27.49 1.7.63.72.23 1.37.2 1.88.12.57-.09 1.77-.72 2.02-1.42.25-.7.25-1.3.17-1.42-.07-.12-.27-.2-.57-.35z"/></svg>
+               </a>`
+            : ""}
+        </div>
+      </div>`;
+    }).join("");
+
+    sidebarList.querySelectorAll<HTMLElement>(".sidebar-cliente-row").forEach(el => {
+      el.addEventListener("click", () => {
+        map.flyTo([parseFloat(el.dataset.lat!), parseFloat(el.dataset.lon!)], 15);
+      });
+    });
+    sidebarList.querySelectorAll<HTMLElement>(".sb-clock-btn").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        document.getElementById("__sb-hora-tip")?.remove();
+        const tip = document.createElement("div");
+        tip.id = "__sb-hora-tip";
+        tip.style.cssText = "position:fixed;z-index:99999;background:#1e293b;color:#e2e8f0;border:1px solid rgba(255,255,255,0.12);border-radius:0.5rem;padding:6px 10px;font-size:11px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,0.4);pointer-events:none;white-space:nowrap;";
+        tip.textContent = btn.dataset.hora ?? "";
+        document.body.appendChild(tip);
+        const rect = btn.getBoundingClientRect();
+        let left = rect.right + 8;
+        const tw = tip.offsetWidth || 160;
+        if (left + tw > window.innerWidth - 8) left = rect.left - tw - 8;
+        tip.style.left = `${left}px`;
+        tip.style.top  = `${rect.top + rect.height / 2 - (tip.offsetHeight || 28) / 2}px`;
+        const close = () => { tip.remove(); document.removeEventListener("click", close, true); };
+        setTimeout(() => document.addEventListener("click", close, true), 0);
+      });
+    });
+  }
+  const counts: Record<string, number> = { PRG: 0, EJE: 0, CAN: 0, COT: 0 };
+  for (const c of clientes) if (c.status in counts) counts[c.status]++;
+  for (const [st, elId] of [["PRG","sidebar-count-prg"],["EJE","sidebar-count-eje"],["CAN","sidebar-count-can"],["COT","sidebar-count-cot"]] as [string,string][]) {
+    const el = document.getElementById(elId);
+    if (el) { el.textContent = counts[st] > 0 ? `${counts[st]}` : ""; el.style.display = counts[st] > 0 ? "" : "none"; }
+  }
+}
+
+// Escuchar cambios del modal para actualizar marker + sidebar sin re-fetch
+document.addEventListener("jornadaClienteChanged", ((e: CustomEvent) => {
+  const { id, status, camion, camion_iniciales, camion_nombre } = e.detail as {
+    id: number; status: string; camion: number | null;
+    camion_iniciales: string; camion_nombre: string;
+  };
+  const c = _clientesJornada.find(x => x.id === id);
+  if (!c) return;
+  c.status = status;
+  c.camion = camion;
+  c.camion_iniciales = camion_iniciales;
+  c.camion_nombre = camion_nombre;
+  // Actualizar marker en el mapa
+  const m = _clienteMarkers.get(id);
+  if (m) m.setIcon(crearIconoCliente(c.status, c.cost, !c.camion));
+  // Re-render sidebar
+  renderSidebarClientes(_clientesJornada);
+}) as EventListener);
+
+// Carga inicial
+cargarCamiones();
+cargarListaCamiones();   // Carga la lista de camiones para los selectores de asignación
+cargarClientesJornada();
+
+// SSE: actualizar camiones en tiempo real cuando llega un nuevo RegistroCamion
+const _sse = new EventSource('/maps/api/camiones-sse/');
+_sse.onmessage = () => { cargarCamiones(false); };
+_sse.onerror = () => {
+  // Si cae la conexión SSE, refrescar cada 30s como fallback
+  console.warn('[SSE] conexión perdida, usando polling');
+  _sse.close();
+  setInterval(cargarCamiones, 30_000);
+};
+
+// Exponer cargarCamiones globalmente para que el botón de solicitar ubicación
+// pueda refrescar el mapa tras recibir la respuesta del teléfono.
+(window as any).cargarCamiones = cargarCamiones;

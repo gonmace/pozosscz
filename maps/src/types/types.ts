@@ -25,6 +25,14 @@ export interface DataPrice {
   origin_saguapac: string[];
   path_saguapac: number[][][];
   costo_combustible: number;
+  costo_combustible_ida: number;
+  costo_combustible_retorno: number;
+  costo_combustible_trabajo: number;
+  costos_combustible_bases: number[];
+  utilidades_bases: number[];
+  chofer_bases: number[];
+  otros_bases: number[];
+  precios_bases: number[];
   costo_otros: number;
   detalle_otros: { mantenimiento: number; saguapac: number; retorno_saguapac: number };
   costo_adicional_retorno: number;
@@ -36,11 +44,14 @@ export interface DataPrice {
   origen: number;
   distance_scz: number;
   distancia_maxima_cotizar: number;
+  tiempo_trabajo_min: number;
   tiempo_real_min: number;
   tiempo_cobro_min: number;
   factor_camion: number;
   factor_cargado: number;
   factor_global: number;
+  grupos?: { bases: number; clientes: number; camiones: number };
+  origins_status?: (string | null)[];
 }
 
 export interface RutasResult {

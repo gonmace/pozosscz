@@ -1,5 +1,7 @@
-import { Map } from 'leaflet';
+import type { Map } from 'leaflet';
 import { createToast } from './toast';
+import { renderClientCard, attachCardListeners, type CardClient } from './clientCard';
+import { buildCamionOptions } from './camiones';
 
 interface Client {
   id: number;
@@ -13,72 +15,87 @@ interface Client {
   user: string;
   service: string;
   created_at: string;
+  camion?: number | null;
+  camion_iniciales?: string | null;
 }
 
-// Función para normalizar texto (remover acentos)
+
 function normalizeText(text: string): string {
   return text.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
 
-// Función para editar un cliente
+function getCookie(name: string): string {
+  let cookieValue = '';
+  for (const cookie of document.cookie.split(';')) {
+    const c = cookie.trim();
+    if (c.startsWith(name + '=')) {
+      cookieValue = decodeURIComponent(c.substring(name.length + 1));
+      break;
+    }
+  }
+  return cookieValue;
+}
+
 async function editClient(client: Client): Promise<void> {
-  // Crear modal de edición
   const editModal = document.createElement('dialog');
-  editModal.className = 'modal items-start justify-center';
+  editModal.className = 'modal';
   editModal.innerHTML = `
-    <div class="modal-box w-11/12 max-w-2xl">
-      <h3 class="font-bold text-lg mb-4">Editar Cliente</h3>
-      <form id="editClientForm" class="flex flex-col gap-4">
-        <div class="form-control">
-          <label class="label">
-            <span class="label-text">Nombre</span>
-          </label>
-          <input type="text" id="editName" class="input input-bordered" value="${client.name || ''}" />
+    <div class="modal-box w-11/12 max-w-2xl bg-primary/20">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="font-bold text-lg">Editar cliente</h3>
+        <button type="button" class="btn btn-sm btn-circle btn-ghost text-lg" onclick="this.closest('dialog').close()">✕</button>
+      </div>
+      <form id="editClientForm" class="flex flex-col gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div class="form-control">
+            <label class="label"><span class="label-text">Nombre</span></label>
+            <input type="text" id="editName" class="input input-bordered" value="${client.name || ''}" />
+          </div>
+          <div class="form-control">
+            <label class="label"><span class="label-text">Teléfono</span></label>
+            <input type="text" id="editPhone" class="input input-bordered" value="${client.tel1 || ''}" />
+          </div>
+          <div class="form-control sm:col-span-2">
+            <label class="label"><span class="label-text">Dirección / Comentario</span></label>
+            <input type="text" id="editAddress" class="input input-bordered" value="${client.address || ''}" />
+          </div>
+          <div class="form-control">
+            <label class="label"><span class="label-text">Precio Bs.</span></label>
+            <input type="number" id="editCost" class="input input-bordered" value="${client.cost || ''}" />
+          </div>
+          <div class="form-control">
+            <label class="label"><span class="label-text">Estado</span></label>
+            <select id="editStatus" class="select select-bordered">
+              <option value="PRG" ${client.status === 'PRG' ? 'selected' : ''}>Programado</option>
+              <option value="COT" ${client.status === 'COT' ? 'selected' : ''}>Cotizado</option>
+              <option value="EJE" ${client.status === 'EJE' ? 'selected' : ''}>Ejecutado</option>
+              <option value="CAN" ${client.status === 'CAN' ? 'selected' : ''}>Cancelado</option>
+              <option value="NEG" ${client.status === 'NEG' ? 'selected' : ''}>L. negra</option>
+            </select>
+          </div>
+          <div class="form-control sm:col-span-2">
+            <label class="label"><span class="label-text">Chofer / Camión</span></label>
+            <select id="editCamion" class="select select-bordered">
+              ${buildCamionOptions(client.camion ?? null)}
+            </select>
+          </div>
         </div>
-        <div class="form-control">
-          <label class="label">
-            <span class="label-text">Teléfono</span>
-          </label>
-          <input type="text" id="editPhone" class="input input-bordered" value="${client.tel1 || ''}" />
-        </div>
-        <div class="form-control">
-          <label class="label">
-            <span class="label-text">Dirección - Comentario</span>
-          </label>
-          <input type="text" id="editAddress" class="input input-bordered" value="${client.address || ''}" />
-        </div>
-        <div class="form-control">
-          <label class="label">
-            <span class="label-text">Precio Bs.</span>
-          </label>
-          <input type="number" id="editCost" class="input input-bordered" value="${client.cost || ''}" />
-        </div>
-        <div class="form-control">
-          <label class="label">
-            <span class="label-text">Estado</span>
-          </label>
-          <select id="editStatus" class="select select-bordered">
-            <option value="COT" ${client.status === 'COT' ? 'selected' : ''}>Cotizado</option>
-            <option value="EJE" ${client.status === 'EJE' ? 'selected' : ''}>Ejecutado</option>
-            <option value="NEG" ${client.status === 'NEG' ? 'selected' : ''}>L.negra</option>
-          </select>
-        </div>
-        <div class="modal-action">
+        <div class="flex gap-2 justify-end mt-2">
+          <button type="button" class="btn btn-ghost" onclick="this.closest('dialog').close()">Cancelar</button>
           <button type="submit" class="btn btn-primary">Guardar</button>
-          <button type="button" class="btn" onclick="this.closest('dialog').close()">Cancelar</button>
         </div>
       </form>
     </div>
+    <form method="dialog" class="modal-backdrop"><button>Cerrar</button></form>
   `;
 
   document.body.appendChild(editModal);
   editModal.showModal();
 
-  // Manejar el envío del formulario
   const form = editModal.querySelector('#editClientForm') as HTMLFormElement;
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-
+    const camionVal = (document.getElementById('editCamion') as HTMLSelectElement).value;
     const updatedClient = {
       ...client,
       name: (document.getElementById('editName') as HTMLInputElement).value,
@@ -86,190 +103,87 @@ async function editClient(client: Client): Promise<void> {
       address: (document.getElementById('editAddress') as HTMLInputElement).value,
       cost: Number((document.getElementById('editCost') as HTMLInputElement).value),
       status: (document.getElementById('editStatus') as HTMLSelectElement).value,
-      lat: client.lat,
-      lon: client.lon,
+      camion: camionVal ? Number(camionVal) : null,
       service: client.service || 'NOR',
-      user: client.user || 'ADM'
+      user: client.user || 'ADM',
     };
 
     try {
       const response = await fetch(`/api/v1/clientes/${client.id}/`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': getCookie('csrftoken'),
-        },
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
         body: JSON.stringify(updatedClient),
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Request payload:', updatedClient);
-        console.error('Error response:', errorData);
-        throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
-      }
-
-      // Show success toast first
-      createToast('editClient', 'map', 'Cliente actualizado correctamente', 'top', 'success');
-      
-      // Wait a bit before closing the modal to ensure toast is visible
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      createToast('editClient', 'map', 'Cliente actualizado', 'top', 'success');
       setTimeout(() => {
         editModal.close();
         editModal.remove();
-        
-        // Recargar la búsqueda para mostrar los datos actualizados
         const searchInput = document.getElementById('searchNameInput') as HTMLInputElement;
-        if (searchInput) {
-          searchInput.dispatchEvent(new Event('input'));
-        }
+        if (searchInput) searchInput.dispatchEvent(new Event('input'));
       }, 500);
     } catch (error) {
-      console.error('Error updating client:', error);
-      createToast('editClient', 'map', `Error: ${error.message}`, 'top', 'error');
+      createToast('editClient', 'map', `Error: ${(error as Error).message}`, 'top', 'error');
     }
   });
 }
 
-// Función para obtener el token CSRF
-function getCookie(name: string): string {
-  let cookieValue = '';
-  const cookies = document.cookie.split(';');
-  for (let i = 0; i < cookies.length; i++) {
-    const cookie = cookies[i].trim();
-    if (cookie.substring(0, name.length + 1) === (name + '=')) {
-      cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-      break;
-    }
+function renderResults(clients: Client[], container: HTMLElement, map: Map, modal: HTMLDialogElement) {
+  if (clients.length === 0) {
+    container.innerHTML = `<p class="text-sm text-base-content/50 text-center col-span-2 py-4">No se encontraron resultados</p>`;
+    return;
   }
-  return cookieValue;
+
+  const cardMap = new Map<number, CardClient>();
+  container.innerHTML = clients.map(c => {
+    cardMap.set(c.id, c);
+    return renderClientCard(c, { showFlyTo: true, showEdit: true });
+  }).join("");
+
+  attachCardListeners(container, cardMap, {
+    onFly:  (c) => { map.flyTo([c.lat, c.lon], 16); modal.close(); },
+    onEdit: (c) => editClient(c as Client),
+  });
 }
 
 export function initializeSearchModal(map: Map): void {
   const modal = document.getElementById('searchClientModal') as HTMLDialogElement;
-  if (!modal) {
-    console.error('Modal element not found');
-    return;
-  }
+  if (!modal) { console.error('Modal element not found'); return; }
 
-  // Add event listeners
-  const nameInput = document.getElementById('searchNameInput') as HTMLInputElement;
+  const nameInput  = document.getElementById('searchNameInput') as HTMLInputElement;
   const phoneInput = document.getElementById('searchPhoneInput') as HTMLInputElement;
-  const closeButton = document.getElementById('closeSearchModal');
-  
-  if (!nameInput || !phoneInput) {
-    console.error('Required input elements not found');
-    return;
-  }
+  const container  = document.getElementById('searchResultsBody') as HTMLElement;
+  if (!nameInput || !phoneInput || !container) { console.error('Required elements not found'); return; }
 
   let searchTimeout: ReturnType<typeof setTimeout>;
 
   const performSearch = async () => {
-    const nameQuery = normalizeText(nameInput.value.trim());
+    const nameQuery  = normalizeText(nameInput.value.trim());
     const phoneQuery = phoneInput.value.trim();
-    
+
     if (nameQuery.length < 2 && phoneQuery.length < 2) {
-      const tbody = document.getElementById('searchResultsBody');
-      if (tbody) {
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center">Ingrese al menos 3 caracteres en nombre o teléfono</td></tr>';
-      }
+      container.innerHTML = `<p class="text-sm text-base-content/50 text-center col-span-2 py-4">Ingrese al menos 2 caracteres</p>`;
       return;
     }
 
     try {
-      const response = await fetch(`/api/v1/clientes/`);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const clients = await response.json() as Client[];
-      
-      // Filtrar clientes localmente
-      const filteredClients = clients.filter(client => {
-        const normalizedName = normalizeText(client.name || '');
-        const normalizedPhone = client.tel1 || '';
-        
-        const nameMatch = nameQuery.length >= 3 ? normalizedName.toLowerCase().includes(nameQuery.toLowerCase()) : true;
-        const phoneMatch = phoneQuery.length >= 3 ? normalizedPhone.includes(phoneQuery) : true;
-        
+      const resp = await fetch('/api/v1/clientes/');
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const clients = await resp.json() as Client[];
+
+      const filtered = clients.filter(c => {
+        const nameMatch  = nameQuery.length >= 2  ? normalizeText(c.name || '').toLowerCase().includes(nameQuery.toLowerCase()) : true;
+        const phoneMatch = phoneQuery.length >= 2 ? (c.tel1 || '').includes(phoneQuery) : true;
         return nameMatch && phoneMatch;
       });
-      
-      const tbody = document.getElementById('searchResultsBody');
-      if (!tbody) return;
-      
-      tbody.innerHTML = '';
-      
-      if (filteredClients.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center">No se encontraron resultados</td></tr>';
-        return;
-      }
 
-      filteredClients.forEach((client) => {
-        const tr = document.createElement('tr');
-        // Formatear la fecha para mostrar solo la fecha sin la hora
-        const fecha = client.created_at ? new Date(client.created_at).toLocaleDateString('es-ES') : '';
-        tr.innerHTML = `
-          <td>${client.name || 'SN'}</td>
-          <td>${client.tel1 || 'ST'}</td>
-          <td>${client.address || ''}</td>
-          <td>${client.cost ? `${client.cost}` : 'Sin precio'}</td>
-          <td>
-            <div class="badge ${client.status === 'ejecutado' ? 'badge-success' : 
-                              client.status === 'cotizado' ? 'badge-info' : 
-                              client.status === 'cancelado' ? 'badge-error' : 'badge-ghost'}">
-              ${client.status || 'Sin estado'}
-            </div>
-          </td>
-          <td>${fecha}</td>
-          <td class="flex gap-1">
-            <button class="btn btn-sm btn-primary locate-client" data-lat="${client.lat}" data-lon="${client.lon}">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-            </button>
-            <button class="btn btn-sm btn-secondary edit-client" data-client='${JSON.stringify(client)}'>
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-              </svg>
-            </button>
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
-
-      // Add click handlers for locate buttons
-      document.querySelectorAll('.locate-client').forEach(button => {
-        button.addEventListener('click', () => {
-          const lat = button.getAttribute('data-lat');
-          const lon = button.getAttribute('data-lon');
-          if (lat && lon) {
-            map.flyTo([parseFloat(lat), parseFloat(lon)], 16);
-            modal.close();
-          }
-        });
-      });
-
-      // Add click handlers for edit buttons
-      document.querySelectorAll('.edit-client').forEach(button => {
-        button.addEventListener('click', () => {
-          const clientData = button.getAttribute('data-client');
-          if (clientData) {
-            const client = JSON.parse(clientData) as Client;
-            editClient(client);
-          }
-        });
-      });
-
+      renderResults(filtered, container, map, modal);
     } catch (error) {
-      console.error('Error searching clients:', error);
-      const tbody = document.getElementById('searchResultsBody');
-      if (tbody) {
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-error">Error al buscar clientes</td></tr>';
-      }
+      container.innerHTML = `<p class="text-sm text-error text-center col-span-2 py-4">Error al buscar clientes</p>`;
+      console.error(error);
     }
   };
 
-  // Add input event listeners to both inputs
   [nameInput, phoneInput].forEach(input => {
     input.addEventListener('input', () => {
       clearTimeout(searchTimeout);
@@ -277,15 +191,7 @@ export function initializeSearchModal(map: Map): void {
     });
   });
 
-  closeButton?.addEventListener('click', () => {
-    modal.close();
-  });
-
-  modal.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      modal.close();
-    }
-  });
+  modal.addEventListener('keydown', (e) => { if (e.key === 'Escape') modal.close(); });
 
   modal.showModal();
   nameInput.focus();

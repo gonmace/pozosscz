@@ -1,3 +1,40 @@
+/**
+ * Modal de confirmación reutilizable con DaisyUI <dialog>.
+ * Devuelve una Promise<boolean>: true si el usuario confirmó, false si canceló.
+ */
+export function confirmDialog(mensaje: string, labelConfirmar = "Eliminar"): Promise<boolean> {
+  return new Promise(resolve => {
+    const dlg = document.createElement("dialog");
+    dlg.className = "modal";
+    dlg.innerHTML = `
+      <div class="modal-box max-w-sm">
+        <h3 class="font-bold text-base mb-1">¿Confirmar acción?</h3>
+        <p class="text-sm opacity-70 mb-5">${mensaje}</p>
+        <div class="modal-action mt-0 gap-2">
+          <button id="cdlg-cancel" class="btn btn-sm btn-ghost flex-1">Cancelar</button>
+          <button id="cdlg-ok"     class="btn btn-sm btn-error  flex-1">${labelConfirmar}</button>
+        </div>
+      </div>
+      <form method="dialog" class="modal-backdrop"><button>cerrar</button></form>
+    `;
+    document.body.appendChild(dlg);
+    dlg.showModal();
+
+    let resolved = false;
+    const cleanup = (result: boolean) => {
+      if (resolved) return;
+      resolved = true;
+      dlg.close();
+      dlg.remove();
+      resolve(result);
+    };
+
+    dlg.querySelector("#cdlg-ok")!.addEventListener("click", () => cleanup(true));
+    dlg.querySelector("#cdlg-cancel")!.addEventListener("click", () => cleanup(false));
+    dlg.addEventListener("close", () => cleanup(false));
+  });
+}
+
 // Para crear un toast
 export function createToast(
     id: string,
