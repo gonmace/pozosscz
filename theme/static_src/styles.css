@@ -1,5 +1,12 @@
 @import "tailwindcss";
 @theme {
+  /* Colores de estado de clientes */
+  --color-status-prg: #2196F3;
+  --color-status-eje: #43A047;
+  --color-status-can: #E53935;
+  --color-status-cot: #FF9800;
+  --color-status-neg: #E53935;
+
   --color-precio300: #ffff00;
   --color-precio350: #fba657;
   --color-precio400: #4ade80;
@@ -15,6 +22,10 @@
 @import "tailwindcss-animated";
 
 @source "../../**/*.{html,py,js,ts}";
+@source "../../maps/src/index-maps-admin.ts";
+@source "../../maps/src/clientesActivosModal.ts";
+@source "../../maps/src/clientesResultadosModal.ts";
+@source "../../maps/src/utils/findClients.ts";
 /* @source "../../../pozosscz/maps/src/utils/SliderControl.js"; */
 /* @source "../../main/src/index-main.ts";
 @source "../../maps/src/index-maps-admin.ts"; */
@@ -58,6 +69,52 @@
 }
 
 @layer components {
+  /* ── Clases de estado de clientes ────────────────────────────────────── */
+
+  /* Inyecta la variable local --st según el estado */
+  .st-prg { --st: var(--color-status-prg); }
+  .st-eje { --st: var(--color-status-eje); }
+  .st-can { --st: var(--color-status-can); }
+  .st-cot { --st: var(--color-status-cot); }
+  .st-neg { --st: var(--color-status-neg); }
+
+  /* Card con borde izquierdo y fondo tintado */
+  .status-card {
+    background: color-mix(in srgb, var(--st, #9E9E9E) 16%, transparent);
+    border: 1px solid color-mix(in srgb, var(--st, #9E9E9E) 30%, transparent);
+    border-left: 4px solid var(--st, #9E9E9E);
+  }
+
+  /* Badge / chip de estado (span o button) */
+  .status-badge {
+    color: var(--st, #9E9E9E);
+    background: color-mix(in srgb, var(--st, #9E9E9E) 15%, transparent);
+    border: 1px solid color-mix(in srgb, var(--st, #9E9E9E) 40%, transparent);
+  }
+
+  /* Select de estado en activos */
+  .status-select {
+    color: var(--st, #9E9E9E);
+    background: color-mix(in srgb, var(--st, #9E9E9E) 20%, transparent);
+    border-color: color-mix(in srgb, var(--st, #9E9E9E) 60%, transparent);
+  }
+
+  /* Separador inferior de card */
+  .status-sep {
+    border-top: 1px solid color-mix(in srgb, var(--st, #9E9E9E) 20%, transparent);
+  }
+
+  /* Borde izquierdo de fila en tabla */
+  .status-row {
+    background: color-mix(in srgb, var(--st, #9E9E9E) 28%, transparent);
+    border-left: 3px solid color-mix(in srgb, var(--st, #9E9E9E) 75%, transparent);
+  }
+
+  /* Botón "ver en mapa" hereda el color del estado */
+  .status-fly-btn { color: var(--st, #9E9E9E); opacity: 0.75; }
+
+  /* ──────────────────────────────────────────────────────────────────── */
+
   .centrear-w-absolute {
     @apply left-1/2 transform -translate-x-1/2;
   }
@@ -73,14 +130,14 @@
   }
   
   .item {
-    @apply text-accent inline-flex items-center h-20 w-20 justify-center mb-5 flex-shrink-0;
+    @apply text-accent inline-flex items-center h-20 w-20 justify-center mb-5 shrink-0;
   }
   
   .scrolled {
     @apply md:bg-primary 
   }
   .puntos {
-    @apply ml-2 inline-block border-black border-1 w-4 h-4 text-center rounded-full;
+    @apply ml-2 inline-block border-black border w-4 h-4 text-center rounded-full;
   }
   #map {
     @apply h-screen;

@@ -75,16 +75,28 @@ async def calculate_route_metrics(
                 if response.status_code == 200:
                     data = response.json()
                     summary = data["trip"]["summary"]
-                    shape = data["trip"]["legs"][0]["shape"]
+                    legs = data["trip"]["legs"]
+                    # Concatenar shape de todos los tramos (ida + waypoints)
+                    full_shape = []
+                    for leg in legs:
+                        full_shape.extend(_decode_shape(leg["shape"]))
                     distances.append(summary["length"] * 1000)   # km → m
                     times.append(summary["time"])                 # seconds
                     origins.append(base_name)
-                    geometries.append(_decode_shape(shape))
+                    geometries.append(full_shape)
+                else:
+                    raise ValueError(f"HTTP {response.status_code}")
             except Exception as e:
-                logger.warning("Valhalla route failed for base %s: %s", base_name, e)
+                logger.warning("Valhalla route failed for base %s: %s — using geodesic fallback", base_name, e)
+                # Fallback geodésico para esta base individualmente
+                fb_d, fb_t, _, fb_g = _geodesic_fallback(lat, lon, [(base_lon, base_lat, base_name)], waypoint)
+                distances.extend(fb_d)
+                times.extend(fb_t)
+                origins.append(base_name)
+                geometries.extend(fb_g)
 
     if not distances:
-        logger.warning("Valhalla unavailable, using geodesic fallback")
+        logger.warning("All routes failed, using geodesic fallback")
         return _geodesic_fallback(lat, lon, bases, waypoint)
 
     return distances, times, origins, geometries

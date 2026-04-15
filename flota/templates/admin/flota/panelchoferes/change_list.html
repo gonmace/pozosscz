@@ -1,0 +1,261 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block title %}Panel de Choferes{% endblock %}
+
+{% block content_title %}<h1>Panel de Choferes</h1>{% endblock %}
+
+{% block content %}
+<style>
+  .panel-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 16px;
+    margin-top: 16px;
+  }
+  .chofer-card {
+    background: var(--darkened-bg, #f8f8f8);
+    border: 1px solid var(--border-color, #ddd);
+    border-radius: 6px;
+    padding: 16px;
+    position: relative;
+    color: var(--body-fg, #333);
+  }
+  .chofer-card.sin-dispositivo {
+    opacity: 0.6;
+    border-style: dashed;
+  }
+  .chofer-nombre {
+    font-size: 1.1em;
+    font-weight: bold;
+    margin-bottom: 8px;
+    color: var(--body-fg, #333);
+  }
+  .chofer-marca {
+    font-size: 0.75em;
+    color: var(--body-quiet-color, #888);
+    font-weight: normal;
+  }
+  .chofer-estado {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.8em;
+    font-weight: 600;
+  }
+  .badge-verde { background: #1a7a3a; color: #d4edda; }
+  .badge-rojo  { background: #8b1a24; color: #f8d7da; }
+  .badge-gris  { background: var(--border-color, #ccc); color: var(--body-fg, #333); }
+  .badge-azul  { background: #0c5460; color: #d1ecf1; }
+  .dato-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85em;
+    padding: 3px 0;
+    border-bottom: 1px solid var(--border-color, #eee);
+    color: var(--body-fg, #333);
+  }
+  .dato-label { color: var(--body-quiet-color, #666); }
+  .dato-val   { font-weight: 500; color: var(--body-fg, #333); }
+  .acciones {
+    margin-top: 12px;
+    display: flex;
+    gap: 8px;
+  }
+  .btn-pedir {
+    background: var(--button-bg, #417690);
+    color: var(--button-fg, white);
+    border: none;
+    padding: 6px 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85em;
+    text-decoration: none;
+  }
+  .btn-pedir:hover { background: var(--button-hover-bg, #2b5672); color: var(--button-fg, white); }
+  .btn-pedir:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-config {
+    background: var(--darkened-bg, #f0f0f0);
+    color: var(--body-fg, #333);
+    border: 1px solid var(--border-color, #ccc);
+    padding: 6px 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85em;
+    text-decoration: none;
+  }
+  .btn-config:hover { filter: brightness(1.1); }
+  .toolbar-panel {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-color, #ddd);
+    margin-bottom: 4px;
+  }
+  .refresh-indicator {
+    font-size: 0.8em;
+    color: var(--body-quiet-color, #888);
+  }
+  .sin-datos { color: var(--body-quiet-color, #aaa); font-style: italic; }
+  .coord-link { color: var(--link-fg, #417690); text-decoration: none; }
+  .coord-link:hover { text-decoration: underline; }
+  #spinner { display: none; margin-left: 8px; }
+</style>
+
+<div class="toolbar-panel">
+  <button class="btn-pedir" onclick="pedirTodos(this)">📍 Pedir ubicación a todos</button>
+  <span class="refresh-indicator">
+    Actualiza automáticamente cada 30 seg.
+    <span id="spinner">⏳</span>
+  </span>
+  <span id="ultimo-refresh" class="refresh-indicator"></span>
+</div>
+
+<div id="panel-grid" class="panel-grid">
+  {% for c in choferes %}
+  <div class="chofer-card {% if not c.tiene_dispositivo %}sin-dispositivo{% endif %}">
+    <div class="chofer-nombre">
+      {% if c.tiene_dispositivo %}📱{% else %}📵{% endif %}
+      {{ c.operador }}
+      <span class="chofer-marca">{{ c.marca }}</span>
+    </div>
+
+    <div class="chofer-estado">
+      {% if c.tracking_activo %}
+        <span class="badge badge-verde">▶ Tracking ON</span>
+      {% else %}
+        <span class="badge badge-rojo">⏸ Tracking OFF</span>
+      {% endif %}
+
+      {% if c.tiene_dispositivo %}
+        <span class="badge badge-azul">FCM ✓</span>
+      {% else %}
+        <span class="badge badge-gris">Sin FCM</span>
+      {% endif %}
+
+      {% if c.activo %}
+        <span class="badge badge-verde">En servicio</span>
+      {% else %}
+        <span class="badge badge-gris">Inactivo</span>
+      {% endif %}
+    </div>
+
+    <div class="dato-row">
+      <span class="dato-label">Última actualización</span>
+      <span class="dato-val">
+        {% if c.ultima_actualizacion %}
+          {{ c.ultima_actualizacion_local }} ({{ c.hace_cuanto }})
+        {% else %}
+          <span class="sin-datos">sin datos</span>
+        {% endif %}
+      </span>
+    </div>
+
+    <div class="dato-row">
+      <span class="dato-label">Posición</span>
+      <span class="dato-val">
+        {% if c.lat and c.lon %}
+          <a class="coord-link"
+             href="https://www.google.com/maps?q={{ c.lat }},{{ c.lon }}"
+             target="_blank">
+            {{ c.lat|floatformat:5 }}, {{ c.lon|floatformat:5 }}
+          </a>
+        {% else %}
+          <span class="sin-datos">desconocida</span>
+        {% endif %}
+      </span>
+    </div>
+
+    <div class="dato-row">
+      <span class="dato-label">Velocidad</span>
+      <span class="dato-val">
+        {% if c.velocidad is not None %}
+          {{ c.velocidad }} km/h &nbsp; {{ c.direccion_texto }}
+        {% else %}
+          <span class="sin-datos">—</span>
+        {% endif %}
+      </span>
+    </div>
+
+    <div class="dato-row">
+      <span class="dato-label">Intervalo tracking</span>
+      <span class="dato-val">{{ c.intervalo_tracking }} seg</span>
+    </div>
+
+    <div class="acciones">
+      {% if c.tiene_dispositivo and c.usuario_id %}
+        <button class="btn-pedir"
+                onclick="pedirUbicacion(this, {{ c.usuario_id }})">
+          📍 Pedir ubicación
+        </button>
+      {% else %}
+        <button class="btn-pedir" disabled>📍 Sin dispositivo</button>
+      {% endif %}
+      <a class="btn-config"
+         href="{% url 'admin:flota_camion_change' c.id %}">
+        ⚙ Config
+      </a>
+    </div>
+  </div>
+  {% empty %}
+  <p>No hay choferes registrados con camión asignado.</p>
+  {% endfor %}
+</div>
+
+<script>
+const CSRF = '{{ csrf_token }}';
+
+async function pedirUbicacion(btn, usuarioId) {
+  btn.disabled = true;
+  btn.textContent = '⏳ Enviando...';
+  try {
+    const resp = await fetch('{% url "flota:solicitar_ubicacion" %}', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
+      body: JSON.stringify({ usuario_ids: [usuarioId] }),
+    });
+    const data = await resp.json();
+    btn.textContent = data.ok ? '✅ Enviado' : '❌ Error';
+  } catch {
+    btn.textContent = '❌ Error';
+  }
+  setTimeout(() => { btn.disabled = false; btn.textContent = '📍 Pedir ubicación'; }, 3000);
+}
+
+async function pedirTodos(btn) {
+  btn.disabled = true;
+  btn.textContent = '⏳ Enviando...';
+  try {
+    const resp = await fetch('{% url "flota:solicitar_todos" %}', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
+      body: JSON.stringify({}),
+    });
+    const data = await resp.json();
+    btn.textContent = data.ok ? `✅ Enviado a ${data.enviados}` : '❌ Sin dispositivos';
+  } catch {
+    btn.textContent = '❌ Error';
+  }
+  setTimeout(() => { btn.disabled = false; btn.textContent = '📍 Pedir ubicación a todos'; }, 4000);
+}
+
+// Auto-refresh cada 30 segundos
+function actualizarTimestamp() {
+  const el = document.getElementById('ultimo-refresh');
+  el.textContent = 'Última carga: ' + new Date().toLocaleTimeString();
+}
+actualizarTimestamp();
+
+setInterval(() => {
+  document.getElementById('spinner').style.display = 'inline';
+  window.location.reload();
+}, 30000);
+</script>
+{% endblock %}

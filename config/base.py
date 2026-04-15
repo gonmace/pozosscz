@@ -14,7 +14,7 @@ try:
 except ImportError:
     pass
 
-SECRET_KEY = config('SECRET_KEY', default='your secret key')
+SECRET_KEY = config('DJANGO_SECRET_KEY')  # Sin default: falla al arrancar si no está en .env
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'pozosscz',
     'clientes',
     'maps',
+    'flota',
 ]
 
 CRISPY_ALLOWED_TEMPLATE_PACKS = "tailwind"
@@ -51,6 +52,9 @@ TAILWIND_APP_NAME = 'theme'
 TAILWIND_CSS_PATH = 'css/tailwind.css'
 
 MIDDLEWARE = [
+    # CORS debe ir antes que CommonMiddleware / SessionMiddleware para que
+    # los preflight OPTIONS sean respondidos antes de auth/CSRF.
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -58,8 +62,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-
-    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -127,6 +129,13 @@ USE_I18N = True
 
 USE_TZ = True
 
+DATETIME_INPUT_FORMATS = [
+    '%d/%m/%Y %H:%M',
+    '%d/%m/%Y %H:%M:%S',
+    '%Y-%m-%d %H:%M:%S',
+    '%Y-%m-%d %H:%M',
+]
+
 
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
@@ -160,6 +169,8 @@ REST_FRAMEWORK = {
     'DEFAULT_THROTTLE_RATES': {
         'anon': '30/minute',
         'user': '300/minute',
+        'login': '10/minute',
+        'cotiza': '20/minute',
     },
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 50,
@@ -189,6 +200,14 @@ DEFAULT_META = {
     },
 }
 
-META_SITE_DOMAIN = "pozosscz.com"
-META_SITE_PROTOCOL = "https"
+META_SITE_DOMAIN = config('SITE_DOMAIN', default='pozosscz.com')
+META_SITE_PROTOCOL = config('SITE_PROTOCOL', default='https')
 META_USE_OG_PROPERTIES = True
+
+# Versión de la app Android (expuesta por /api/v1/app-version/)
+APP_MIN_VERSION = config('APP_MIN_VERSION', default='1.0.0')
+APP_LATEST_VERSION = config('APP_LATEST_VERSION', default='1.0.0')
+APP_FORCE_UPGRADE = config('APP_FORCE_UPGRADE', default=False, cast=bool)
+
+# Permitir más campos en formularios del admin (list_editable con muchos registros)
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 5000

@@ -22,6 +22,7 @@ urlpatterns = [
     path('', include('maps.urls')),
     path('', include('clientes.urls')),
     path('', include('pozosscz.urls')),
+    path('', include('flota.urls')),
     path('spritesheet.svg', RedirectView.as_view(url=settings.STATIC_URL + 'maps/spritesheet.svg', permanent=True)),
 ]
 

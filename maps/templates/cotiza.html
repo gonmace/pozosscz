@@ -1,8 +1,8 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static vstatic %}
 
 {% block css %}
-<link rel="stylesheet" href="{% static 'maps/maps.css' %}">
+<link rel="stylesheet" href="{% vstatic 'maps/maps.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -47,5 +47,5 @@
   window.ISAUTHENTICATED = {{ request.user.is_authenticated|yesno:"true,false" }};
   window.DATOS_GENERALES = {{ datos_generales|safe }};
 </script>
-<script type="module" src="{% static 'maps/maps.js' %}"></script>
+<script type="module" src="{% vstatic 'maps/maps.js' %}"></script>
 {% endblock %}

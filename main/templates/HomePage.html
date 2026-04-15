@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static vstatic %}
 
 {% block head %}
 {% endblock %}
@@ -222,6 +222,6 @@
     const banner_alt = "{{ banner.img_alt }}";
     {% endif %}
 </script>
-<script src="{% static 'js/main.js' %}"></script>
+<script src="{% vstatic 'js/main.js' %}"></script>
 
 {% endblock %}

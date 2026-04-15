@@ -147,6 +147,35 @@ class AreasFactor(models.Model):
         ]
 
 
+class PerfilUsuario(models.Model):
+    ROL_ADMINISTRADOR = 'ADM'
+    ROL_OPERADOR = 'OPR'
+    ROLES = [
+        (ROL_ADMINISTRADOR, 'Administrador'),
+        (ROL_OPERADOR, 'Operador'),
+    ]
+
+    user = models.OneToOneField(
+        'auth.User',
+        on_delete=models.CASCADE,
+        related_name='perfil',
+        verbose_name='Usuario',
+    )
+    rol = models.CharField(
+        'Rol',
+        max_length=3,
+        choices=ROLES,
+        default=ROL_OPERADOR,
+    )
+
+    def __str__(self):
+        return f'{self.user.username} — {self.get_rol_display()}'
+
+    class Meta:
+        verbose_name = 'Perfil de Usuario'
+        verbose_name_plural = 'Perfiles de Usuario'
+
+
 def default_img_alt():
     return datetime.now().strftime('%d-%m-%Y')
 
@@ -167,3 +196,5 @@ class BaseCamion(models.Model):
         indexes = [
             models.Index(fields=['available', 'deleted']),
         ]
+
+

@@ -2,21 +2,28 @@ from rest_framework import viewsets
 from .models import (
     PreciosPozosSCZ,
     AreasFactor,
-    BaseCamion
+    BaseCamion,
 )
+from flota.models import Camion, RegistroCamion, DispositivoFCM
+from django.core.exceptions import ObjectDoesNotExist
 from .serializers import (
     PreciosPozosSCZSerializer,
     AreasFactorSerializer,
-    BaseCamionSerializer
+    BaseCamionSerializer,
+    CamionSerializer,
+    RegistroCamionSerializer,
+    DispositivoFCMSerializer,
 )
 from django.http import Http404
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.throttling import AnonRateThrottle
+from rest_framework.throttling import AnonRateThrottle, ScopedRateThrottle
 
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from django.contrib.auth.models import User
+from django.conf import settings
 
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.http import require_POST
@@ -68,38 +75,165 @@ class BaseCamionViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     pagination_class = None
 
+class CamionViewSet(viewsets.ModelViewSet):
+    queryset = Camion.objects.all()
+    serializer_class = CamionSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = None
+
+
+class RegistroCamionViewSet(viewsets.ModelViewSet):
+    serializer_class = RegistroCamionSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = None
+
+    def get_queryset(self):
+        qs = RegistroCamion.objects.select_related('camion')
+        camion_id = self.request.query_params.get('camion')
+        if camion_id:
+            qs = qs.filter(camion_id=camion_id)
+        return qs
+
+
 class CustomAuthToken(ObtainAuthToken):
-    throttle_classes = [AnonRateThrottle]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = 'login'
 
     def post(self, request, *args, **kwargs):
         username = request.data.get('username')
         password = request.data.get('password')
         user = None
 
+        # Respuesta genérica para no filtrar si el usuario existe
+        invalid = Response({'error': 'Invalid username or password'}, status=400)
+
         if username and password:
             try:
                 user = User.objects.get(username=username)
             except User.DoesNotExist:
-                return Response(
-                    {'error': 'Invalid username or password'},
-                    status=400)
+                return invalid
 
             if user.check_password(password):
                 token, created = Token.objects.get_or_create(user=user)
+                perfil = getattr(user, 'perfil', None)
+                rol = perfil.rol if perfil else 'OPR'
                 return Response({
                     'token': token.key,
                     'user_id': user.pk,
-                    'username': user.username
+                    'username': user.username,
+                    'rol': rol,
                 })
-            else:
-                return Response(
-                    {'error': 'Invalid username or password'},
-                    status=400)
+            return invalid
 
-        return Response(
-            {'error': 'Username and password required'},
-            status=400)
+        return Response({'error': 'Username and password required'}, status=400)
+
+
+class LogoutTokenView(APIView):
+    """Revoca el token DRF del usuario autenticado (login logout desde la app)."""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        Token.objects.filter(user=request.user).delete()
+        return Response({'ok': True})
+
+
+class AppVersionView(APIView):
+    """Devuelve la versión mínima requerida de la app Android.
+
+    La app debería llamar a este endpoint al iniciar y forzar upgrade si
+    su versión < `min_version`. No rechaza peticiones — solo informa —
+    para no romper despliegues en curso.
+    """
+    permission_classes = []  # público
+
+    def get(self, request):
+        return Response({
+            'min_version': getattr(settings, 'APP_MIN_VERSION', '1.0.0'),
+            'latest_version': getattr(settings, 'APP_LATEST_VERSION', '1.0.0'),
+            'force_upgrade': getattr(settings, 'APP_FORCE_UPGRADE', False),
+        })
 
 
 def hello_world(request):
     return HttpResponse("Pozos SCZ!!!")
+
+
+class DispositivoFCMView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        """Registra o actualiza el token FCM del dispositivo del usuario autenticado."""
+        token = request.data.get('fcm_token', '').strip()
+        if not token:
+            return Response({'error': 'fcm_token requerido'}, status=400)
+
+        # Desactivar cualquier otro token de este mismo dispositivo (otro usuario previo)
+        DispositivoFCM.objects.filter(fcm_token=token).exclude(
+            usuario=request.user
+        ).update(activo=False)
+
+        # Registrar o actualizar el token para el usuario actual
+        DispositivoFCM.objects.update_or_create(
+            fcm_token=token,
+            defaults={'usuario': request.user, 'activo': True},
+        )
+        return Response({'ok': True})
+
+
+class ConfigTrackingView(APIView):
+    """Devuelve la configuración de tracking para el camión del usuario autenticado."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            camion = request.user.camion
+        except Camion.DoesNotExist:
+            return Response({'error': 'Usuario no tiene camión asignado'}, status=400)
+        return Response({
+            'tracking_activo': camion.tracking_activo,
+            'intervalo_tracking': max(10, camion.intervalo_tracking),
+        })
+
+
+class UbicacionCamionView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        """Recibe lat/lon del chofer y crea un EstadoCamion."""
+        from django.utils import timezone
+        from datetime import timedelta
+
+        try:
+            camion = request.user.camion
+        except Camion.DoesNotExist:
+            return Response({'error': 'Usuario no tiene camión asignado'}, status=400)
+
+        lat = request.data.get('lat')
+        lon = request.data.get('lon')
+        if lat is None or lon is None:
+            return Response({'error': 'lat y lon requeridos'}, status=400)
+
+        velocidad = request.data.get('velocidad', 0)
+        direccion = request.data.get('direccion', 0)
+        activo = request.data.get("activo", True)
+        if isinstance(activo, str):
+            activo = activo.lower() != "false"
+        comentario = (request.data.get("comentario") or "").strip()
+
+        # Deduplicar: ignorar si ya llegó una ubicación del mismo camión en los últimos 5 segundos
+        # Excepciones: comentario no vacío, o activo=False (marcar inactivo siempre pasa)
+        if activo and not comentario:
+            hace_5s = timezone.now() - timedelta(seconds=5)
+            if RegistroCamion.objects.filter(camion=camion, registrado_at__gte=hace_5s).exists():
+                return Response({'ok': True, 'duplicado': True})
+
+        RegistroCamion.objects.create(
+            camion=camion,
+            activo=activo,
+            lat=lat,
+            lon=lon,
+            velocidad=round(float(velocidad), 1),
+            direccion=round(float(direccion), 1),
+            comentario=comentario,
+        )
+        return Response({'ok': True})

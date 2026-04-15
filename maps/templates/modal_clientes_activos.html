@@ -1,0 +1,47 @@
+<style>
+  #modalClientesActivos { pointer-events: none; background: transparent !important; z-index: 1000; }
+  #draggableClientesActivos { pointer-events: auto; position: relative; z-index: 1; height: fit-content !important; max-height: none !important; overflow-y: visible !important; }
+  @keyframes hora-pulse {
+    0%, 100% { border-color: #E5393580; opacity: 1;   }
+    50%       { border-color: #E53935ff; opacity: 0.6; }
+  }
+  @keyframes chofer-alert {
+    0%   { border-color: #ef4444; transform: scale(1);    opacity: 1;   }
+    50%  { border-color: #fca5a5; transform: scale(1.15); opacity: 0.6; }
+    100% { border-color: #ef4444; transform: scale(1);    opacity: 1;   }
+  }
+</style>
+<dialog id="modal-clientes-activos" class="modal items-start justify-center">
+  <div id="draggableClientesActivos"
+       class="modal-box relative pt-0 px-0 mt-16 sm:mt-4 w-full sm:w-[600px]"
+       style="max-width:95vw;overflow-x:visible;">
+
+    <!-- Header: drag handle + badges + colapso -->
+    <div id="modalClientesActivosHeader"
+         class="flex items-center gap-2 cursor-move px-3 h-9 bg-base-300 font-bold text-sm rounded-t-lg select-none flex-wrap">
+      <span class="mr-1">Clientes activos</span>
+      <span id="modal-activos-prg" class="status-badge st-prg text-[9px] font-bold px-1.5 py-px rounded-full" style="display:none;"></span>
+      <span id="modal-activos-eje" class="status-badge st-eje text-[9px] font-bold px-1.5 py-px rounded-full" style="display:none;"></span>
+      <span id="modal-activos-can" class="status-badge st-can text-[9px] font-bold px-1.5 py-px rounded-full" style="display:none;"></span>
+      <span id="modal-activos-cot" class="status-badge st-cot text-[9px] font-bold px-1.5 py-px rounded-full" style="display:none;"></span>
+      <div class="ml-auto flex items-center gap-1">
+        <button id="modalClientesActivosCollapseBtn" type="button"
+                class="btn btn-xs btn-ghost px-1" title="Colapsar / Expandir">▼</button>
+        <button id="modalClientesActivosCloseBtn" type="button"
+                class="btn btn-xs btn-ghost px-1" title="Cerrar">✕</button>
+      </div>
+    </div>
+
+    <!-- Contenido colapsable -->
+    <div id="modalClientesActivosContent"
+         class="overflow-y-auto px-3 py-3"
+         style="max-height:75vh;">
+      <div id="modal-activos-list" class="flex gap-4">
+        <div id="modal-activos-col-1" class="flex flex-col gap-4 flex-1 min-w-0"></div>
+        <div id="modal-activos-col-2" class="flex flex-col gap-4 flex-1 min-w-0 hidden sm:flex"></div>
+      </div>
+      </div>
+    </div>
+
+  </div>
+</dialog>
