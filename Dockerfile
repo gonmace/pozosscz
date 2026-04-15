@@ -25,8 +25,8 @@ RUN chmod +x ./entrypoint.sh
 
 RUN python manage.py collectstatic --noinput
 
-RUN useradd --no-create-home --shell /bin/false appuser \
-    && chown -R appuser:appuser /app
+RUN useradd --create-home --shell /bin/false appuser \
+    && chown -R appuser:appuser /home/appuser /app
 
 USER appuser
 
