@@ -654,6 +654,23 @@ def eventos_camion_factura_update(request, pk):
     return JsonResponse({'id': ev.id, 'factura': ev.factura})
 
 
+@login_required
+def eventos_camion_delete(request, pk):
+    """Elimina un EventoCamion."""
+    from flota.models import EventoCamion
+
+    if request.method != 'DELETE':
+        return JsonResponse({'error': 'Método no permitido'}, status=405)
+
+    try:
+        ev = EventoCamion.objects.get(pk=pk)
+    except EventoCamion.DoesNotExist:
+        return JsonResponse({'error': 'Evento no encontrado'}, status=404)
+
+    ev.delete()
+    return JsonResponse({'id': pk, 'deleted': True})
+
+
 
 
 import time as _time

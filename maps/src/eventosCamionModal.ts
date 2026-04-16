@@ -1,5 +1,6 @@
 import type { Map } from "leaflet";
 import dragModal from "./utils/dragModal";
+import { confirmDialog, createToast } from "./utils/toast";
 
 interface EventoCamion {
   id: number;
@@ -126,7 +127,7 @@ export function initEventosCamionModal(map: Map) {
     if (_loading) return;
     _loading = true;
     const list = document.getElementById("eventos-camion-body");
-    if (list) list.innerHTML = `<tr><td colspan="9" class="text-center py-6 text-xs opacity-40">Cargando…</td></tr>`;
+    if (list) list.innerHTML = `<tr><td colspan="10" class="text-center py-6 text-xs opacity-40">Cargando…</td></tr>`;
     try {
       const params = new URLSearchParams({ dias: String(_dias) });
       if (_camionFiltro) params.set("camion", _camionFiltro);
@@ -136,7 +137,7 @@ export function initEventosCamionModal(map: Map) {
       render();
     } catch (e) {
       const list2 = document.getElementById("eventos-camion-body");
-      if (list2) list2.innerHTML = `<tr><td colspan="9" class="text-center py-6 text-xs text-error">Error al cargar</td></tr>`;
+      if (list2) list2.innerHTML = `<tr><td colspan="10" class="text-center py-6 text-xs text-error">Error al cargar</td></tr>`;
     } finally {
       _loading = false;
     }
@@ -179,7 +180,7 @@ export function initEventosCamionModal(map: Map) {
 
     if (_data.length === 0) {
       const lbl = _dias === 1 ? "el último día" : `los últimos ${_dias} días`;
-      tbody.innerHTML = `<tr><td colspan="9" class="text-center py-6 text-xs opacity-40">Sin eventos en ${lbl}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="10" class="text-center py-6 text-xs opacity-40">Sin eventos en ${lbl}</td></tr>`;
       return;
     }
 
@@ -264,6 +265,15 @@ export function initEventosCamionModal(map: Map) {
             </td>
             <td class="px-2 py-1.5 text-[10px] max-w-[100px] truncate" style="color:rgba(255,255,255,0.4);" title="${ev.comentario}">
               ${ev.comentario || '<span style="opacity:0.25">—</span>'}
+            </td>
+            <td class="px-2 py-1.5 text-center">
+              <button type="button" class="eventos-delete-btn" data-id="${ev.id}" title="Eliminar evento"
+                      style="cursor:pointer;border:none;background:transparent;padding:2px;border-radius:4px;line-height:0;opacity:0.5;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#E53935" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                  <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                </svg>
+              </button>
             </td>
           </tr>`;
       }).join("");
@@ -355,6 +365,36 @@ export function initEventosCamionModal(map: Map) {
         } finally {
           btn.disabled = false;
           btn.style.opacity = "";
+        }
+      });
+    });
+
+    // Borrar evento
+    tbody.querySelectorAll<HTMLButtonElement>(".eventos-delete-btn").forEach(btn => {
+      btn.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        const id = parseInt(btn.dataset.id!);
+        const ok = await confirmDialog("¿Está seguro que desea eliminar este evento?");
+        if (!ok) return;
+        btn.disabled = true;
+        btn.style.opacity = "0.3";
+        try {
+          const resp = await fetch(`/maps/api/eventos-camion/${id}/`, {
+            method: "DELETE",
+            headers: { "X-CSRFToken": getCsrf() },
+          });
+          if (!resp.ok) throw new Error();
+          for (const dia of _data) {
+            const idx = dia.eventos.findIndex(x => x.id === id);
+            if (idx >= 0) { dia.eventos.splice(idx, 1); break; }
+          }
+          _data = _data.filter(d => d.eventos.length > 0);
+          render();
+          createToast("evento", "map", "Evento eliminado", "top", "success");
+        } catch {
+          btn.disabled = false;
+          btn.style.opacity = "0.5";
+          createToast("evento", "map", "Error al eliminar evento", "top", "error");
         }
       });
     });
