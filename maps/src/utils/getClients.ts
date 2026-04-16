@@ -386,11 +386,17 @@ export async function fetchClients(): Promise<{ groupEje: LayerGroup[], groupCot
       if (el) wirePopup(el, cd, marca as CircleMarker);
     });
 
+    let parentGroup: LayerGroup | null = null;
     if (e.status == "COT") {
-      e.user == "ADM" ? marca.addTo(groupADM) : null
-      e.user == "CLC" ? marca.addTo(groupCLC) : marca.addTo(groupCLX)
+      if (e.user == "ADM") { parentGroup = groupADM; }
+      else if (e.user == "CLC") { parentGroup = groupCLC; }
+      else { parentGroup = groupCLX; }
     } else {
-      e.status == "EJE" ? marca.addTo(groupEje[color]) : marca.addTo(groupEje[10])
+      parentGroup = e.status == "EJE" ? groupEje[color] : groupEje[10];
+    }
+    if (parentGroup) {
+      marca.addTo(parentGroup);
+      (marca as any)._parentGroup = parentGroup;
     }
   });
   return { groupEje, groupCot};

@@ -115,7 +115,13 @@ L.Control.SliderControl = L.Control.extend({
 
     onRemove: function (map) {
         for (var i = this.options.minValue; i <= this.options.maxValue; i++) {
-            if (this.options.markers[i]) map.removeLayer(this.options.markers[i]);
+            var m = this.options.markers[i];
+            if (!m) continue;
+            if (m._parentGroup && typeof m._parentGroup.hasLayer === 'function' && m._parentGroup.hasLayer(m)) {
+                m._parentGroup.removeLayer(m);
+            } else {
+                map.removeLayer(m);
+            }
         }
     },
 
@@ -291,13 +297,30 @@ L.Control.SliderControl = L.Control.extend({
     _updateMarkers: function (startValue, endValue) {
         var map = this.options.map;
         var fg  = L.featureGroup();
+        var hide = function (m) {
+            if (!m) return;
+            if (m._parentGroup && typeof m._parentGroup.hasLayer === 'function' && m._parentGroup.hasLayer(m)) {
+                m._parentGroup.removeLayer(m);
+            } else {
+                map.removeLayer(m);
+            }
+        };
+        var show = function (m) {
+            if (!m) return;
+            if (m._parentGroup && typeof m._parentGroup.hasLayer === 'function' && !m._parentGroup.hasLayer(m)) {
+                m._parentGroup.addLayer(m);
+            } else if (!m._parentGroup) {
+                map.addLayer(m);
+            }
+        };
         for (var i = this.options.minValue; i <= this.options.maxValue; i++) {
-            if (this.options.markers[i]) map.removeLayer(this.options.markers[i]);
+            hide(this.options.markers[i]);
         }
         for (i = startValue; i <= endValue; i++) {
-            if (this.options.markers[i]) {
-                map.addLayer(this.options.markers[i]);
-                fg.addLayer(this.options.markers[i]);
+            var m = this.options.markers[i];
+            if (m) {
+                show(m);
+                fg.addLayer(m);
             }
         }
         if (this.options.rezoom) {
