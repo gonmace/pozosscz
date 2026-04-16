@@ -1,7 +1,7 @@
 import { Map as LeafletMap, Marker } from "leaflet";
 import { iconRed } from "./ObjectLeaflet";
 import { createToast } from "./toast";
-import { buildCamionOptions } from "./camiones";
+import { buildCamionOptions, cargarCamiones, getCamiones, getCamionIniciales } from "./camiones";
 
 interface Client {
   id: number;
@@ -17,6 +17,7 @@ interface Client {
   user: string;
   service: string;
   created_at: string;
+  hora_programada?: string | null;
   camion?: number | null;
   camion_iniciales?: string | null;
 }
@@ -80,8 +81,9 @@ export function tableModal(map: LeafletMap) {
               <th class="text-center">Est.</th>
               <th class="text-center">Act.</th>
               <th class="text-center">Cam.</th>
-              <th class="w-[100px]">Comentario</th>
               <th class="text-center">Fecha</th>
+              <th class="text-center">Hora</th>
+              <th class="w-[100px]">Comentario</th>
               <th class="text-center">Acc.</th>
             </tr>
           </thead>
@@ -139,10 +141,16 @@ export function tableModal(map: LeafletMap) {
       new Marker([client.lat, client.lon], { icon: iconRed }).addTo(map);
     } else if (btn.dataset.action === "edit") {
       editClient(client);
-    } else if (btn.dataset.action === "comment") {
-      showCommentTooltip(btn, client.address || "Sin comentario");
     } else if (btn.dataset.action === "status-open") {
       showStatusPicker(btn, client, clientMap);
+    } else if (btn.dataset.action === "edit-fecha") {
+      inlineEditDate(btn, client);
+    } else if (btn.dataset.action === "edit-hora") {
+      inlineEditTime(btn, client);
+    } else if (btn.dataset.action === "edit-comment") {
+      inlineEditComment(btn, client);
+    } else if (btn.dataset.action === "edit-camion") {
+      showCamionPicker(btn, client);
     }
   });
 
@@ -163,6 +171,7 @@ export function tableModal(map: LeafletMap) {
         if (!resp.ok) throw new Error();
         const c = clientMap.get(id);
         if (c) c.activo = nuevoValor;
+        if ((window as any).refreshClientLayers) (window as any).refreshClientLayers();
       } catch {
         toggle.checked = !nuevoValor;
         createToast("activo", "map", "Error al actualizar", "top", "error");
@@ -212,10 +221,10 @@ export function tableModal(map: LeafletMap) {
     clientMap.clear();
     clients.forEach(c => clientMap.set(c.id, c));
 
-    // Ordenar por fecha descendente para que el zebra agrupe días correlativos
+    // Ordenar por hora_programada descendente para que el zebra agrupe días correlativos
     const sorted = [...clients].sort((a, b) => {
-      const da = a.created_at ?? "";
-      const db = b.created_at ?? "";
+      const da = a.hora_programada ?? a.created_at ?? "";
+      const db = b.hora_programada ?? b.created_at ?? "";
       return db.localeCompare(da);
     });
 
@@ -223,7 +232,8 @@ export function tableModal(map: LeafletMap) {
     let zebraIdx    = -1;
 
     tableBody.innerHTML = sorted.map(client => {
-      const dayKey = client.created_at ? client.created_at.slice(0, 10) : "__";
+      const fechaRef = client.hora_programada ?? client.created_at;
+      const dayKey = fechaRef ? fechaRef.slice(0, 10) : "__";
 
       // Nuevo día → insertar separador y rotar color
       let separator = "";
@@ -231,13 +241,13 @@ export function tableModal(map: LeafletMap) {
         zebraDayKey = dayKey;
         zebraIdx    = 1 - zebraIdx;   // alterna 0 ↔ 1
 
-        const dayLabel = client.created_at
-          ? fmtFechaLarga.format(new Date(client.created_at))
+        const dayLabel = fechaRef
+          ? fmtFechaLarga.format(new Date(fechaRef))
           : "Sin fecha";
 
         separator = `
         <tr class="day-separator" style="background:rgba(255,255,255,0.12);border-top:2px solid rgba(255,255,255,0.25);">
-          <td colspan="9"
+          <td colspan="10"
               style="padding:5px 10px 4px;font-size:10px;font-weight:800;letter-spacing:0.1em;
                      text-transform:uppercase;opacity:0.85;">
             ${dayLabel}
@@ -249,7 +259,10 @@ export function tableModal(map: LeafletMap) {
       const stClass = STATUS_CLASS[client.status] ?? "";
       // Combinar: tinte de estado + overlay de día
       const rowBg   = `linear-gradient(${ZEBRA_OVERLAY[zebraIdx]},${ZEBRA_OVERLAY[zebraIdx]}),${hexAlpha(color, 0.08)}`;
-      const fecha   = client.created_at ? fmtFecha.format(new Date(client.created_at)) : "—";
+      const fechaDt = fechaRef ? new Date(fechaRef) : null;
+      const fecha   = fechaDt ? fmtFecha.format(fechaDt) : "—";
+      const horaDt  = client.hora_programada ? new Date(client.hora_programada) : null;
+      const hora    = horaDt ? horaDt.toLocaleTimeString("es-BO", { hour: "2-digit", minute: "2-digit", hour12: false }) : "";
 
       const waCell = client.tel1
         ? `<a href="https://wa.me/${client.tel1.replace(/[^\d+]/g, "")}" target="_blank"
@@ -283,7 +296,7 @@ export function tableModal(map: LeafletMap) {
           <input type="checkbox" class="toggle toggle-xs toggle-success"
                  data-id="${client.id}" ${client.activo ? "checked" : ""} />
         </td>
-        <td class="text-center">
+        <td class="text-center cursor-pointer" data-action="edit-camion" data-id="${client.id}">
           ${client.camion_iniciales
             ? `<span class="inline-flex items-center justify-center w-6 h-6 rounded-full text-[9px] font-bold"
                      title="${client.camion_iniciales}"
@@ -292,10 +305,11 @@ export function tableModal(map: LeafletMap) {
                </span>`
             : `<span class="text-xs" style="opacity:0.2;">—</span>`}
         </td>
-        <td class="text-xs w-[100px] max-w-[100px] cursor-pointer" style="opacity:0.6;">
-          <span class="line-clamp-1" data-action="comment" data-id="${client.id}">${client.address || '<span class="italic" style="opacity:0.5;">—</span>'}</span>
+        <td class="text-center text-xs cursor-pointer" style="opacity:0.6;" data-action="edit-fecha" data-id="${client.id}">${fecha}</td>
+        <td class="text-center text-xs cursor-pointer" style="opacity:0.6;" data-action="edit-hora" data-id="${client.id}">${hora || '<span class="italic" style="opacity:0.4;">—</span>'}</td>
+        <td class="text-xs w-[100px] max-w-[100px] cursor-pointer" style="opacity:0.6;" data-action="edit-comment" data-id="${client.id}">
+          <span class="line-clamp-1">${client.address || '<span class="italic" style="opacity:0.5;">—</span>'}</span>
         </td>
-        <td class="text-center text-xs" style="opacity:0.4;">${fecha}</td>
         <td>
           <div class="flex items-center gap-1 justify-center">
             <button class="btn btn-xs btn-ghost btn-square status-fly-btn"
@@ -377,6 +391,7 @@ export function tableModal(map: LeafletMap) {
           body: JSON.stringify({ status: newStatus }),
         });
         if (!resp.ok) throw new Error();
+        if ((window as any).refreshClientLayers) (window as any).refreshClientLayers();
       } catch {
         createToast("status", "map", "Error al actualizar estado", "top", "error");
       }
@@ -409,6 +424,207 @@ export function tableModal(map: LeafletMap) {
 
     // Cerrar al primer click en cualquier lugar
     const close = () => { tip.remove(); document.removeEventListener("click", close, true); };
+    setTimeout(() => document.addEventListener("click", close, true), 0);
+  }
+
+  function getHoraProgramada(client: Client): { date: string; time: string } {
+    if (client.hora_programada) {
+      const dt = new Date(client.hora_programada);
+      const y = dt.getFullYear();
+      const m = String(dt.getMonth() + 1).padStart(2, "0");
+      const d = String(dt.getDate()).padStart(2, "0");
+      const hh = String(dt.getHours()).padStart(2, "0");
+      const mm = String(dt.getMinutes()).padStart(2, "0");
+      return { date: `${y}-${m}-${d}`, time: `${hh}:${mm}` };
+    }
+    if (client.created_at) {
+      const dt = new Date(client.created_at);
+      const y = dt.getFullYear();
+      const m = String(dt.getMonth() + 1).padStart(2, "0");
+      const d = String(dt.getDate()).padStart(2, "0");
+      return { date: `${y}-${m}-${d}`, time: "" };
+    }
+    return { date: "", time: "" };
+  }
+
+  async function patchHoraProgramada(client: Client, dateStr: string, timeStr: string) {
+    const isoVal = timeStr ? `${dateStr}T${timeStr}:00` : `${dateStr}T00:00:00`;
+    try {
+      const resp = await fetch(`/api/v1/clientes/${client.id}/`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", "X-CSRFToken": getCookie("csrftoken") },
+        body: JSON.stringify({ hora_programada: isoVal }),
+      });
+      if (!resp.ok) throw new Error();
+      client.hora_programada = isoVal;
+      updateTable();
+      if ((window as any).refreshClientLayers) (window as any).refreshClientLayers();
+    } catch {
+      createToast("fecha", "map", "Error al actualizar fecha/hora", "top", "error");
+    }
+  }
+
+  function inlineEditDate(cell: HTMLElement, client: Client) {
+    if (cell.querySelector("input")) return;
+    const { date, time } = getHoraProgramada(client);
+    const original = cell.textContent ?? "";
+    const input = document.createElement("input");
+    input.type = "date";
+    input.value = date;
+    input.className = "input input-xs w-[120px] text-xs text-center";
+    input.style.cssText = "background:rgba(0,0,0,0.3);color:inherit;border:1px solid rgba(255,255,255,0.2);";
+    cell.textContent = "";
+    cell.appendChild(input);
+    input.focus();
+
+    const commit = () => {
+      if (input.value && input.value !== date) {
+        patchHoraProgramada(client, input.value, time);
+      } else {
+        cell.textContent = original;
+      }
+    };
+    input.addEventListener("change", commit);
+    input.addEventListener("blur", () => {
+      if (cell.contains(input)) commit();
+    });
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") { cell.textContent = original; }
+    });
+  }
+
+  function inlineEditTime(cell: HTMLElement, client: Client) {
+    if (cell.querySelector("input")) return;
+    const { date, time } = getHoraProgramada(client);
+    if (!date) return;
+    const original = cell.innerHTML;
+    const input = document.createElement("input");
+    input.type = "time";
+    input.value = time;
+    input.className = "input input-xs w-[90px] text-xs text-center";
+    input.style.cssText = "background:rgba(0,0,0,0.3);color:inherit;border:1px solid rgba(255,255,255,0.2);";
+    cell.textContent = "";
+    cell.appendChild(input);
+    input.focus();
+
+    const commit = () => {
+      if (input.value !== time) {
+        patchHoraProgramada(client, date, input.value);
+      } else {
+        cell.innerHTML = original;
+      }
+    };
+    input.addEventListener("change", commit);
+    input.addEventListener("blur", () => {
+      if (cell.contains(input)) commit();
+    });
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") { cell.innerHTML = original; }
+    });
+  }
+
+  function inlineEditComment(cell: HTMLElement, client: Client) {
+    if (cell.querySelector("input")) return;
+    const original = cell.innerHTML;
+    const currentVal = client.address ?? "";
+    const input = document.createElement("input");
+    input.type = "text";
+    input.value = currentVal;
+    input.maxLength = 200;
+    input.className = "input input-xs w-full text-xs";
+    input.style.cssText = "background:rgba(0,0,0,0.3);color:inherit;border:1px solid rgba(255,255,255,0.2);";
+    cell.innerHTML = "";
+    cell.appendChild(input);
+    input.focus();
+
+    let saved = false;
+    const commit = async () => {
+      if (saved) return;
+      saved = true;
+      const newVal = input.value.trim();
+      if (newVal === currentVal) { cell.innerHTML = original; return; }
+      try {
+        const resp = await fetch(`/api/v1/clientes/${client.id}/`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json", "X-CSRFToken": getCookie("csrftoken") },
+          body: JSON.stringify({ address: newVal }),
+        });
+        if (!resp.ok) throw new Error();
+        client.address = newVal;
+        updateTable();
+        if ((window as any).refreshClientLayers) (window as any).refreshClientLayers();
+      } catch {
+        cell.innerHTML = original;
+        createToast("comment", "map", "Error al actualizar comentario", "top", "error");
+      }
+    };
+    input.addEventListener("blur", commit);
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") input.blur();
+      if (e.key === "Escape") { saved = true; cell.innerHTML = original; }
+    });
+  }
+
+  async function showCamionPicker(cell: HTMLElement, client: Client) {
+    document.getElementById("__camion-picker")?.remove();
+    let camiones = getCamiones();
+    if (!camiones.length) camiones = await cargarCamiones();
+
+    const picker = document.createElement("div");
+    picker.id = "__camion-picker";
+    picker.style.cssText = "position:fixed;z-index:99999;background:#1e293b;border:1px solid rgba(255,255,255,0.12);border-radius:0.5rem;box-shadow:0 8px 24px rgba(0,0,0,0.4);min-width:160px;padding:0.25rem 0;max-height:280px;overflow-y:auto;";
+
+    const items: { id: number | null; label: string }[] = [
+      { id: null, label: "— Sin asignar —" },
+      ...camiones.map(c => ({ id: c.id, label: c.operador })),
+    ];
+
+    items.forEach(item => {
+      const isSelected = item.id === (client.camion ?? null);
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "w-full text-left px-3 py-1.5 text-xs";
+      btn.style.cssText = `color:${isSelected ? "#38bdf8" : "#e2e8f0"};background:${isSelected ? "#0f172a" : "transparent"};border:none;cursor:pointer;`;
+      btn.textContent = item.label + (isSelected ? "  ✓" : "");
+      btn.addEventListener("mouseenter", () => { if (!isSelected) btn.style.background = "#1e3a5f"; });
+      btn.addEventListener("mouseleave", () => { btn.style.background = isSelected ? "#0f172a" : "transparent"; });
+      btn.addEventListener("click", async (ev) => {
+        ev.stopPropagation();
+        picker.remove();
+        try {
+          const resp = await fetch(`/api/v1/clientes/${client.id}/`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json", "X-CSRFToken": getCookie("csrftoken") },
+            body: JSON.stringify({ camion: item.id }),
+          });
+          if (!resp.ok) throw new Error();
+          client.camion = item.id;
+          const found = camiones.find(x => x.id === item.id);
+          client.camion_iniciales = found ? getCamionIniciales(found.operador) : null;
+          updateTable();
+          if ((window as any).refreshClientLayers) (window as any).refreshClientLayers();
+        } catch {
+          createToast("camion", "map", "Error al asignar chofer", "top", "error");
+        }
+      });
+      picker.appendChild(btn);
+    });
+
+    document.body.appendChild(picker);
+    const rect = cell.getBoundingClientRect();
+    let left = rect.left + window.scrollX;
+    let top = rect.bottom + window.scrollY + 4;
+    const pw = picker.offsetWidth || 160;
+    if (left + pw > window.innerWidth - 8) left = window.innerWidth - pw - 8;
+    picker.style.left = `${left}px`;
+    picker.style.top = `${top}px`;
+
+    const close = (ev: MouseEvent) => {
+      if (!picker.contains(ev.target as Node)) {
+        picker.remove();
+        document.removeEventListener("click", close, true);
+      }
+    };
     setTimeout(() => document.addEventListener("click", close, true), 0);
   }
 

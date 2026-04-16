@@ -221,11 +221,17 @@ export function initClientesActivosModal(map: Map) {
       </div>`;
     };
 
-    const mitad = Math.ceil(filtrados.length / 2);
     const col1 = document.getElementById("modal-activos-col-1");
     const col2 = document.getElementById("modal-activos-col-2");
-    if (col1) col1.innerHTML = filtrados.slice(0, mitad).map(renderCard).join("");
-    if (col2) col2.innerHTML = filtrados.slice(mitad).map(renderCard).join("");
+    const esMobile = window.innerWidth < 640;
+    if (esMobile) {
+      if (col1) col1.innerHTML = filtrados.map(renderCard).join("");
+      if (col2) col2.innerHTML = "";
+    } else {
+      const mitad = Math.ceil(filtrados.length / 2);
+      if (col1) col1.innerHTML = filtrados.slice(0, mitad).map(renderCard).join("");
+      if (col2) col2.innerHTML = filtrados.slice(mitad).map(renderCard).join("");
+    }
 
     // Drag & drop reordering
     const allCards = list.querySelectorAll<HTMLElement>("[data-drag-id]");
@@ -378,7 +384,7 @@ export function initClientesActivosModal(map: Map) {
           content.style.display = "none";
           if (collapseBtn) collapseBtn.textContent = "▲";
         }
-        map.flyTo([parseFloat(btn.dataset.lat!), parseFloat(btn.dataset.lon!)], 13);
+        map.flyTo([parseFloat(btn.dataset.lat!), parseFloat(btn.dataset.lon!)], 14);
       });
     });
 

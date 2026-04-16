@@ -4,7 +4,7 @@ import { Marker, Map, Path } from "leaflet";
 import { postData } from "./postCliente";
 import { createToast } from "./toast";
 import { polyline } from "leaflet";
-import { fetchClients } from "./getClients";
+
 
 let tbValores: HTMLTableElement;
 let tbConstantes: HTMLTableElement;
@@ -434,22 +434,9 @@ export const modalPrecio = (data: DataPrice, colorPath: string[], marker: Marker
         // Si la respuesta es exitosa
         createToast('postData', 'map', 'Datos guardados con éxito', 'top', 'success');
         
-        // Actualizar la lista de clientes
-        const { groupEje, groupCot } = await fetchClients();
-        
-        // Remover los grupos antiguos y añadir los nuevos
-        if (window.mcgLayerSupportGroup) {
-          window.mcgLayerSupportGroup.checkIn(groupCot);
-
-          // Desactivar capa de ejecutados
-          groupEje.forEach(group => {
-            if (group) group.removeFrom(map!);
-          });
-
-          // Activar capa de cotizados
-          groupCot.forEach(group => {
-            if (group) group.addTo(map!);
-          });
+        // Actualizar capas de clientes y jornada
+        if ((window as any).refreshClientLayers) {
+          (window as any).refreshClientLayers();
         }
         
         // Cerrar el modal

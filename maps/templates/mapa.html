@@ -55,6 +55,20 @@
         </button>
       </div>
 
+      <!-- Sección: Clientes activos -->
+      <div class="p-3 border-b border-base-300">
+        <div class="flex items-center gap-1.5 mb-2 flex-wrap">
+          <p class="text-xs font-semibold uppercase tracking-widest text-base-content/50 flex-1">Clientes activos</p>
+          <span id="sidebar-count-prg" class="status-badge st-prg text-[9px] font-bold px-1.5 py-px rounded-full" style="display:none;"></span>
+          <span id="sidebar-count-eje" class="status-badge st-eje text-[9px] font-bold px-1.5 py-px rounded-full" style="display:none;"></span>
+          <span id="sidebar-count-can" class="status-badge st-can text-[9px] font-bold px-1.5 py-px rounded-full" style="display:none;"></span>
+          <span id="sidebar-count-cot" class="status-badge st-cot text-[9px] font-bold px-1.5 py-px rounded-full" style="display:none;"></span>
+        </div>
+        <div id="sidebar-clientes-list" class="flex flex-col gap-0.5">
+          <p class="text-xs text-base-content/40 text-center py-2">Cargando…</p>
+        </div>
+      </div>
+
       <!-- Sección: Base -->
       <div class="p-3 border-b border-base-300">
         <p class="text-xs font-semibold uppercase tracking-widest text-base-content/50 mb-3">Base</p>
@@ -114,22 +128,8 @@
         </div>
       </div>
 
-      <!-- Sección: Clientes activos -->
-      <div class="p-3 border-b border-base-300">
-        <div class="flex items-center gap-1.5 mb-2 flex-wrap">
-          <p class="text-xs font-semibold uppercase tracking-widest text-base-content/50 flex-1">Clientes activos</p>
-          <span id="sidebar-count-prg" class="status-badge st-prg text-[9px] font-bold px-1.5 py-px rounded-full" style="display:none;"></span>
-          <span id="sidebar-count-eje" class="status-badge st-eje text-[9px] font-bold px-1.5 py-px rounded-full" style="display:none;"></span>
-          <span id="sidebar-count-can" class="status-badge st-can text-[9px] font-bold px-1.5 py-px rounded-full" style="display:none;"></span>
-          <span id="sidebar-count-cot" class="status-badge st-cot text-[9px] font-bold px-1.5 py-px rounded-full" style="display:none;"></span>
-        </div>
-        <div id="sidebar-clientes-list" class="flex flex-col gap-0.5">
-          <p class="text-xs text-base-content/40 text-center py-2">Cargando…</p>
-        </div>
-      </div>
-
       <!-- Sección: Zonas / Polígonos -->
-      <div class="p-3">
+      <div class="p-3 hidden sm:block">
         <p class="text-xs font-semibold uppercase tracking-widest text-base-content/50 mb-2">Zonas</p>
         <form id="savePolygon" action="/api/v1/areasfactor/" method="POST">
           <textarea

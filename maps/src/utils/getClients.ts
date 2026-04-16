@@ -120,6 +120,16 @@ function wirePopup(popupEl: HTMLElement, cd: ClienteEx, marca: CircleMarker) {
     if (newEl) wirePopup(newEl, cd, marca);
   };
 
+  // Click en el popup (fuera de links/inputs/selects/buttons) cierra el popup
+  const card = popupEl.querySelector<HTMLElement>('.status-card');
+  if (card) {
+    card.addEventListener('click', (e) => {
+      const target = e.target as HTMLElement;
+      if (target.closest('a, input, select, button, .popup-camion-btn, .popup-comment-txt')) return;
+      marca.closePopup();
+    });
+  }
+
   // Status select
   const sel = popupEl.querySelector<HTMLSelectElement>('.popup-status-sel');
   if (sel) {

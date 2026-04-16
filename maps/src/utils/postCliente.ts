@@ -33,6 +33,7 @@ export async function postData(
     status: status,
     user: user,
     cod: cod,
+    activo: true,
   };
   if (typeof precio_cotizado === "number" && precio_cotizado > 0) data.precio_cotizado = precio_cotizado;
   return fetch(urlPost, {

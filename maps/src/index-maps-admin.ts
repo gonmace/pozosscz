@@ -190,6 +190,8 @@ const cotiza = control.custom({
               </div>`,
   events: {
     click: async () => {
+      const btn = document.getElementById("cotiza") as HTMLButtonElement | null;
+      if (!btn || btn.disabled) return;
       overlay.classList.remove("invisible");
       dataPrice = await cotizando(marker, '/api/v1/contratar-admin/');
       overlay.classList.add("invisible");
@@ -387,7 +389,7 @@ GuardarBaseMarker.addEventListener("click", async () => {
 // Manejar clicks en los botones locate-camion
 document.querySelectorAll(".locate-camion").forEach((button) => {
   button.addEventListener("click", (e) => {
-    const row = (e.target as HTMLElement).closest("tr");
+    const row = (e.currentTarget as HTMLElement).closest(".flex.items-center");
     if (row) {
       const coordsInput = row.querySelector(
         ".camion-coords"
@@ -395,7 +397,7 @@ document.querySelectorAll(".locate-camion").forEach((button) => {
       if (coordsInput && coordsInput.value) {
         try {
           const coords = JSON.parse(coordsInput.value) as [number, number];
-          map.flyTo(coords, 12);
+          map.flyTo(coords, 13);
         } catch (error) {
           console.error("Error parsing coordinates:", error);
         }
@@ -467,7 +469,13 @@ document.querySelectorAll(".delete-camion").forEach((button) => {
 });
 
 // Funcion para ubicar el marcador en el mapa
+let _popupJustClosedAt = 0;
+map.on("popupclose", () => { _popupJustClosedAt = Date.now(); });
+map.on("tooltipclose", () => { _popupJustClosedAt = Date.now(); });
+
 function onMapClick(e: LeafletMouseEvent) {
+  // Si se acaba de cerrar un popup/tooltip por este mismo click, no colocar marker
+  if (Date.now() - _popupJustClosedAt < 100) return;
   // Obtener el elemento nav y el contenedor del slider
   const navElement = document.querySelector("nav");
   const sliderContainer = document.querySelector(".leaflet-top.leaflet-right");
@@ -961,9 +969,29 @@ async function initializeAreas() {
     mcgLayerSupportGroup.checkIn(groupCot);
     mcgLayerSupportGroup.checkIn(groupEje);
 
-    groupEje.forEach((g) => {
-      g.addTo(map);
-    });
+    const LAYER_STATE_KEY = "mapa.layerState";
+    const layerKeyMap = new Map<any, string>();
+    polygonLayers.forEach((pl, i) => layerKeyMap.set(pl.layer, `poly-${i}`));
+    groupEje.forEach((g: any, i: number) => layerKeyMap.set(g, `eje-${i}`));
+    groupCot.forEach((g: any, i: number) => layerKeyMap.set(g, `cot-${i}`));
+
+    let savedLayerState: Record<string, boolean> = {};
+    try { savedLayerState = JSON.parse(localStorage.getItem(LAYER_STATE_KEY) || "{}"); } catch {}
+    const hasSavedState = Object.keys(savedLayerState).length > 0;
+
+    if (hasSavedState) {
+      groupEje.forEach((g: any, i: number) => {
+        if (savedLayerState[`eje-${i}`] !== false) g.addTo(map);
+      });
+      groupCot.forEach((g: any, i: number) => {
+        if (savedLayerState[`cot-${i}`]) g.addTo(map);
+      });
+      polygonLayers.forEach((pl, i) => {
+        if (savedLayerState[`poly-${i}`]) pl.layer.addTo(map);
+      });
+    } else {
+      groupEje.forEach((g: any) => g.addTo(map));
+    }
 
     var baseTree = {
       label: "<strong>Capas Base</strong>",
@@ -973,6 +1001,8 @@ async function initializeAreas() {
         { label: "Esri World Imagery", layer: esri },
       ],
     };
+
+    const esMobile = window.innerWidth < 640;
 
     var overlayTree = {
       label: "<strong> Zonas / Clientes</strong>",
@@ -1048,13 +1078,29 @@ async function initializeAreas() {
       ],
     };
 
-    const esMobile = window.innerWidth < 640;
     control.layers
       .tree(baseTree, overlayTree, {
         position: esMobile ? "topleft" : "bottomleft",
         collapsed: esMobile,
       })
       .addTo(map);
+
+    map.on('overlayadd', (e: any) => {
+      const key = layerKeyMap.get(e.layer);
+      if (key) {
+        const s = JSON.parse(localStorage.getItem(LAYER_STATE_KEY) || "{}");
+        s[key] = true;
+        localStorage.setItem(LAYER_STATE_KEY, JSON.stringify(s));
+      }
+    });
+    map.on('overlayremove', (e: any) => {
+      const key = layerKeyMap.get(e.layer);
+      if (key) {
+        const s = JSON.parse(localStorage.getItem(LAYER_STATE_KEY) || "{}");
+        s[key] = false;
+        localStorage.setItem(LAYER_STATE_KEY, JSON.stringify(s));
+      }
+    });
 
     // SLIDER
     const grupoEjecutados = groupEje.flatMap((group) => group.getLayers());
@@ -1385,7 +1431,16 @@ async function cargarCamiones(enfocar = false) {
       } else {
         const mk = new Marker([c.lat, c.lon], { icon: crearIconoCamion(c.direccion, c.activo, c.velocidad, c.nivel_tanque) })
           .addTo(map)
-          .bindTooltip(tooltipHtml, { permanent: false, direction: "top" });
+          .bindTooltip(tooltipHtml, { permanent: false, direction: "top", offset: [0, -28] });
+        if (window.matchMedia('(hover: none)').matches) {
+          mk.on('click', () => {
+            if ((mk as any).isTooltipOpen && (mk as any).isTooltipOpen()) {
+              mk.closeTooltip();
+            } else {
+              mk.openTooltip();
+            }
+          });
+        }
         const pl = polyline(c.historial, {
           color: c.activo ? "#42A5F5" : "#9E9E9E",
           weight: 2,
@@ -1558,7 +1613,7 @@ function renderSidebarClientes(clientes: DatoCliente[]) {
 
     sidebarList.querySelectorAll<HTMLElement>(".sidebar-cliente-row").forEach(el => {
       el.addEventListener("click", () => {
-        map.flyTo([parseFloat(el.dataset.lat!), parseFloat(el.dataset.lon!)], 15);
+        map.flyTo([parseFloat(el.dataset.lat!), parseFloat(el.dataset.lon!)], 14);
       });
     });
     sidebarList.querySelectorAll<HTMLElement>(".sb-clock-btn").forEach(btn => {
@@ -1626,3 +1681,14 @@ _sse.onerror = () => {
 // Exponer cargarCamiones globalmente para que el botón de solicitar ubicación
 // pueda refrescar el mapa tras recibir la respuesta del teléfono.
 (window as any).cargarCamiones = cargarCamiones;
+(window as any).cargarClientesJornada = cargarClientesJornada;
+(window as any).refreshClientLayers = async () => {
+  cargarClientesJornada();
+  const updated = await fetchClients();
+  if (mcgLayerSupportGroup) {
+    mcgLayerSupportGroup.checkIn(updated.groupCot);
+    mcgLayerSupportGroup.checkIn(updated.groupEje);
+  }
+  groupCot = updated.groupCot;
+  groupEje = updated.groupEje;
+};
