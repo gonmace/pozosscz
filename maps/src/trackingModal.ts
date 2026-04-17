@@ -161,13 +161,6 @@ export function initTrackingModal(map: Map) {
           <span class="text-[10px] font-semibold" style="color:rgba(255,255,255,0.35);">
             ${dia.camiones.length} camión${dia.camiones.length !== 1 ? "es" : ""} · ${totalRegistros} reg.
           </span>
-          <button type="button" class="tracking-delete-dia btn btn-xs btn-ghost btn-square shrink-0" data-fecha="${dia.fecha}"
-                  title="Eliminar tracking de este día" style="opacity:0.5;">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#E53935" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
-              <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
-            </svg>
-          </button>
         </div>`;
 
       const camiones = dia.camiones.map((cam, i) => {
@@ -201,6 +194,14 @@ export function initTrackingModal(map: Map) {
                 ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`
                 : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`}
             </span>
+            <button type="button" class="tracking-delete-camion btn btn-xs btn-ghost btn-square shrink-0"
+                    data-fecha="${dia.fecha}" data-camion-id="${cam.camion_id}" data-camion-nombre="${cam.camion_nombre}" data-registros="${cam.registros}"
+                    title="Eliminar tracking de ${cam.camion_nombre}" style="opacity:0.4;" onclick="event.stopPropagation()">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#E53935" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+              </svg>
+            </button>
           </div>`;
       }).join("");
 
@@ -221,15 +222,16 @@ export function initTrackingModal(map: Map) {
       });
     });
 
-    // Borrar tracking de un día
-    body.querySelectorAll<HTMLButtonElement>(".tracking-delete-dia").forEach(btn => {
+    // Borrar tracking de un camión en una fecha
+    body.querySelectorAll<HTMLButtonElement>(".tracking-delete-camion").forEach(btn => {
       btn.addEventListener("click", async (e) => {
         e.stopPropagation();
         const fecha = btn.dataset.fecha!;
-        const dia = _data.find(d => d.fecha === fecha);
-        const totalReg = dia ? dia.camiones.reduce((s, c) => s + c.registros, 0) : 0;
+        const camionId = btn.dataset.camionId!;
+        const camionNombre = btn.dataset.camionNombre || "";
+        const registros = btn.dataset.registros || "0";
         const ok = await confirmDialog(
-          `¿Eliminar ${totalReg} registros de tracking del ${fmtFecha(fecha)}?`
+          `¿Eliminar ${registros} registros de ${camionNombre} del ${fmtFecha(fecha)}?`
         );
         if (!ok) return;
         btn.setAttribute("disabled", "");
@@ -237,21 +239,22 @@ export function initTrackingModal(map: Map) {
           const resp = await fetch(`/maps/api/tracking-camion/delete/`, {
             method: "DELETE",
             headers: { "Content-Type": "application/json", "X-CSRFToken": getCsrf() },
-            body: JSON.stringify({ fecha }),
+            body: JSON.stringify({ fecha, camion_id: parseInt(camionId) }),
           });
           if (!resp.ok) throw new Error();
           const data = await resp.json();
-          // Limpiar rutas de ese día
-          if (dia) {
-            dia.camiones.forEach(cam => {
-              const key = rutaKey(fecha, cam.camion_id);
-              if (_rutas.has(key)) {
-                map.removeLayer(_rutas.get(key)!);
-                _rutas.delete(key);
-              }
-            });
+          // Limpiar ruta de ese camión
+          const key = rutaKey(fecha, parseInt(camionId));
+          if (_rutas.has(key)) {
+            map.removeLayer(_rutas.get(key)!);
+            _rutas.delete(key);
           }
-          _data = _data.filter(d => d.fecha !== fecha);
+          // Remover camión del día
+          const dia = _data.find(d => d.fecha === fecha);
+          if (dia) {
+            dia.camiones = dia.camiones.filter(c => c.camion_id !== parseInt(camionId));
+          }
+          _data = _data.filter(d => d.camiones.length > 0);
           render();
           createToast("tracking", "map", `${data.deleted} registros eliminados`, "top", "success");
         } catch {

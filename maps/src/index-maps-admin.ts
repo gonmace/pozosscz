@@ -128,7 +128,7 @@ const colores = [
 const map = new LeafletMap("map", {
   center: [-17.784071, -63.180522],
   zoom: 12,
-  maxZoom: 20,
+  maxZoom: 19,
   zoomControl: false,
 });
 
