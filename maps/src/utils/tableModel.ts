@@ -244,9 +244,11 @@ export function tableModal(map: LeafletMap) {
         const dayLabel = fechaRef
           ? fmtFechaLarga.format(new Date(fechaRef))
           : "Sin fecha";
+        const dayOfWeek = fechaRef ? new Date(fechaRef).getDay() : 1;
+        const isWknd = dayOfWeek === 0 || dayOfWeek === 6;
 
         separator = `
-        <tr class="day-separator" style="background:rgba(255,255,255,0.12);border-top:2px solid rgba(255,255,255,0.25);">
+        <tr class="day-separator" style="background:${isWknd ? "rgba(255,152,0,0.15)" : "rgba(255,255,255,0.12)"};border-top:2px solid rgba(255,255,255,0.25);">
           <td colspan="10"
               style="padding:5px 10px 4px;font-size:10px;font-weight:800;letter-spacing:0.1em;
                      text-transform:uppercase;opacity:0.85;">

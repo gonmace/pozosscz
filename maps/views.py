@@ -540,8 +540,104 @@ def clientes_jornada_mapa(request):
             'camion': c.camion_id,
             'camion_iniciales': iniciales,
             'camion_nombre': c.camion.operador if c.camion else '',
+            'created_at': c.created_at.isoformat() if c.created_at else None,
         })
     return JsonResponse(data, safe=False)
+
+
+@login_required
+def tracking_camion_api(request):
+    """Devuelve RegistroCamion agrupados por día y camión."""
+    import datetime
+    from collections import defaultdict
+    from django.utils import timezone
+    from flota.models import RegistroCamion, Camion
+
+    dias = min(int(request.GET.get('dias', 7)), 90)
+    camion_id = request.GET.get('camion')
+
+    desde = timezone.now() - datetime.timedelta(days=dias)
+    qs = RegistroCamion.objects.select_related('camion').filter(
+        registrado_at__gte=desde
+    )
+    if camion_id:
+        qs = qs.filter(camion_id=camion_id)
+
+    tz_local = timezone.get_current_timezone()
+    # Agrupar por (fecha, camion_id)
+    grupos: dict = defaultdict(lambda: defaultdict(list))
+    for r in qs.order_by('-registrado_at'):
+        fecha = r.registrado_at.astimezone(tz_local).date().isoformat()
+        grupos[fecha][r.camion_id].append({
+            'id': r.id,
+            'hora': r.registrado_at.astimezone(tz_local).strftime('%H:%M'),
+            'lat': r.lat,
+            'lon': r.lon,
+            'velocidad': r.velocidad,
+            'direccion': r.direccion,
+            'activo': r.activo,
+            'comentario': r.comentario,
+        })
+
+    # Nombres de camiones
+    cam_ids = set()
+    for por_camion in grupos.values():
+        cam_ids.update(por_camion.keys())
+    camiones_map = {c.id: c.operador for c in Camion.objects.filter(id__in=cam_ids)}
+
+    result = []
+    for fecha in sorted(grupos.keys(), reverse=True):
+        por_camion = grupos[fecha]
+        camiones_dia = []
+        for cid in sorted(por_camion.keys(), key=lambda x: camiones_map.get(x, '')):
+            camiones_dia.append({
+                'camion_id': cid,
+                'camion_nombre': camiones_map.get(cid, ''),
+                'registros': len(por_camion[cid]),
+                'puntos': por_camion[cid],
+            })
+        result.append({'fecha': fecha, 'camiones': camiones_dia})
+
+    return JsonResponse(result, safe=False)
+
+
+@login_required
+def tracking_camion_delete(request):
+    """Elimina todos los RegistroCamion de una fecha (y opcionalmente un camión)."""
+    import json
+    import datetime
+    from django.utils import timezone
+    from flota.models import RegistroCamion
+
+    if request.method != 'DELETE':
+        return JsonResponse({'error': 'Método no permitido'}, status=405)
+
+    try:
+        payload = json.loads(request.body or b'{}')
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'JSON inválido'}, status=400)
+
+    fecha_str = payload.get('fecha')
+    if not fecha_str:
+        return JsonResponse({'error': 'Campo fecha requerido (YYYY-MM-DD)'}, status=400)
+
+    try:
+        fecha = datetime.date.fromisoformat(fecha_str)
+    except ValueError:
+        return JsonResponse({'error': 'Formato de fecha inválido'}, status=400)
+
+    tz_local = timezone.get_current_timezone()
+    inicio = datetime.datetime.combine(fecha, datetime.time.min, tzinfo=tz_local)
+    fin = datetime.datetime.combine(fecha, datetime.time.max, tzinfo=tz_local)
+
+    qs = RegistroCamion.objects.filter(registrado_at__range=(inicio, fin))
+    camion_id = payload.get('camion_id')
+    if camion_id:
+        qs = qs.filter(camion_id=camion_id)
+
+    count = qs.count()
+    qs.delete()
+    return JsonResponse({'deleted': count, 'fecha': fecha_str})
 
 
 @login_required
@@ -673,6 +769,93 @@ def eventos_camion_delete(request, pk):
 
 
 
+@login_required
+def eventos_camion_monto_update(request, pk):
+    """Actualiza el campo monto (int | null) de un EventoCamion."""
+    import json
+    from flota.models import EventoCamion
+
+    if request.method not in ('POST', 'PATCH'):
+        return JsonResponse({'error': 'Método no permitido'}, status=405)
+
+    try:
+        payload = json.loads(request.body or b'{}')
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'JSON inválido'}, status=400)
+
+    if 'monto' not in payload:
+        return JsonResponse({'error': 'Campo monto requerido'}, status=400)
+
+    valor = payload['monto']
+    if valor is not None:
+        try:
+            valor = int(valor)
+        except (TypeError, ValueError):
+            return JsonResponse({'error': 'monto debe ser entero o null'}, status=400)
+
+    try:
+        ev = EventoCamion.objects.get(pk=pk)
+    except EventoCamion.DoesNotExist:
+        return JsonResponse({'error': 'Evento no encontrado'}, status=404)
+
+    ev.monto = valor
+    ev.save(update_fields=['monto'])
+    return JsonResponse({'id': ev.id, 'monto': ev.monto})
+
+
+@login_required
+def camion_tracking_toggle(request, pk):
+    """Consulta o actualiza tracking_activo y/o intervalo_tracking de un Camion."""
+    import json
+    from flota.models import Camion
+
+    if request.method == 'GET':
+        try:
+            cam = Camion.objects.get(pk=pk)
+        except Camion.DoesNotExist:
+            return JsonResponse({'error': 'Camión no encontrado'}, status=404)
+        return JsonResponse({
+            'id': cam.id,
+            'tracking_activo': cam.tracking_activo,
+            'intervalo_tracking': cam.intervalo_tracking,
+        })
+
+    if request.method not in ('POST', 'PATCH'):
+        return JsonResponse({'error': 'Método no permitido'}, status=405)
+
+    try:
+        payload = json.loads(request.body or b'{}')
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'JSON inválido'}, status=400)
+
+    try:
+        cam = Camion.objects.get(pk=pk)
+    except Camion.DoesNotExist:
+        return JsonResponse({'error': 'Camión no encontrado'}, status=404)
+
+    fields = []
+    if 'tracking_activo' in payload and isinstance(payload['tracking_activo'], bool):
+        cam.tracking_activo = payload['tracking_activo']
+        fields.append('tracking_activo')
+    if 'intervalo_tracking' in payload:
+        try:
+            val = max(10, int(payload['intervalo_tracking']))
+        except (TypeError, ValueError):
+            return JsonResponse({'error': 'intervalo_tracking debe ser entero >= 10'}, status=400)
+        cam.intervalo_tracking = val
+        fields.append('intervalo_tracking')
+
+    if not fields:
+        return JsonResponse({'error': 'Enviar tracking_activo (bool) o intervalo_tracking (int)'}, status=400)
+
+    cam.save(update_fields=fields)
+    return JsonResponse({
+        'id': cam.id,
+        'tracking_activo': cam.tracking_activo,
+        'intervalo_tracking': cam.intervalo_tracking,
+    })
+
+
 import time as _time
 from django.http import StreamingHttpResponse
 from django.core.cache import cache as _cache
@@ -681,20 +864,27 @@ from django.core.cache import cache as _cache
 @login_required
 def camiones_sse(request):
     def stream():
-        last = _cache.get('camiones_version', 0)
+        last_cam = _cache.get('camiones_version', 0)
+        last_cli = _cache.get('clientes_version', 0)
         yield 'data: init\n\n'
         ticks = 0
         while True:
             _time.sleep(2)
-            current = _cache.get('camiones_version', 0)
-            if current != last:
-                last = current
-                yield 'data: ' + str(current) + '\n\n'
-            else:
+            cur_cam = _cache.get('camiones_version', 0)
+            cur_cli = _cache.get('clientes_version', 0)
+            if cur_cam != last_cam:
+                last_cam = cur_cam
+                yield 'data: ' + str(cur_cam) + '\n\n'
+            if cur_cli != last_cli:
+                last_cli = cur_cli
+                yield 'event: clientes\ndata: ' + str(cur_cli) + '\n\n'
+            if cur_cam == last_cam and cur_cli == last_cli:
                 ticks += 1
                 if ticks >= 8:
                     ticks = 0
                     yield ': ping\n\n'
+            else:
+                ticks = 0
 
     resp = StreamingHttpResponse(stream(), content_type='text/event-stream')
     resp['Cache-Control'] = 'no-cache'

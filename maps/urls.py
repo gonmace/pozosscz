@@ -14,5 +14,9 @@ urlpatterns = [
     path('maps/api/eventos-camion/', views.eventos_camion_api, name='eventos-camion'),
     path('maps/api/eventos-camion/<int:pk>/qr/', views.eventos_camion_qr_update, name='eventos-camion-qr'),
     path('maps/api/eventos-camion/<int:pk>/factura/', views.eventos_camion_factura_update, name='eventos-camion-factura'),
+    path('maps/api/eventos-camion/<int:pk>/monto/', views.eventos_camion_monto_update, name='eventos-camion-monto'),
     path('maps/api/eventos-camion/<int:pk>/', views.eventos_camion_delete, name='eventos-camion-delete'),
+    path('maps/api/camion/<int:pk>/tracking/', views.camion_tracking_toggle, name='camion-tracking-toggle'),
+    path('maps/api/tracking-camion/', views.tracking_camion_api, name='tracking-camion'),
+    path('maps/api/tracking-camion/delete/', views.tracking_camion_delete, name='tracking-camion-delete'),
 ]

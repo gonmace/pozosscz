@@ -41,11 +41,26 @@
         </select>
         {% if camiones %}
         <select id="eventos-sel-camion" class="select select-xs select-bordered flex-1 min-w-[120px]">
-          <option value="">Todos los camiones</option>
+          <option value="" disabled selected>Seleccione camión</option>
           {% for camion in camiones %}
-          <option value="{{ camion.id }}">{{ camion.operador }}</option>
+          <option value="{{ camion.id }}" data-tracking="{{ camion.tracking_activo|yesno:'1,0' }}" data-intervalo="{{ camion.intervalo_tracking }}">{{ camion.operador }}</option>
           {% endfor %}
         </select>
+        <label class="flex items-center gap-1" title="Activar/desactivar tracking del teléfono">
+          <input id="eventos-tracking-toggle" type="checkbox" class="toggle toggle-xs toggle-success" disabled />
+          <span id="eventos-tracking-label" class="text-[10px] text-base-content/50">Inactivo</span>
+        </label>
+        <label class="flex items-center gap-0.5" title="Intervalo de tracking (seg)">
+          <input id="eventos-intervalo" type="number" min="10" step="5"
+                 class="input input-xs input-bordered w-14 text-center font-mono text-[11px]" disabled placeholder="—" />
+          <span class="text-[10px] text-base-content/40">seg</span>
+          <button id="eventos-intervalo-btn" class="btn btn-xs btn-ghost btn-square" disabled title="Aplicar intervalo"
+                  style="opacity:0.3;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </button>
+        </label>
         {% endif %}
         <button id="eventos-btn-recargar" class="btn btn-xs btn-ghost btn-square" title="Recargar">
           <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">

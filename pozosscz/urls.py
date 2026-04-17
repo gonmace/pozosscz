@@ -24,6 +24,7 @@ router.register(r'camiones', CamionViewSet, 'camiones')
 router.register(r'estados-camion', RegistroCamionViewSet, 'estados-camion')
 
 urlpatterns = [
+    path('api/v1/camiones/config/', ConfigTrackingView.as_view(), name='config_tracking'),
     path('api/v1/', include(router.urls)),
     path('api/v1/auth/token/', CustomAuthToken.as_view(), name='auth_token'),
     path('api/v1/auth/logout/', LogoutTokenView.as_view(), name='auth_logout'),
@@ -31,5 +32,4 @@ urlpatterns = [
     path('api/v1/shortlink/', shortlink_proxy, name='shortlink_proxy'),
     path('api/v1/dispositivo/registrar/', DispositivoFCMView.as_view(), name='dispositivo_registrar'),
     path('api/v1/ubicacion/camion/', UbicacionCamionView.as_view(), name='ubicacion_camion'),
-    path('api/v1/camiones/config/', ConfigTrackingView.as_view(), name='config_tracking'),
 ]

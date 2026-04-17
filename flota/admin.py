@@ -1,4 +1,10 @@
+import json
+import time
+
 from django.contrib import admin
+from django.core.cache import cache
+from django.http import JsonResponse, StreamingHttpResponse
+from django.urls import path
 from django.utils.timezone import localtime, now
 from django.utils.html import format_html
 
@@ -141,6 +147,80 @@ class EventoCamionAdmin(admin.ModelAdmin):
     readonly_fields = ('registrado_at',)
     ordering = ('-registrado_at',)
     date_hierarchy = 'registrado_at'
+
+    def get_urls(self):
+        custom = [
+            path(
+                'toggle-tracking/<int:camion_id>/',
+                self.admin_site.admin_view(self._toggle_tracking),
+                name='flota_eventocamion_toggle_tracking',
+            ),
+            path(
+                'tracking-sse/<int:camion_id>/',
+                self.admin_site.admin_view(self._tracking_sse),
+                name='flota_eventocamion_tracking_sse',
+            ),
+        ]
+        return custom + super().get_urls()
+
+    def _toggle_tracking(self, request, camion_id):
+        if request.method != 'POST':
+            return JsonResponse({'error': 'POST requerido'}, status=405)
+        try:
+            camion = Camion.objects.get(pk=camion_id)
+        except Camion.DoesNotExist:
+            return JsonResponse({'error': 'Camión no encontrado'}, status=404)
+        camion.tracking_activo = not camion.tracking_activo
+        camion.save()
+        try:
+            cache.incr(f'tracking_v_{camion_id}')
+        except ValueError:
+            cache.set(f'tracking_v_{camion_id}', 1, timeout=None)
+        return JsonResponse({'tracking_activo': camion.tracking_activo, 'operador': camion.operador})
+
+    def _tracking_sse(self, request, camion_id):
+        def stream():
+            try:
+                camion = Camion.objects.only('tracking_activo').get(pk=camion_id)
+            except Camion.DoesNotExist:
+                return
+            last_v = cache.get(f'tracking_v_{camion_id}', 0)
+            yield f'data: {json.dumps({"tracking_activo": camion.tracking_activo})}\n\n'
+            ticks = 0
+            while True:
+                time.sleep(2)
+                cur_v = cache.get(f'tracking_v_{camion_id}', 0)
+                if cur_v != last_v:
+                    last_v = cur_v
+                    ticks = 0
+                    try:
+                        camion = Camion.objects.only('tracking_activo').get(pk=camion_id)
+                        yield f'data: {json.dumps({"tracking_activo": camion.tracking_activo})}\n\n'
+                    except Camion.DoesNotExist:
+                        break
+                else:
+                    ticks += 1
+                    if ticks >= 8:   # ping cada ~16s para mantener la conexión viva
+                        ticks = 0
+                        yield ': ping\n\n'
+
+        resp = StreamingHttpResponse(stream(), content_type='text/event-stream')
+        resp['Cache-Control'] = 'no-cache'
+        resp['X-Accel-Buffering'] = 'no'
+        return resp
+
+    def _camiones_tracking(self):
+        return {str(c.pk): c.tracking_activo for c in Camion.objects.all()}
+
+    def add_view(self, request, form_url='', extra_context=None):
+        extra_context = extra_context or {}
+        extra_context['camiones_tracking_json'] = json.dumps(self._camiones_tracking())
+        return super().add_view(request, form_url, extra_context)
+
+    def change_view(self, request, object_id, form_url='', extra_context=None):
+        extra_context = extra_context or {}
+        extra_context['camiones_tracking_json'] = json.dumps(self._camiones_tracking())
+        return super().change_view(request, object_id, form_url, extra_context)
 
     @admin.display(description='Tanque', ordering='nivel_tanque')
     def nivel_tanque_display(self, obj):

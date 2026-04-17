@@ -37,6 +37,12 @@ const TIPO_CONFIG: Record<string, { color: string; bg: string; icon: string }> =
   TRK_DES: { color: "#78909C", bg: "#78909C18", icon: `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>` },
 };
 
+function isWeekend(iso: string): boolean {
+  const [y, m, d] = iso.split("-");
+  const day = new Date(parseInt(y), parseInt(m) - 1, parseInt(d)).getDay();
+  return day === 0 || day === 6;
+}
+
 function fmtHora(iso: string): string {
   const dt = new Date(iso);
   return isNaN(dt.getTime()) ? iso : dt.toLocaleString("es-BO", { hour: "2-digit", minute: "2-digit", hour12: false });
@@ -123,14 +129,23 @@ export function initEventosCamionModal(map: Map) {
     };
   }
 
+  function mostrarMensajeSeleccionar() {
+    const list = document.getElementById("eventos-camion-body");
+    if (list) list.innerHTML = `<tr><td colspan="10" class="text-center py-6 text-xs opacity-40">Seleccione un camión para ver sus eventos</td></tr>`;
+  }
+
   async function cargar() {
+    if (!_camionFiltro) {
+      _data = [];
+      mostrarMensajeSeleccionar();
+      return;
+    }
     if (_loading) return;
     _loading = true;
     const list = document.getElementById("eventos-camion-body");
     if (list) list.innerHTML = `<tr><td colspan="10" class="text-center py-6 text-xs opacity-40">Cargando…</td></tr>`;
     try {
-      const params = new URLSearchParams({ dias: String(_dias) });
-      if (_camionFiltro) params.set("camion", _camionFiltro);
+      const params = new URLSearchParams({ dias: String(_dias), camion: _camionFiltro });
       const resp = await fetch(`/maps/api/eventos-camion/?${params}`);
       if (!resp.ok) throw new Error("Error al cargar eventos");
       _data = await resp.json();
@@ -194,10 +209,11 @@ export function initEventosCamionModal(map: Map) {
       const totalDia = dia.eventos.reduce((s, e) => s + (e.factura ?? e.monto ?? 0), 0);
       const valChofer = Math.round(totalSrvEje * 0.15);
       const valSocios = totalDia - valChofer;
+      const wknd = isWeekend(dia.fecha);
       const header = `
         <tr class="cursor-pointer select-none eventos-dia-toggle"
             data-fecha="${dia.fecha}"
-            style="background:rgba(255,255,255,0.04);border-top:1px solid rgba(255,255,255,0.08);">
+            style="background:${wknd ? "rgba(255,152,0,0.15)" : "rgba(255,255,255,0.04)"};border-top:1px solid rgba(255,255,255,0.08);">
           <td colspan="3" class="px-3 py-2">
             <div class="flex items-center gap-2">
               <span class="text-[10px] transition-transform ${collapsed ? "" : "rotate-90"}" style="color:rgba(255,255,255,0.4);">▶</span>
@@ -242,8 +258,11 @@ export function initEventosCamionModal(map: Map) {
             <td class="px-2 py-1.5 text-[11px] text-center" style="color:${nivelColor(ev.nivel_tanque)};">
               ${fmtNivel(ev.nivel_tanque) || '<span style="opacity:0.25;font-weight:normal;">—</span>'}
             </td>
-            <td class="px-2 py-1.5 text-[11px] text-right whitespace-nowrap" style="color:#FFD54F;">
-              ${ev.monto != null ? `Bs. ${ev.monto.toLocaleString()}` : '<span style="opacity:0.25;">—</span>'}
+            <td class="px-2 py-1.5 text-[11px] text-right whitespace-nowrap">
+              <span class="eventos-monto-cell" data-id="${ev.id}" data-monto="${ev.monto ?? ""}"
+                    style="color:#FFD54F;cursor:pointer;" title="Click para editar">
+                ${ev.monto != null ? `Bs. ${ev.monto.toLocaleString()}` : '<span style="opacity:0.25;color:rgba(255,255,255,0.25);">—</span>'}
+              </span>
             </td>
             <td class="px-2 py-1.5 text-[11px] text-right whitespace-nowrap">
               ${ev.tipo === "SRV_EJE"
@@ -280,6 +299,61 @@ export function initEventosCamionModal(map: Map) {
 
       return header + rows;
     }).join("");
+
+    // Editar Monto inline
+    tbody.querySelectorAll<HTMLElement>(".eventos-monto-cell").forEach(span => {
+      span.addEventListener("click", () => {
+        if (span.querySelector("input")) return;
+        const id = parseInt(span.dataset.id!);
+        const prev = span.dataset.monto === "" ? null : parseInt(span.dataset.monto!);
+        const original = span.innerHTML;
+        const inp = document.createElement("input");
+        inp.type = "number";
+        inp.value = prev != null ? String(prev) : "";
+        inp.placeholder = "—";
+        inp.min = "0";
+        inp.step = "1";
+        inp.style.cssText = "width:64px;background:transparent;border:1px solid rgba(255,255,255,0.2);border-radius:4px;padding:1px 4px;color:#FFD54F;font-weight:bold;text-align:right;font-size:11px;";
+        span.innerHTML = "";
+        span.appendChild(inp);
+        inp.focus();
+        inp.select();
+
+        let saved = false;
+        const commit = async () => {
+          if (saved) return;
+          saved = true;
+          const raw = inp.value.trim();
+          const nuevo = raw === "" ? null : parseInt(raw);
+          if (nuevo === prev) { span.innerHTML = original; return; }
+          try {
+            const resp = await fetch(`/maps/api/eventos-camion/${id}/monto/`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", "X-CSRFToken": getCsrf() },
+              body: JSON.stringify({ monto: nuevo }),
+            });
+            if (!resp.ok) throw new Error();
+            const data = await resp.json();
+            const val: number | null = data.monto;
+            span.dataset.monto = val != null ? String(val) : "";
+            span.innerHTML = val != null ? `Bs. ${val.toLocaleString()}` : '<span style="opacity:0.25;color:rgba(255,255,255,0.25);">—</span>';
+            for (const dia of _data) {
+              const ev = dia.eventos.find(x => x.id === id);
+              if (ev) { ev.monto = val; break; }
+            }
+            recomputarTotales(id);
+          } catch {
+            span.innerHTML = original;
+            createToast("monto", "map", "Error al actualizar monto", "top", "error");
+          }
+        };
+        inp.addEventListener("blur", commit);
+        inp.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") { e.preventDefault(); inp.blur(); }
+          if (e.key === "Escape") { saved = true; span.innerHTML = original; }
+        });
+      });
+    });
 
     // Editar Factura por evento
     tbody.querySelectorAll<HTMLInputElement>(".eventos-factura-input").forEach(inp => {
@@ -422,15 +496,165 @@ export function initEventosCamionModal(map: Map) {
   const selDias = document.getElementById("eventos-sel-dias") as HTMLSelectElement | null;
   const selCamion = document.getElementById("eventos-sel-camion") as HTMLSelectElement | null;
   const btnRecargar = document.getElementById("eventos-btn-recargar");
+  const trackingToggle = document.getElementById("eventos-tracking-toggle") as HTMLInputElement | null;
+  const trackingLabel = document.getElementById("eventos-tracking-label") as HTMLElement | null;
+  const intervaloInput = document.getElementById("eventos-intervalo") as HTMLInputElement | null;
+  let _updatingToggle = false;
+
+  function updateTrackingLabel(activo: boolean) {
+    if (!trackingLabel) return;
+    trackingLabel.textContent = activo ? "Activo" : "Inactivo";
+    trackingLabel.style.color = activo ? "#43A047" : "";
+  }
+
+  function updateTrackingToggle() {
+    if (!trackingToggle || !selCamion) return;
+    const opt = selCamion.selectedOptions[0];
+    if (!opt || !selCamion.value) {
+      trackingToggle.checked = false;
+      trackingToggle.setAttribute("disabled", "");
+      if (intervaloInput) { intervaloInput.value = ""; intervaloInput.setAttribute("disabled", ""); }
+      updateTrackingLabel(false);
+      return;
+    }
+    trackingToggle.removeAttribute("disabled");
+    const activo = opt.getAttribute("data-tracking") === "1";
+    _updatingToggle = true;
+    trackingToggle.checked = activo;
+    _updatingToggle = false;
+    updateTrackingLabel(activo);
+    if (intervaloInput) {
+      intervaloInput.removeAttribute("disabled");
+      const intVal = opt.getAttribute("data-intervalo") || "30";
+      intervaloInput.value = intVal;
+      intervaloInput.dataset.prev = intVal;
+    }
+  }
 
   if (selDias) {
     selDias.addEventListener("change", () => { _dias = parseInt(selDias.value); cargar(); });
   }
   if (selCamion) {
-    selCamion.addEventListener("change", () => { _camionFiltro = selCamion.value; cargar(); });
+    const savedCamion = localStorage.getItem("eventos.camionFiltro");
+    if (savedCamion && selCamion.querySelector<HTMLOptionElement>(`option[value="${savedCamion}"]`)) {
+      selCamion.value = savedCamion;
+      _camionFiltro = savedCamion;
+      updateTrackingToggle();
+    }
+    selCamion.addEventListener("change", () => {
+      _camionFiltro = selCamion.value;
+      localStorage.setItem("eventos.camionFiltro", _camionFiltro);
+      updateTrackingToggle();
+      cargar();
+    });
+  }
+  if (trackingToggle) {
+    trackingToggle.addEventListener("change", async () => {
+      if (_updatingToggle || !_camionFiltro) return;
+      const nuevoValor = trackingToggle.checked;
+      trackingToggle.disabled = true;
+      try {
+        const resp = await fetch(`/maps/api/camion/${_camionFiltro}/tracking/`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "X-CSRFToken": getCsrf() },
+          body: JSON.stringify({ tracking_activo: nuevoValor }),
+        });
+        if (!resp.ok) throw new Error();
+        const data = await resp.json();
+        trackingToggle.checked = data.tracking_activo;
+        updateTrackingLabel(data.tracking_activo);
+        if (selCamion) {
+          const opt = selCamion.querySelector<HTMLOptionElement>(`option[value="${_camionFiltro}"]`);
+          if (opt) opt.dataset.tracking = data.tracking_activo ? "1" : "0";
+        }
+        createToast("tracking", "map", `Teléfono ${data.tracking_activo ? "activado" : "desactivado"}`, "top", "success");
+      } catch {
+        trackingToggle.checked = !nuevoValor;
+        createToast("tracking", "map", "Error al cambiar tracking", "top", "error");
+      } finally {
+        trackingToggle.disabled = false;
+      }
+    });
+  }
+  const intervaloBtn = document.getElementById("eventos-intervalo-btn") as HTMLButtonElement | null;
+
+  function updateIntervaloBtn() {
+    if (!intervaloBtn || !intervaloInput) return;
+    const changed = intervaloInput.value !== intervaloInput.dataset.prev;
+    if (changed && !intervaloInput.disabled) {
+      intervaloBtn.removeAttribute("disabled");
+      intervaloBtn.style.opacity = "1";
+      intervaloBtn.style.color = "#43A047";
+    } else {
+      intervaloBtn.setAttribute("disabled", "");
+      intervaloBtn.style.opacity = "0.3";
+      intervaloBtn.style.color = "";
+    }
+  }
+
+  if (intervaloInput) {
+    intervaloInput.addEventListener("input", updateIntervaloBtn);
+    intervaloInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") { e.preventDefault(); intervaloBtn?.click(); }
+      if (e.key === "Escape") { intervaloInput.value = intervaloInput.dataset.prev || "30"; updateIntervaloBtn(); }
+    });
+  }
+  if (intervaloBtn) {
+    intervaloBtn.addEventListener("click", async () => {
+      if (!_camionFiltro || !intervaloInput) return;
+      const val = parseInt(intervaloInput.value);
+      if (!isFinite(val) || val < 10) { intervaloInput.value = intervaloInput.dataset.prev || "30"; updateIntervaloBtn(); return; }
+      intervaloBtn.setAttribute("disabled", "");
+      intervaloBtn.style.opacity = "0.3";
+      intervaloInput.disabled = true;
+      try {
+        const resp = await fetch(`/maps/api/camion/${_camionFiltro}/tracking/`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "X-CSRFToken": getCsrf() },
+          body: JSON.stringify({ intervalo_tracking: val }),
+        });
+        if (!resp.ok) throw new Error();
+        const data = await resp.json();
+        intervaloInput.value = String(data.intervalo_tracking);
+        intervaloInput.dataset.prev = String(data.intervalo_tracking);
+        if (selCamion) {
+          const opt = selCamion.querySelector<HTMLOptionElement>(`option[value="${_camionFiltro}"]`);
+          if (opt) opt.dataset.intervalo = String(data.intervalo_tracking);
+        }
+        createToast("intervalo", "map", `Intervalo: ${data.intervalo_tracking} seg`, "top", "success");
+      } catch {
+        intervaloInput.value = intervaloInput.dataset.prev || "30";
+        createToast("intervalo", "map", "Error al cambiar intervalo", "top", "error");
+      } finally {
+        intervaloInput.disabled = false;
+        updateIntervaloBtn();
+      }
+    });
   }
   if (btnRecargar) {
     btnRecargar.addEventListener("click", () => cargar());
+  }
+
+  async function refreshTrackingState() {
+    if (!_camionFiltro || !trackingToggle || !selCamion) return;
+    try {
+      const resp = await fetch(`/maps/api/camion/${_camionFiltro}/tracking/`);
+      if (!resp.ok) return;
+      const data = await resp.json();
+      const opt = selCamion.querySelector<HTMLOptionElement>(`option[value="${_camionFiltro}"]`);
+      if (opt) {
+        opt.dataset.tracking = data.tracking_activo ? "1" : "0";
+        opt.dataset.intervalo = String(data.intervalo_tracking);
+      }
+      _updatingToggle = true;
+      trackingToggle.checked = data.tracking_activo;
+      _updatingToggle = false;
+      updateTrackingLabel(data.tracking_activo);
+      if (intervaloInput) {
+        intervaloInput.value = String(data.intervalo_tracking);
+        intervaloInput.dataset.prev = String(data.intervalo_tracking);
+      }
+    } catch {}
   }
 
   return {
@@ -443,5 +667,6 @@ export function initEventosCamionModal(map: Map) {
       modal?.show();
       cargar();
     },
+    refreshTrackingState,
   };
 }

@@ -59,6 +59,7 @@ import { initializeSearchModal } from "./utils/findClients";
 import { tableModal } from "./utils/tableModel";
 import { cargarCamiones as cargarListaCamiones } from "./utils/camiones";
 import { initEventosCamionModal } from "./eventosCamionModal";
+import { initTrackingModal } from "./trackingModal";
 import { findClientsInPolygon, parsePolygonCoordinates, fetchAllClients } from "./utils/findClientsInPolygon";
 import "leaflet.awesome-markers/dist/leaflet.awesome-markers.css";
 import "leaflet.awesome-markers";
@@ -133,6 +134,7 @@ const map = new LeafletMap("map", {
 
 const _modalActivos = initClientesActivosModal(map);
 const _modalEventos = initEventosCamionModal(map);
+const _modalTracking = initTrackingModal(map);
 
 // Restore map view from localStorage if available
 const savedView = localStorage.getItem("mapView");
@@ -1134,9 +1136,10 @@ async function initializeAreas() {
   const buscarCliente = control.custom({
     position: "topright",
     content: `<div class="mb-2 sm:mb-1">
-  <button id="buscarCliente" class="btn btn-accent btn-sm btn-square sombra">
-    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sombra" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 10a7 7 0 11-14 0 7 7 0 0114 0z" />
+  <button id="buscarCliente" class="btn btn-sm btn-square sombra" title="Buscar cliente"
+      style="background:rgba(255,255,255,0.92);border:1px solid rgba(0,0,0,0.12);color:rgba(0,0,0,0.55);">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 10a7 7 0 11-14 0 7 7 0 0114 0z" />
     </svg>
   </button>
 </div>`,
@@ -1165,13 +1168,32 @@ async function initializeAreas() {
   });
   tableClientes.addTo(map);
 
+  // Control: Tracking (abre modal)
+  const ctrlTracking = control.custom({
+    position: "topright",
+    content: `<div class="mb-2 sm:mb-1">
+      <button id="ctrl-btn-tracking" title="Tracking por camión"
+          class="btn btn-sm btn-square sombra"
+          style="background:#1565C0;border:none;color:white;">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sombra" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="6" cy="19" r="3"/><circle cx="18" cy="5" r="3"/><path d="M12 19h4.5a3.5 3.5 0 0 0 0-7h-8a3.5 3.5 0 0 1 0-7H12"/>
+        </svg>
+      </button>
+    </div>`,
+    events: {
+      click: () => _modalTracking.open(),
+    },
+  });
+  ctrlTracking.addTo(map);
+
   // Control: Clientes activos (abre modal)
   const ctrlClientesActivos = control.custom({
     position: "topright",
     content: `<div class="mb-2 sm:mb-1">
       <button id="ctrl-btn-clientes-activos" title="Clientes activos"
-          class="btn btn-info btn-sm btn-square sombra">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sombra" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          class="btn btn-sm btn-square sombra"
+          style="background:linear-gradient(to bottom,#2196F3 33%,#43A047 33%,#43A047 66%,#FF9800 66%);border:none;color:white;">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sombra" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
           <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
           <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
         </svg>
@@ -1198,9 +1220,8 @@ async function initializeAreas() {
     content: `<div class="mb-2 sm:mb-1">
       <button id="ctrl-btn-eventos-camion" title="Eventos camión"
           class="btn btn-warning btn-sm btn-square sombra">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sombra" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
-          <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sombra" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M1 3h15v13H1z"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
         </svg>
       </button>
     </div>`,
@@ -1269,7 +1290,7 @@ function nivelTanqueColor(n: number | null): string {
   if (n >= 0.99) return "#E53935";
   if (n >= 0.60) return "#FDD835";
   if (n >= 0.25) return "#43A047";
-  return "#ECEFF1";
+  return "#333333";
 }
 
 const capasCamion = new Map<number, { marker: Marker; polyline: Polyline }>();
@@ -1549,6 +1570,11 @@ function renderSidebarClientes(clientes: DatoCliente[]) {
     const clientesOrdenados = [...clientes].sort((a, b) => {
       const d = (STATUS_ORDER_SB[a.status] ?? 9) - (STATUS_ORDER_SB[b.status] ?? 9);
       if (d !== 0) return d;
+      if (a.status === "COT") {
+        const da = a.created_at ?? "";
+        const db = b.created_at ?? "";
+        return db.localeCompare(da);
+      }
       if (!a.hora_programada && !b.hora_programada) return 0;
       if (!a.hora_programada) return 1;
       if (!b.hora_programada) return -1;
@@ -1571,8 +1597,14 @@ function renderSidebarClientes(clientes: DatoCliente[]) {
     sidebarList.innerHTML = clientesOrdenados.map(c => {
       const stClass = STATUS_CLASS_SB[c.status] ?? "";
       const precio = c.cost ? `<span class="shrink-0 text-[10px] font-bold" style="color:#FFD54F;">Bs.${c.cost}</span>` : "";
-      const horaStr = fmtHoraSolo(c.hora_programada);
-      const horaFmt = fmtHoraSB(c.hora_programada);
+      const cotFechaSB = (() => {
+        if (c.status !== "COT" || !c.created_at) return "";
+        const dt = new Date(c.created_at);
+        if (isNaN(dt.getTime())) return "";
+        return `<div>${dt.toLocaleDateString("es-BO", { day: "2-digit", month: "2-digit" })}</div><div>${dt.toLocaleTimeString("es-BO", { hour: "2-digit", minute: "2-digit", hour12: false })}</div>`;
+      })();
+      const horaStr = cotFechaSB || fmtHoraSolo(c.hora_programada);
+      const horaFmt = cotFechaSB || fmtHoraSB(c.hora_programada);
       return `
       <div class="sidebar-cliente-row flex items-center gap-1 px-2 py-1.5 rounded-lg cursor-pointer hover:brightness-110 transition-all status-row ${stClass}"
            data-lat="${c.lat}" data-lon="${c.lon}">
@@ -1591,12 +1623,14 @@ function renderSidebarClientes(clientes: DatoCliente[]) {
           <span class="text-xs font-medium truncate">${c.name ?? "(sin nombre)"}</span>
         </div>
         <div class="shrink-0 w-10 text-center">
-          ${horaStr
-            ? `<button class="sb-clock-btn text-[9px] font-semibold opacity-70 hover:opacity-100 transition-opacity leading-none"
-                       data-hora="${horaFmt}" onclick="event.stopPropagation()" style="background:none;border:none;cursor:pointer;color:inherit;padding:0;">
-                   ${horaStr}
-                 </button>`
-            : ""}
+          ${cotFechaSB
+            ? `<div style="font-size:10px;font-weight:400;color:rgba(255,255,255,0.9);line-height:1.2;">${cotFechaSB}</div>`
+            : horaStr
+              ? `<button class="sb-clock-btn text-[9px] font-semibold opacity-70 hover:opacity-100 transition-opacity leading-none"
+                         data-hora="${horaFmt}" onclick="event.stopPropagation()" style="background:none;border:none;cursor:pointer;color:inherit;padding:0;">
+                     ${horaStr}
+                   </button>`
+              : ""}
         </div>
         <div class="flex items-center gap-1 shrink-0">
           ${precio}
@@ -1670,12 +1704,15 @@ cargarClientesJornada();
 
 // SSE: actualizar camiones en tiempo real cuando llega un nuevo RegistroCamion
 const _sse = new EventSource('/maps/api/camiones-sse/');
-_sse.onmessage = () => { cargarCamiones(false); };
+_sse.onmessage = () => { cargarCamiones(false); _modalEventos.refreshTrackingState(); };
+_sse.addEventListener('clientes', () => {
+  if ((window as any).refreshClientLayers) (window as any).refreshClientLayers();
+});
 _sse.onerror = () => {
-  // Si cae la conexión SSE, refrescar cada 30s como fallback
   console.warn('[SSE] conexión perdida, usando polling');
   _sse.close();
   setInterval(cargarCamiones, 30_000);
+  setInterval(() => { if ((window as any).refreshClientLayers) (window as any).refreshClientLayers(); }, 30_000);
 };
 
 // Exponer cargarCamiones globalmente para que el botón de solicitar ubicación

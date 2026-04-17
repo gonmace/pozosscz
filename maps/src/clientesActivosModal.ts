@@ -16,6 +16,7 @@ export interface DatoCliente {
   camion: number | null;
   camion_iniciales: string;
   camion_nombre: string;
+  created_at?: string | null;
 }
 
 export const STATUS_BORDER: Record<string, string> = {
@@ -103,7 +104,13 @@ export function initClientesActivosModal(map: Map) {
       filtrados = [..._clientes].sort((a, b) => {
         const orderDiff = (STATUS_ORDER[a.status] ?? 9) - (STATUS_ORDER[b.status] ?? 9);
         if (orderDiff !== 0) return orderDiff;
-        // Dentro del mismo estado: ordenar por hora (nulls al final)
+        // COT: más reciente primero
+        if (a.status === "COT") {
+          const da = a.created_at ?? "";
+          const db = b.created_at ?? "";
+          return db.localeCompare(da);
+        }
+        // Otros: ordenar por hora programada (nulls al final)
         if (!a.hora_programada && !b.hora_programada) return 0;
         if (!a.hora_programada) return 1;
         if (!b.hora_programada) return -1;
@@ -153,6 +160,12 @@ export function initClientesActivosModal(map: Map) {
                  ${hora}
                </span>`;
       })();
+      const cotFecha = (() => {
+        if (c.status !== "COT" || !c.created_at) return "";
+        const dt = new Date(c.created_at);
+        if (isNaN(dt.getTime())) return "";
+        return `<span class="text-[11px] font-normal shrink-0" style="color:rgba(255,255,255,0.9);">${dt.toLocaleDateString("es-BO", { day: "2-digit", month: "2-digit" })} - ${dt.toLocaleTimeString("es-BO", { hour: "2-digit", minute: "2-digit", hour12: false })}</span>`;
+      })();
       const chofBadge = c.status === "COT"
         ? ""
         : c.camion_iniciales
@@ -179,6 +192,7 @@ export function initClientesActivosModal(map: Map) {
           <div class="flex items-center gap-1.5 mb-1.5">
             ${GRIP_ICON}
             <p class="flex-1 text-sm leading-snug truncate">${c.name ?? "(sin nombre)"}</p>
+            ${cotFecha}
             ${horaChip}
           </div>
           <div class="flex items-center gap-1">

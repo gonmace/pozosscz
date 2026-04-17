@@ -194,6 +194,24 @@ class ConfigTrackingView(APIView):
             'intervalo_tracking': max(10, camion.intervalo_tracking),
         })
 
+    def post(self, request):
+        """El teléfono cambia su propio estado de tracking."""
+        try:
+            camion = request.user.camion
+        except Camion.DoesNotExist:
+            return Response({'error': 'Usuario no tiene camión asignado'}, status=400)
+
+        tracking_activo = request.data.get('tracking_activo')
+        if tracking_activo is None or not isinstance(tracking_activo, bool):
+            return Response({'error': 'Campo tracking_activo (bool) requerido'}, status=400)
+
+        camion.tracking_activo = tracking_activo
+        camion.save(update_fields=['tracking_activo'])
+        return Response({
+            'tracking_activo': camion.tracking_activo,
+            'intervalo_tracking': max(10, camion.intervalo_tracking),
+        })
+
 
 class UbicacionCamionView(APIView):
     permission_classes = [IsAuthenticated]

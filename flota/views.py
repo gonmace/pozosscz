@@ -91,6 +91,17 @@ class EventoCamionView(APIView):
             monto=request.data.get('monto'),
         )
 
+        # Sincronizar tracking_activo en el modelo Camion cuando el chofer
+        # activa o desactiva el toggle desde su teléfono.
+        if tipo in ('TRK_ACT', 'TRK_DES'):
+            nuevo_activo = tipo == 'TRK_ACT'
+            Camion.objects.filter(pk=camion.pk).update(tracking_activo=nuevo_activo)
+            from django.core.cache import cache
+            try:
+                cache.incr('camiones_version')
+            except ValueError:
+                cache.set('camiones_version', 1, timeout=None)
+
         if tipo in ('SRV_EJE', 'SRV_CAN') and cliente:
             nuevo_status = 'EJE' if tipo == 'SRV_EJE' else 'CAN'
             from clientes.models import Cliente as ClienteModel
@@ -108,6 +119,45 @@ class EventoCamionView(APIView):
             ).start()
 
         return Response({'ok': True, 'evento_id': evento.pk})
+
+
+class ConfigTrackingView(APIView):
+    """Consulta o actualiza la configuración de tracking del camión autenticado."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            camion = request.user.camion
+        except Exception:
+            return Response({'error': 'Usuario no tiene camión asignado'}, status=400)
+        return Response({
+            'tracking_activo': camion.tracking_activo,
+            'intervalo_tracking': camion.intervalo_tracking,
+        })
+
+    def post(self, request):
+        try:
+            camion = request.user.camion
+        except Exception:
+            return Response({'error': 'Usuario no tiene camión asignado'}, status=400)
+
+        tracking_activo = request.data.get('tracking_activo')
+        if tracking_activo is None:
+            return Response({'error': 'tracking_activo requerido'}, status=400)
+
+        Camion.objects.filter(pk=camion.pk).update(tracking_activo=bool(tracking_activo))
+        camion.refresh_from_db()
+
+        from django.core.cache import cache
+        try:
+            cache.incr(f'tracking_v_{camion.pk}')
+        except ValueError:
+            cache.set(f'tracking_v_{camion.pk}', 1, timeout=None)
+
+        return Response({
+            'tracking_activo': camion.tracking_activo,
+            'intervalo_tracking': camion.intervalo_tracking,
+        })
 
 
 class ChoferesConetatadosView(APIView):

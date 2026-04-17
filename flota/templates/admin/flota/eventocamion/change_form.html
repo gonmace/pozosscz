@@ -1,0 +1,125 @@
+{% extends "admin/change_form.html" %}
+{% load i18n %}
+
+{% block after_related_objects %}
+{{ block.super }}
+
+<style>
+#btn-tracking {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 10px;
+  padding: 4px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  vertical-align: middle;
+  transition: opacity 0.15s;
+}
+#btn-tracking:hover { opacity: 0.82; }
+#btn-tracking:disabled { opacity: 0.45; cursor: default; }
+#btn-tracking.activo  { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
+#btn-tracking.inactivo { background: #fce4ec; color: #c62828; border: 1px solid #ef9a9a; }
+</style>
+
+<script>
+(function () {
+  const TRACKING_DATA = {{ camiones_tracking_json|safe }};
+  const TOGGLE_BASE   = '{% url "admin:flota_eventocamion_toggle_tracking" 0 %}'.replace('/0/', '/');
+  const SSE_BASE      = '{% url "admin:flota_eventocamion_tracking_sse" 0 %}'.replace('/0/', '/');
+
+  function estadoBtn(activo) {
+    return activo
+      ? { clase: 'activo',   texto: '✓ App activa',    titulo: 'Toca para desactivar la app del chofer' }
+      : { clase: 'inactivo', texto: '✗ App inactiva',  titulo: 'Toca para activar la app del chofer' };
+  }
+
+  function crearBoton() {
+    const btn = document.createElement('button');
+    btn.id   = 'btn-tracking';
+    btn.type = 'button';
+    return btn;
+  }
+
+  function actualizarBoton(btn, activo) {
+    const e = estadoBtn(activo);
+    btn.className   = e.clase;
+    btn.textContent = e.texto;
+    btn.title       = e.titulo;
+  }
+
+  function insertarBoton() {
+    const select = document.getElementById('id_camion');
+    if (!select) return;
+
+    const btn = crearBoton();
+    select.after(btn);
+
+    function refrescar() {
+      const camionId = select.value;
+      if (!camionId || TRACKING_DATA[camionId] === undefined) {
+        btn.style.display = 'none';
+        return;
+      }
+      btn.style.display = '';
+      actualizarBoton(btn, TRACKING_DATA[camionId]);
+    }
+
+    select.addEventListener('change', refrescar);
+    refrescar();
+
+    // SSE: recibir cambios en tiempo real sin polling
+    let sse = null;
+    function iniciarSSE() {
+      detenerSSE();
+      const camionId = select.value;
+      if (!camionId) return;
+      sse = new EventSource(SSE_BASE + camionId + '/');
+      sse.onmessage = (e) => {
+        const data = JSON.parse(e.data);
+        TRACKING_DATA[camionId] = data.tracking_activo;
+        btn.style.display = '';
+        actualizarBoton(btn, data.tracking_activo);
+      };
+    }
+    function detenerSSE() {
+      if (sse) { sse.close(); sse = null; }
+    }
+
+    select.addEventListener('change', iniciarSSE);
+    iniciarSSE();
+    document.addEventListener('visibilitychange', () => {
+      document.hidden ? detenerSSE() : iniciarSSE();
+    });
+
+    btn.addEventListener('click', async function () {
+      const camionId = select.value;
+      if (!camionId) return;
+      btn.disabled = true;
+      try {
+        const resp = await fetch(TOGGLE_BASE + camionId + '/', {
+          method: 'POST',
+          headers: { 'X-CSRFToken': document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '' },
+        });
+        const data = await resp.json();
+        TRACKING_DATA[camionId] = data.tracking_activo;
+        actualizarBoton(btn, data.tracking_activo);
+      } catch (e) {
+        alert('Error al cambiar el estado: ' + e);
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', insertarBoton);
+  } else {
+    insertarBoton();
+  }
+})();
+</script>
+{% endblock %}

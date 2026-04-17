@@ -1,5 +1,6 @@
 import threading
 
+from django.core.cache import cache
 from django.db.models import F
 from rest_framework import viewsets
 from rest_framework.decorators import action
@@ -9,6 +10,13 @@ from rest_framework.response import Response
 from .models import Cliente
 from .serializers import ClienteSerializer
 from pozosscz.servicios_fcm import enviar_actualizacion_proyectos, enviar_asignacion_cliente
+
+
+def _bump_clientes_version():
+    try:
+        cache.incr('clientes_version')
+    except ValueError:
+        cache.set('clientes_version', 1, timeout=None)
 
 
 def _notificar_en_background(usuario_id=None):
@@ -94,6 +102,7 @@ class ClienteViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         instance = serializer.save()
+        _bump_clientes_version()
         _notificar_en_background(_usuario_id_de_instancia(instance))
 
     def perform_update(self, serializer):
@@ -111,6 +120,8 @@ class ClienteViewSet(viewsets.ModelViewSet):
             and (old_status != 'PRG' or old_camion_id != instance.camion_id)
         )
 
+        _bump_clientes_version()
+
         if nueva_asignacion_prg:
             _notificar_asignacion_en_background(instance)
         else:
@@ -118,4 +129,5 @@ class ClienteViewSet(viewsets.ModelViewSet):
 
     def perform_destroy(self, instance):
         instance.delete()
+        _bump_clientes_version()
         _notificar_en_background()
