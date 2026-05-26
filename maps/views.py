@@ -284,8 +284,8 @@ class ContratarAPIView(APIView):
         tasa_chofer     = p.personal_camion / 100
         precio          = subtotal / (1 - tasa_chofer)
         chofer          = precio - subtotal
-        precio          = round(precio / 10) * 10  # múltiplo de 10
-        precio_sin_zona = round(subtotal_sin_zona / (1 - tasa_chofer) / 10) * 10
+        precio          = math.ceil(precio / 10) * 10
+        precio_sin_zona = math.ceil(subtotal_sin_zona / (1 - tasa_chofer) / 10) * 10
 
         # Calcular precio completo para cada base (para comparación en el modal)
         costos_combustible_bases = []
@@ -306,7 +306,7 @@ class ContratarAPIView(APIView):
             mant_i     = (p.costo_mantenimiento / 100) * comb_i
             util_i     = (p.utilidad_km * (dist_i / 1000) + p.utilidad_base) * factor
             subtotal_i = (comb_i + mant_i + costo_saguapac_panta + util_i + costo_adicional_km_retorno) * p.factor_global
-            precio_i   = round(subtotal_i / (1 - tasa_chofer) / 10) * 10
+            precio_i   = math.ceil(subtotal_i / (1 - tasa_chofer) / 10) * 10
             chofer_i   = round(subtotal_i / (1 - tasa_chofer) * tasa_chofer, 1)
             mant_i_fact = round(mant_i * p.factor_global, 1)
             costos_combustible_bases.append(round(comb_i - costo_combustible_retorno - costo_combustible_trabajo, 1))

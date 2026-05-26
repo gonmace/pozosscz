@@ -271,6 +271,10 @@ export const modalPrecio = (data: DataPrice, colorPath: string[], marker: Marker
     const precios_b = data.precios_bases ?? [];
     let currentIdx  = data.origen;
 
+    // Referencias a celdas del resumen que deben actualizarse al cambiar base
+    let tdCotizado:  HTMLTableCellElement | null = null;
+    let tdFacturado: HTMLTableCellElement | null = null;
+
     updateTotal = (i: number) => {
         currentIdx = i;
         const { c3, c4, c5 } = recalcConsts();
@@ -289,6 +293,11 @@ export const modalPrecio = (data: DataPrice, colorPath: string[], marker: Marker
         formCost.value = precioBase;
         formPrecioSistema.value = precioBase;
         precio_sugerido = precioBase;
+        // Actualizar filas del resumen
+        if (tdCotizado)  tdCotizado.textContent  = precioBase;
+        if (tdFacturado) tdFacturado.textContent  = precios_b[i] != null
+            ? String(Math.round(precios_b[i] * 1.18 / 10) * 10)
+            : '';
     };
 
     const recalcAndUpdate = () => updateTotal(currentIdx);
@@ -327,6 +336,8 @@ export const modalPrecio = (data: DataPrice, colorPath: string[], marker: Marker
                 td.style.fontSize = "0.75rem";
                 td.style.fontWeight = label === 'P. Cotizado' ? "700" : "500";
                 if (color) td.style.color = color;
+                if (label === 'P. Cotizado')  tdCotizado  = td;
+                if (label === 'P. Facturado') tdFacturado = td;
             }
             tr.appendChild(td);
         }
