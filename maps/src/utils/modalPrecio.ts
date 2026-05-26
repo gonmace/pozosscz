@@ -284,11 +284,11 @@ export const modalPrecio = (data: DataPrice, colorPath: string[], marker: Marker
         if (totalCells[5]) totalCells[5].textContent = t5 != null ? t5.toFixed(0) : '';
         if (totalCells[6]) totalCells[6].textContent = t6 != null ? t6.toFixed(0) : '';
         if (totalCells[7]) totalCells[7].textContent = horizTotal ? horizTotal.toFixed(0) : '';
-        // Actualizar Precio Final y Precio Sistema con el Total (redondeado a múltiplo de 10)
-        const redondeado = horizTotal ? String(Math.round(horizTotal / 10) * 10) : '';
-        formCost.value = redondeado;
-        formPrecioSistema.value = redondeado;
-        precio_sugerido = redondeado;
+        // Usar precios_bases[i] del backend (calculado con precisión completa, sin error de redondeo acumulado)
+        const precioBase = precios_b[i] != null ? String(precios_b[i]) : (horizTotal ? String(Math.round(horizTotal / 10) * 10) : '');
+        formCost.value = precioBase;
+        formPrecioSistema.value = precioBase;
+        precio_sugerido = precioBase;
     };
 
     const recalcAndUpdate = () => updateTotal(currentIdx);
