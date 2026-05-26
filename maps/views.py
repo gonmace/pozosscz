@@ -309,7 +309,7 @@ class ContratarAPIView(APIView):
             precio_i   = round(subtotal_i / (1 - tasa_chofer) / 10) * 10
             chofer_i   = round(subtotal_i / (1 - tasa_chofer) * tasa_chofer, 1)
             mant_i_fact = round(mant_i * p.factor_global, 1)
-            costos_combustible_bases.append(round((t_ida_i / 3600) * p.consumo_viaje_hr * p.precio_diesel, 1))
+            costos_combustible_bases.append(round(comb_i - costo_combustible_retorno - costo_combustible_trabajo, 1))
             utilidades_bases.append(round(util_i * p.factor_global, 1))
             chofer_bases.append(chofer_i)
             otros_bases.append(mant_i_fact)
