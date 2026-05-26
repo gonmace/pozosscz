@@ -6,28 +6,16 @@ from geopy.distance import geodesic
 
 logger = logging.getLogger(__name__)
 
-VALHALLA_URL = "https://valhalla1.openstreetmap.de/route"
+OSRM_URL = "http://router.project-osrm.org/route/v1/driving"
 
 # Fallback: distancia real en carretera vs línea recta
 ROAD_FACTOR = 1.4
 AVG_SPEED_KMH = 35
 
 
-def _decode_shape(encoded: str) -> List[List[float]]:
-    """Decode Valhalla encoded polyline (precision 6) to [[lat, lon], ...]."""
-    return [[lat, lon] for lat, lon in polyline_codec.decode(encoded, precision=6)]
-
-
-def _build_valhalla_locations(
-    base_lon: float, base_lat: float,
-    dest_lat: float, dest_lon: float,
-    waypoint: Tuple[float, float] = None
-) -> List[dict]:
-    locations = [{"lon": base_lon, "lat": base_lat, "type": "break"}]
-    if waypoint:
-        locations.append({"lon": waypoint[1], "lat": waypoint[0], "type": "through"})
-    locations.append({"lon": dest_lon, "lat": dest_lat, "type": "break"})
-    return locations
+def _decode_polyline(encoded: str) -> List[List[float]]:
+    """Decode OSRM encoded polyline (precision 5) to [[lat, lon], ...]."""
+    return [[lat, lon] for lat, lon in polyline_codec.decode(encoded)]
 
 
 def _geodesic_fallback(
@@ -35,7 +23,7 @@ def _geodesic_fallback(
     bases: List[Tuple[float, float, str]],
     waypoint: Tuple[float, float] = None
 ) -> Tuple[List[float], List[float], List[str], List[List[List[float]]]]:
-    """Fallback con distancia geodésica cuando Valhalla no está disponible."""
+    """Fallback con distancia geodésica cuando OSRM no está disponible."""
     distances, times, origins, geometries = [], [], [], []
 
     for base_lon, base_lat, base_name in bases:
@@ -59,36 +47,33 @@ async def calculate_route_metrics(
     bases: List[Tuple[float, float, str]],
     waypoint: Tuple[float, float] = None
 ) -> Tuple[List[float], List[float], List[str], List[List[List[float]]]]:
-    """Calculate distances and times. Uses Valhalla, falls back to geodesic."""
+    """Calculate distances and times. Uses OSRM, falls back to geodesic."""
     distances, times, origins, geometries = [], [], [], []
 
     async with httpx.AsyncClient(timeout=8.0) as client:
         for base_lon, base_lat, base_name in bases:
-            locations = _build_valhalla_locations(base_lon, base_lat, lat, lon, waypoint)
-            body = {
-                "locations": locations,
-                "costing": "auto",
-                "shape_format": "polyline6",
-            }
+            # Coordenadas en formato OSRM: lon,lat separadas por ;
+            coords = [f"{base_lon},{base_lat}"]
+            if waypoint:
+                coords.append(f"{waypoint[1]},{waypoint[0]}")
+            coords.append(f"{lon},{lat}")
+            url = f"{OSRM_URL}/{';'.join(coords)}?overview=full&geometries=polyline"
             try:
-                response = await client.post(VALHALLA_URL, json=body)
+                response = await client.get(url)
                 if response.status_code == 200:
                     data = response.json()
-                    summary = data["trip"]["summary"]
-                    legs = data["trip"]["legs"]
-                    # Concatenar shape de todos los tramos (ida + waypoints)
-                    full_shape = []
-                    for leg in legs:
-                        full_shape.extend(_decode_shape(leg["shape"]))
-                    distances.append(summary["length"] * 1000)   # km → m
-                    times.append(summary["time"])                 # seconds
-                    origins.append(base_name)
-                    geometries.append(full_shape)
+                    if data["code"] == "Ok" and data["routes"]:
+                        route = data["routes"][0]
+                        distances.append(route["distance"])  # metros
+                        times.append(route["duration"])      # segundos
+                        origins.append(base_name)
+                        geometries.append(_decode_polyline(route["geometry"]))
+                    else:
+                        raise ValueError(f"OSRM code: {data.get('code')}")
                 else:
                     raise ValueError(f"HTTP {response.status_code}")
             except Exception as e:
-                logger.warning("Valhalla route failed for base %s: %s — using geodesic fallback", base_name, e)
-                # Fallback geodésico para esta base individualmente
+                logger.warning("OSRM route failed for base %s: %s — using geodesic fallback", base_name, e)
                 fb_d, fb_t, _, fb_g = _geodesic_fallback(lat, lon, [(base_lon, base_lat, base_name)], waypoint)
                 distances.extend(fb_d)
                 times.extend(fb_t)

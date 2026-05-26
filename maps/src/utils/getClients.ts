@@ -284,30 +284,17 @@ function formatearFecha(date: Date): string {
   return `${dia}/${mes}/${anio}`;
 }
 
-export async function fetchClients(): Promise<{ groupEje: LayerGroup[], groupCot: LayerGroup[] }> {
-  // Add event listener for client updates
-  window.addEventListener('clientUpdated', async () => {
-    // Clear existing markers
-    groupEje.forEach(group => group.clearLayers());
-    groupCot.forEach(group => group.clearLayers());
-    
-    // Reset arrays
-    p300 = [];
-    p350 = [];
-    p400 = [];
-    p450 = [];
-    p500 = [];
-    p600 = [];
-    p700 = [];
-    p800 = [];
-    p900 = [];
-    p1000 = [];
-    pNegro = [];
-    
-    // Fetch and process clients again
-    await fetchClients();
-  });
+async function _refreshClients() {
+  groupEje.forEach(group => group.clearLayers());
+  groupCot.forEach(group => group.clearLayers());
+  p300 = []; p350 = []; p400 = []; p450 = []; p500 = [];
+  p600 = []; p700 = []; p800 = []; p900 = []; p1000 = []; pNegro = [];
+  await fetchClients();
+}
 
+window.addEventListener('clientUpdated', _refreshClients);
+
+export async function fetchClients(): Promise<{ groupEje: LayerGroup[], groupCot: LayerGroup[] }> {
   const clientes: Clientes[] = await fetch(urlGet)
     .then(resp => resp.json())
     .then(data => {

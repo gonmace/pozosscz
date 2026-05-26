@@ -284,8 +284,11 @@ export const modalPrecio = (data: DataPrice, colorPath: string[], marker: Marker
         if (totalCells[5]) totalCells[5].textContent = t5 != null ? t5.toFixed(0) : '';
         if (totalCells[6]) totalCells[6].textContent = t6 != null ? t6.toFixed(0) : '';
         if (totalCells[7]) totalCells[7].textContent = horizTotal ? horizTotal.toFixed(0) : '';
-        // Actualizar Precio Final con el Total (redondeado a múltiplo de 10)
-        formCost.value = horizTotal ? String(Math.round(horizTotal / 10) * 10) : '';
+        // Actualizar Precio Final y Precio Sistema con el Total (redondeado a múltiplo de 10)
+        const redondeado = horizTotal ? String(Math.round(horizTotal / 10) * 10) : '';
+        formCost.value = redondeado;
+        formPrecioSistema.value = redondeado;
+        precio_sugerido = redondeado;
     };
 
     const recalcAndUpdate = () => updateTotal(currentIdx);
@@ -330,8 +333,7 @@ export const modalPrecio = (data: DataPrice, colorPath: string[], marker: Marker
         tbConstantes.appendChild(tr);
     });
 
-    precio_sugerido = data.precio.toFixed(0);
-    formPrecioSistema.value = precio_sugerido;
+    // precio_sugerido y formPrecioSistema se sincronizan dentro de updateTotal
 
     // Notas informativas
     const warning = document.getElementById("warning") as HTMLDivElement;
