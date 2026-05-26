@@ -38,7 +38,7 @@ import type {
 } from "leaflet";
 import type { DataPrice, Poligonos } from "./types/types";
 import { createToast, confirmDialog } from "./utils/toast";
-import { fetchClients } from "./utils/getClients";
+import { fetchClients, refreshClients } from "./utils/getClients";
 import { initClientesActivosModal, DatoCliente } from "./clientesActivosModal";
 import { showClientesResultadosModal } from "./clientesResultadosModal";
 import "leaflet.markercluster";
@@ -1751,11 +1751,8 @@ _sse.onerror = () => {
 (window as any).cargarClientesJornada = cargarClientesJornada;
 (window as any).refreshClientLayers = async () => {
   cargarClientesJornada();
-  const updated = await fetchClients();
-  if (mcgLayerSupportGroup) {
-    mcgLayerSupportGroup.checkIn(updated.groupCot);
-    mcgLayerSupportGroup.checkIn(updated.groupEje);
-  }
+  // refreshClients limpia los grupos antes de volver a poblarlos — evita acumulación
+  const updated = await refreshClients();
   groupCot = updated.groupCot;
   groupEje = updated.groupEje;
 };

@@ -284,15 +284,15 @@ function formatearFecha(date: Date): string {
   return `${dia}/${mes}/${anio}`;
 }
 
-async function _refreshClients() {
+export async function refreshClients() {
   groupEje.forEach(group => group.clearLayers());
   groupCot.forEach(group => group.clearLayers());
   p300 = []; p350 = []; p400 = []; p450 = []; p500 = [];
   p600 = []; p700 = []; p800 = []; p900 = []; p1000 = []; pNegro = [];
-  await fetchClients();
+  return await fetchClients();
 }
 
-window.addEventListener('clientUpdated', _refreshClients);
+window.addEventListener('clientUpdated', refreshClients);
 
 export async function fetchClients(): Promise<{ groupEje: LayerGroup[], groupCot: LayerGroup[] }> {
   const clientes: Clientes[] = await fetch(urlGet)
