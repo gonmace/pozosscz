@@ -46,13 +46,14 @@
         </p>
       </div>
 
-      <!-- Enlaces -->
+      <!-- Servicios y guías (linking interno con keywords en todo el sitio) -->
       <div>
-        <h4 class="font-display font-semibold text-[15px] text-white mb-3.5">Enlaces</h4>
+        <h4 class="font-display font-semibold text-[15px] text-white mb-3.5">Servicios</h4>
         <div class="flex flex-col gap-2.5 text-[14.5px] text-[#9fb0a3]">
-          <a href="/" class="hover:text-white transition-colors">Inicio</a>
-          <a href="/#servicios" class="hover:text-white transition-colors">Servicios</a>
-          <a href="/#funciona" class="hover:text-white transition-colors">Cómo funciona</a>
+          <a href="{% url 'servicio_pozo_ciego' %}" class="hover:text-white transition-colors">Limpieza de pozos ciegos</a>
+          <a href="{% url 'servicio_pozos_septicos' %}" class="hover:text-white transition-colors">Limpieza de pozos sépticos</a>
+          <a href="{% url 'servicio_camaras_septicas' %}" class="hover:text-white transition-colors">Limpieza de cámaras sépticas</a>
+          <a href="{% url 'medidas_pozo_septico' %}" class="hover:text-white transition-colors">Medidas de pozo séptico</a>
           <a href="/#faq" class="hover:text-white transition-colors">Preguntas frecuentes</a>
         </div>
       </div>

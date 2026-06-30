@@ -106,6 +106,20 @@ ZONAS = {
 
 
 class StaticViewSitemap(Sitemap):
+    changefreq = 'weekly'
+
+    # Prioridad relativa de cada página dentro del sitio.
+    PRIORITIES = {
+        'home_page': 1.0,
+        'cotiza': 0.9,
+        'calcula': 0.9,
+        'servicio_pozo_ciego': 0.9,
+        'servicio_pozos_septicos': 0.9,
+        'servicio_camaras_septicas': 0.9,
+        'medidas_pozo_septico': 0.7,
+        'contact': 0.5,
+    }
+
     def items(self):
         return [
             'home_page', 'cotiza', 'calcula', 'contact',
@@ -116,8 +130,14 @@ class StaticViewSitemap(Sitemap):
     def location(self, item):
         return reverse(item)
 
+    def priority(self, item):
+        return self.PRIORITIES.get(item, 0.5)
+
 
 class ZonaSitemap(Sitemap):
+    changefreq = 'monthly'
+    priority = 0.7
+
     def items(self):
         return list(ZONAS.keys())
 
