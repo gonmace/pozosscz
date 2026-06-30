@@ -21,6 +21,21 @@ class DatosGenerales(SingletonModel):
         help_text="Versión del hero de la página de inicio que ve el público."
     )
 
+    hero_imagen = models.ImageField(
+        "Imagen del hero (inicio)",
+        upload_to='home/',
+        blank=True,
+        null=True,
+        help_text="Imagen del servicio que se muestra arriba del título en el inicio. "
+                  "Si se deja vacío, se usa la imagen por defecto."
+    )
+    hero_imagen_alt = models.CharField(
+        "Texto alternativo de la imagen del hero",
+        max_length=255,
+        default="Camión de limpieza de pozos sépticos en Santa Cruz",
+        help_text="Descripción de la imagen para accesibilidad y SEO."
+    )
+
     correo = models.EmailField(
         "Correo Electrónico", max_length=100, default="info@pozosscz.com"
     )

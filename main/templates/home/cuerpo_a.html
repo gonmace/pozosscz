@@ -1,12 +1,20 @@
 {% comment %}
 Cuerpo de la VARIANTE A (rediseño). Independiente de la D — editar acá no afecta a D.
 {% endcomment %}
+{% load static %}
 
 
 <!-- Hero A — split + card de cotización -->
 <section data-screen-label="Hero A" class="relative overflow-hidden">
   <div class="max-w-[1140px] mx-auto px-6 pt-16 pb-14 grid grid-cols-1 lg:grid-cols-[1.05fr_.95fr] gap-12 items-center">
     <div>
+      {% if datos_generales.hero_imagen %}
+      <img src="{{ datos_generales.hero_imagen.url }}" alt="{{ datos_generales.hero_imagen_alt }}"
+           class="w-full max-w-[460px] h-auto rounded-[22px] mb-6" loading="eager" decoding="async">
+      {% else %}
+      <img src="{% static 'img/Camión_limpieza_pozo_ciego_verde_blanco.png' %}" alt="{{ datos_generales.hero_imagen_alt|default:'Camión de limpieza de pozos sépticos en Santa Cruz' }}"
+           class="w-full max-w-[460px] h-auto rounded-[22px] mb-6" loading="eager" decoding="async">
+      {% endif %}
       <span class="inline-flex items-center gap-2 bg-band text-accent font-bold text-[13.5px] px-3.5 py-1.5 rounded-full">
         <i class="ph-fill ph-map-pin" aria-hidden="true"></i> Servicio local en Santa Cruz y alrededores
       </span>
