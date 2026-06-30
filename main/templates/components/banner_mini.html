@@ -1,0 +1,51 @@
+{% comment %}
+Banner pequeño (solo Variante A): fondo SVG (banner.svg) + foto (banner.img) encima.
+Al entrar en viewport (IntersectionObserver) la FOTO se desvanece (2.5s) y, en sincronía,
+APARECE el lockup de marca centrado: camión + "Santa Cruz" (Pacifico) + bajada, sobre el SVG.
+Sin IDs #banner/#camion para no chocar con la Variante D.
+{% endcomment %}
+{% if banner.img or banner.svg %}
+<div id="banner-mini" class="mt-8">
+  <div class="relative w-full aspect-[2/1] rounded-[26px] overflow-hidden bg-center bg-cover bg-no-repeat border border-base-300 shadow-[0_14px_30px_rgba(30,60,30,.12)]"
+       {% if banner.svg %}style="background-image:url('{{ banner.svg.url }}');"{% endif %}>
+    {% if banner.img %}
+    <img src="{{ banner.img.url }}" alt="{{ banner.img_alt }}"
+         class="w-full absolute top-1/2 -translate-y-1/2" data-bm-img
+         style="opacity:1;transition:opacity 2.5s ease-out;" loading="lazy" decoding="async">
+    {% endif %}
+    <!-- Scrim suave para legibilidad del lockup sobre el SVG -->
+    <div class="absolute inset-0 bg-black/25 pointer-events-none"></div>
+    <!-- Lockup de marca: aparece mientras la foto se desvanece -->
+    <div class="absolute inset-0 flex flex-col items-center justify-center text-center text-white px-4" data-bm-brand
+         style="opacity:0;transform:translateY(12px) scale(.97);transition:opacity 2.5s ease-out, transform 2.5s ease-out;">
+      {% include 'components/logo_camion.html' with logo_class='h-10 sm:h-16 w-auto block mx-auto sombra' %}
+      <span class="font-script leading-none text-[40px] sm:text-[80px] mt-1 drop-shadow-[0_4px_16px_rgba(0,0,0,.55)]">Santa Cruz</span>
+      <p class="uppercase tracking-wide font-display font-medium text-sm sm:text-xl mt-1 drop-shadow-lg">Tu pozo limpio. Hoy mismo.</p>
+    </div>
+  </div>
+</div>
+<noscript><style>#banner-mini [data-bm-brand]{opacity:1!important;transform:none!important}#banner-mini [data-bm-img]{opacity:.25!important}</style></noscript>
+<script>
+(function () {
+  var s = document.getElementById('banner-mini');
+  if (!s) return;
+  var img = s.querySelector('[data-bm-img]');
+  var brand = s.querySelector('[data-bm-brand]');
+  function reveal() {
+    if (img) img.style.opacity = '0';                 // la foto se desvanece y queda el SVG
+    if (brand) { brand.style.opacity = '1'; brand.style.transform = 'none'; }  // aparece "Santa Cruz"
+  }
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduce || !('IntersectionObserver' in window)) {
+    if (reduce && img) img.style.transition = 'none';
+    if (reduce && brand) brand.style.transition = 'none';
+    reveal();
+    return;
+  }
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) { if (e.isIntersecting) { reveal(); io.disconnect(); } });
+  }, { threshold: 0.35 });
+  io.observe(s);
+})();
+</script>
+{% endif %}

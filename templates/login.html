@@ -1,50 +1,78 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block body_class %}bg-gradient-to-b from-primary via-white to-primary{% endblock %}
+{% block robots %}<meta name="robots" content="noindex, nofollow">{% endblock %}
+
+{% block body_class %}bg-base-100{% endblock %}
 
 {% block content %}
-<div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative">
-    <div class="w-full max-w-md mx-auto bg-white/20 rounded-xl shadow-md overflow-hidden md:max-w-2xl p-8 z-20 sombra -translate-y-[20%]">
-        <div class="text-center mb-8">
-            <h2 class="text-2xl font-bold text-gray-900 mb-2">Iniciar Sesión</h2>
+<div class="min-h-screen flex flex-col">
+  <main class="flex-1 flex items-center justify-center px-4 py-12" style="background:radial-gradient(circle at 50% -5%, #EAF6EC 0%, #FBF6EC 60%);">
+    <div class="w-full max-w-md">
+
+      <!-- Marca -->
+      <a href="/" class="flex flex-col items-center gap-2.5 mb-6" aria-label="Inicio — Pozos Santa Cruz">
+        <span class="w-14 h-14 rounded-2xl bg-primary text-white flex items-center justify-center shadow-[0_8px_18px_rgba(47,162,78,.32)]">
+          {% include 'components/logo_camion.html' with logo_class='h-8 w-auto' %}
+        </span>
+        <span class="font-script text-[30px] text-accent leading-none">Santa Cruz</span>
+      </a>
+
+      <!-- Card -->
+      <div class="bg-white rounded-[24px] border border-base-300 shadow-[0_24px_50px_rgba(30,60,30,.12)] p-7 sm:p-8">
+        <div class="text-center mb-6">
+          <h1 class="font-display font-medium text-[26px] text-ink">Iniciar sesión</h1>
+          <p class="text-[14px] text-base-content/50 mt-1 inline-flex items-center gap-1.5">
+            <i class="ph-fill ph-lock-key text-primary" aria-hidden="true"></i> Acceso para administradores
+          </p>
         </div>
 
         {% if messages %}
-        <div class="mb-8">
-            {% for message in messages %}
-            <div class="p-4 {% if message.tags == 'success' %}bg-green-100 text-green-700{% else %}bg-red-100 text-red-700{% endif %} rounded-lg">
-                {{ message }}
-            </div>
-            {% endfor %}
+        <div class="mb-5 flex flex-col gap-2">
+          {% for message in messages %}
+          <div class="flex items-center gap-2.5 rounded-[14px] px-4 py-3 text-[14.5px] {% if message.tags == 'success' %}bg-band text-accent{% else %}bg-error/10 text-error{% endif %}">
+            <i class="ph-fill {% if message.tags == 'success' %}ph-check-circle{% else %}ph-warning-circle{% endif %} text-lg" aria-hidden="true"></i>
+            <span>{{ message }}</span>
+          </div>
+          {% endfor %}
         </div>
         {% endif %}
 
-        <form method="post" class="space-y-6">
-            {% csrf_token %}
-            <div>
-                <label for="username" class="block text-sm font-medium text-gray-700">Usuario</label>
-                <div class="mt-1">
-                    <input id="username" name="username" type="text" required class="input input-bordered input-primary w-full">
-                </div>
+        <form method="post" class="space-y-5">
+          {% csrf_token %}
+          <div>
+            <label for="username" class="block text-sm font-semibold text-base-content/70 mb-1.5">Usuario</label>
+            <div class="relative">
+              <i class="ph ph-user absolute left-3.5 top-1/2 -translate-y-1/2 text-base-content/40 text-lg pointer-events-none" aria-hidden="true"></i>
+              <input id="username" name="username" type="text" required autocomplete="username"
+                     class="input input-bordered w-full pl-10 focus:input-primary">
             </div>
+          </div>
 
-            <div>
-                <label for="password" class="block text-sm font-medium text-gray-700">Contraseña</label>
-                <div class="mt-1">
-                    <input id="password" name="password" type="password" required class="input input-bordered input-primary w-full">
-                </div>
+          <div>
+            <label for="password" class="block text-sm font-semibold text-base-content/70 mb-1.5">Contraseña</label>
+            <div class="relative">
+              <i class="ph ph-lock absolute left-3.5 top-1/2 -translate-y-1/2 text-base-content/40 text-lg pointer-events-none" aria-hidden="true"></i>
+              <input id="password" name="password" type="password" required autocomplete="current-password"
+                     class="input input-bordered w-full pl-10 focus:input-primary">
             </div>
+          </div>
 
-            <div>
-                <button type="submit" class="btn btn-primary w-full">
-                    Ingresar
-                </button>
-            </div>
+          <button type="submit"
+                  class="w-full inline-flex items-center justify-center gap-2.5 bg-primary text-primary-content py-3 rounded-full font-display font-semibold text-[16px] shadow-[0_9px_20px_rgba(47,162,78,.3)] hover:brightness-105 transition">
+            <i class="ph-fill ph-sign-in" aria-hidden="true"></i> Ingresar
+          </button>
         </form>
+      </div>
+
+      <p class="text-center mt-5">
+        <a href="/" class="text-[14px] text-base-content/50 hover:text-accent inline-flex items-center gap-1.5 transition-colors">
+          <i class="ph-bold ph-arrow-left" aria-hidden="true"></i> Volver al inicio
+        </a>
+      </p>
     </div>
-    <div class="absolute bottom-0 w-full">
-        {% include 'components/footer.html' %}
-    </div>
+  </main>
+
+  {% include 'components/footer.html' %}
 </div>
 {% endblock %}

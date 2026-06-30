@@ -179,8 +179,8 @@ REST_FRAMEWORK = {
 }
 
 DEFAULT_META = {
-    "TITLE": "Limpieza de Pozos Sépticos en Santa Cruz, Bolivia | PozosSCZ",
-    "DESCRIPTION": "Servicio profesional de limpieza y succión de pozos sépticos en Santa Cruz de la Sierra. Precio online al instante, sin sorpresas. Atendemos hogares y empresas.",
+    "TITLE": "Limpieza de Pozos Ciegos y Sépticos en Santa Cruz | PozosSCZ",
+    "DESCRIPTION": "Desagote de pozos ciegos y sépticos en Santa Cruz, Bolivia. Precio al instante sin sorpresas. Servicio rápido para hogares, empresas y condominios.",
     "KEYWORDS": [
         "limpieza de pozos sépticos Santa Cruz",
         "succión de pozos sépticos Santa Cruz",

@@ -1,13 +1,13 @@
 {% load static tailwind_tags meta %}
 
 <!DOCTYPE html>
-<html lang="es" data-theme="dark" {% meta_namespaces %}>
+<html lang="es" data-theme="{% block theme %}claro{% endblock %}" {% meta_namespaces %}>
   <head>
     <meta charset="utf-8" />
     {% include "meta/meta.html" %}
-    <meta name="robots" content="index, follow" />
+    {% block robots %}<meta name="robots" content="index, follow" />{% endblock %}
     <meta name="referrer" content="origin" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="canonical" href="https://pozosscz.com{{ request.path }}" />
      <!-- Content MApa de calor -->
      <script src="https://t.contentsquare.net/uxa/7a05b5f9edd25.js"></script>
@@ -24,7 +24,10 @@
     <link rel="apple-touch-icon" sizes="180x180" href="{% static 'favicon/apple-touch-icon.png' %}" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-		<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
+		<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;500;600;700;800;900&family=Pacifico&display=swap" rel="stylesheet">
+    <!-- Phosphor Icons (regular + fill) — usados en el rediseño del sitio público -->
+    <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+    <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
     {% tailwind_css %}
     
     {% block css %}
@@ -39,10 +42,11 @@
     {
       "@context": "https://schema.org",
       "@type": "LocalBusiness",
+      "@id": "https://pozosscz.com/#business",
       "name": "PozosSCZ - Limpieza de Pozos Sépticos",
       "description": "Servicio profesional de limpieza y succión de pozos sépticos en Santa Cruz de la Sierra, Bolivia. Precio online al instante.",
       "url": "https://pozosscz.com",
-      "telephone": "+59171011118",
+      "telephone": "{{ datos_generales.celular }}",
       "address": {
         "@type": "PostalAddress",
         "addressLocality": "Santa Cruz de la Sierra",
@@ -54,15 +58,27 @@
         "latitude": -17.7833,
         "longitude": -63.1821
       },
-      "areaServed": {
-        "@type": "GeoCircle",
-        "geoMidpoint": {
-          "@type": "GeoCoordinates",
-          "latitude": -17.7833,
-          "longitude": -63.1821
+      "areaServed": [
+        {
+          "@type": "GeoCircle",
+          "geoMidpoint": {
+            "@type": "GeoCoordinates",
+            "latitude": -17.7833,
+            "longitude": -63.1821
+          },
+          "geoRadius": "100000"
         },
-        "geoRadius": "100000"
-      },
+        {"@type": "City", "name": "Santa Cruz de la Sierra"},
+        {"@type": "City", "name": "Warnes"},
+        {"@type": "City", "name": "Cotoca"},
+        {"@type": "City", "name": "La Guardia"},
+        {"@type": "AdministrativeArea", "name": "Plan 3000"},
+        {"@type": "AdministrativeArea", "name": "Villa 1ro de Mayo"},
+        {"@type": "AdministrativeArea", "name": "Pampa de la Isla"},
+        {"@type": "AdministrativeArea", "name": "Urubó"},
+        {"@type": "AdministrativeArea", "name": "El Palmar"},
+        {"@type": "AdministrativeArea", "name": "Parque Industrial"}
+      ],
       "openingHoursSpecification": {
         "@type": "OpeningHoursSpecification",
         "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"],
@@ -71,6 +87,9 @@
       },
       "priceRange": "$$",
       "serviceType": "Limpieza de pozos sépticos",
+      "sameAs": [
+        "https://wa.me/59176644033"
+      ],
       "hasOfferCatalog": {
         "@type": "OfferCatalog",
         "name": "Servicios de limpieza de pozos sépticos",
@@ -89,6 +108,14 @@
               "@type": "Service",
               "name": "Limpieza de pozo séptico comercial",
               "description": "Servicio de limpieza para empresas, condominios y negocios"
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Limpieza de pozo ciego",
+              "description": "Desagote y limpieza de pozos ciegos en Santa Cruz de la Sierra y alrededores"
             }
           }
         ]

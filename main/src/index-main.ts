@@ -20,7 +20,12 @@ function updateBannerContent(svgUrl: string, imgUrl: string, imgAlt: string) {
   banner.appendChild(image);
 }
 
-updateBannerContent(banner_svg, banner_img, banner_alt);
+// Solo la variante D incluye el banner (#banner). En las variantes A/B/C el
+// elemento no existe, así que evitamos tocarlo (y typeof evita ReferenceError
+// si la plantilla no emitió los globales banner_*).
+if (document.getElementById("banner") && typeof banner_svg !== "undefined") {
+  updateBannerContent(banner_svg, banner_img, banner_alt);
+}
 
 // Obtén los elementos del DOM y asegúrate de que no sean null
 const bgBanner = document.getElementById("bgBanner") as HTMLElement;
@@ -91,7 +96,7 @@ if (bgBanner && camion && titulo) {
           {
             path: "#anta",
             attr: {
-              fill: "#fff",
+              fill: "#52b551",
             },
           },
           {
@@ -103,7 +108,7 @@ if (bgBanner && camion && titulo) {
           {
             path: "#ruz",
             attr: {
-              fill: "#fff",
+              fill: "#52b551",
             },
           },
           {
@@ -115,7 +120,7 @@ if (bgBanner && camion && titulo) {
           {
             path: "#S",
             attr: {
-              fill: "#fff",
+              fill: "#52b551",
             },
           },
           {
@@ -127,7 +132,7 @@ if (bgBanner && camion && titulo) {
           {
             path: "#C",
             attr: {
-              fill: "#fff",
+              fill: "#52b551",
             },
           },
           {
@@ -160,11 +165,18 @@ if (bgBanner && camion && titulo) {
     "<-=2000"
   ); // starts 1000ms after the previous animation
 
-  tl.add("#wapp", {
-    translateY: ["-300%", "0%"],
-    opacity: [0, 1],
-    duration: 1000,
-  });
 } else {
-  console.error("Uno o más elementos no se encontraron en el DOM.");
+  // En A/B/C la ausencia del banner es esperada, no un error.
+  console.warn("Banner no presente: animación del camión omitida (variante sin banner).");
+}
+
+// Burbuja de WhatsApp (#wapp): aparece en TODAS las variantes, independiente
+// de la animación del banner. Se renderiza con opacity:0 en whatsapp_bubble.html.
+const wapp = document.getElementById("wapp");
+if (wapp) {
+  wapp.style.transition = "opacity 1s ease-in-out, transform 1s ease-in-out";
+  window.setTimeout(() => {
+    wapp.style.opacity = "1";
+    wapp.style.transform = "translateY(0)";
+  }, 2000);
 }

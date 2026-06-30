@@ -1,5 +1,25 @@
 @import "tailwindcss";
 @theme {
+  /* Tipografías del rediseño (sitio público):
+     - font-display → títulos (Fredoka)
+     - font-script  → wordmark "Santa Cruz" (Pacifico)
+     El cuerpo sigue en Nunito (ver @layer base). */
+  --font-display: "Fredoka", "Nunito", system-ui, sans-serif;
+  --font-script: "Pacifico", cursive;
+
+  /* ── Paleta del rediseño "Pozos Santa Cruz" (sitio público) ───────────────
+     El tema DaisyUI "claro" ya define base/primary/accent/etc. Estos son los
+     colores de apoyo recurrentes, disponibles como utilidades:
+       bg-band / text-ink / bg-sun / text-whatsapp, etc. */
+  --color-cream: #FBF6EC;      /* fondo crema (= base-100) */
+  --color-band: #EAF6EC;       /* banda suave de sección (verde muy claro) */
+  --color-ink: #1C2A1F;        /* texto de títulos (verde casi negro) */
+  --color-sun: #FFF3D6;        /* tiles / acentos cálidos (amarillo claro) */
+  --color-brand: #2FA24E;      /* verde de marca (= primary) */
+  --color-brand-dark: #1E7A3C; /* verde oscuro (= accent) */
+  --color-whatsapp: #25D366;   /* verde WhatsApp */
+  --color-night: #16271B;      /* verde noche del footer (= neutral) */
+
   /* Colores de estado de clientes */
   --color-status-prg: #2196F3;
   --color-status-eje: #43A047;
@@ -31,10 +51,44 @@
 @source "../../maps/src/index-maps-admin.ts"; */
 
 @plugin "daisyui";
+
+/* ── Tema CLARO: sitio público (cálido, amigable, accesible) ───────────────
+   Paleta del rediseño "Pozos Santa Cruz": fondo crema (#FBF6EC) + verde de
+   marca (#2FA24E). Las tarjetas usan bg-white explícito y las bandas suaves
+   bg-[#EAF6EC] directamente en las plantillas. */
+@plugin "daisyui/theme" {
+  name: "claro";
+  default: true;
+  prefersdark: false;
+  color-scheme: "light";
+  /* Crema cálido del diseño */
+  --color-base-100: #FBF6EC;
+  --color-base-200: #F3EDDF;
+  --color-base-300: #ECE7DA;
+  --color-base-content: #2A2A24;
+  --color-primary: #2FA24E;
+  --color-primary-content: #ffffff;
+  --color-secondary: #FF4444;
+  --color-secondary-content: oklch(99% 0.01 20);
+  --color-accent: #1E7A3C;
+  --color-accent-content: #ffffff;
+  --color-neutral: #16271b;
+  --color-neutral-content: oklch(98% 0.01 160);
+  --color-info: oklch(55% 0.13 233);
+  --color-info-content: oklch(98% 0.01 233);
+  --color-success: #2FA24E;
+  --color-success-content: #ffffff;
+  --color-warning: #E0A100;
+  --color-warning-content: #ffffff;
+  --color-error: oklch(58% 0.20 25);
+  --color-error-content: oklch(99% 0.01 25);
+}
+
+/* ── Tema OSCURO: panel admin / flota (herramienta operativa) ──────────── */
 @plugin "daisyui/theme" {
   name: "dark";
-  default: true;
-  prefersdark: true;
+  default: false;
+  prefersdark: false;
   color-scheme: "dark";
   --color-base-100: oklch(25.33% 0.016 252.42);
   --color-base-200: oklch(23.26% 0.014 253.1);
@@ -134,7 +188,14 @@
   }
   
   .scrolled {
-    @apply md:bg-primary 
+    @apply md:bg-primary;
+  }
+  /* Al hacer scroll el nav se vuelve verde → texto y logo pasan a color claro (solo desktop) */
+  @media (min-width: 768px) {
+    .scrolled,
+    .scrolled a {
+      color: var(--color-primary-content);
+    }
   }
   .puntos {
     @apply ml-2 inline-block border-black border w-4 h-4 text-center rounded-full;

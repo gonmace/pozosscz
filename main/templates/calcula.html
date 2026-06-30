@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static vstatic %}
 
 {% block head %}
 <script type="application/ld+json">
@@ -33,248 +33,220 @@
 </script>
 {% endblock %}
 
-{% block body_class %}bg-base-100{% endblock %}
+{% block body_class %}bg-band{% endblock %}
 
 {% block content %}
 <main>
-    <!-- Header -->
-    <nav class="w-full fixed z-50 rounded-2xl left-1/2 transform -translate-x-1/2">
-        {% include 'components/header.html' with class_nav='max-w-7xl mx-auto rounded-2xl' %}
-    </nav>
+    {% include 'components/header_publico.html' %}
 
-    <!-- Hero -->
-    <div class="bg-primary pt-24 pb-12 px-4 text-center">
-        <h1 class="text-3xl sm:text-4xl font-bold text-primary-content mb-3">Calculadoras de Pozos Sépticos</h1>
-        <p class="text-primary-content/80 text-base sm:text-lg max-w-xl mx-auto">
-            Herramientas gratuitas para conocer la capacidad de tu pozo o calcular las dimensiones que necesitás.
+    <!-- Hero / título -->
+    <section class="max-w-[1140px] mx-auto px-6 pt-14 pb-8 text-center">
+        <span class="inline-flex items-center gap-2 bg-white text-accent font-bold text-[13.5px] px-3.5 py-1.5 rounded-full shadow-sm">
+            <i class="ph-fill ph-calculator" aria-hidden="true"></i> Herramientas gratuitas
+        </span>
+        <h1 class="font-display font-medium text-[34px] sm:text-[44px] leading-tight tracking-tight mt-4 text-ink">Calculadoras de Pozos Sépticos</h1>
+        <p class="text-lg text-base-content/60 mt-3 max-w-xl mx-auto">
+            Conocé la capacidad de tu pozo o calculá las dimensiones que necesitás.
         </p>
-    </div>
+    </section>
 
-    <div class="max-w-6xl mx-auto px-4 py-10">
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="max-w-6xl mx-auto px-6 pb-12">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
 
             <!-- Calculadora de Capacidad -->
-            <div class="card bg-base-200 shadow-xl">
-                <div class="card-body">
-                    <h2 class="card-title text-xl sm:text-2xl mb-1">
-                        <i class="fas fa-ruler-vertical text-primary"></i>
-                        Calcular capacidad
-                    </h2>
-                    <p class="text-sm opacity-70 mb-4">Ingresá las medidas de tu pozo para conocer su volumen.</p>
-
-                    <form id="calculaForm" class="space-y-5" aria-label="Formulario para calcular la capacidad del pozo séptico">
-                        <!-- Diámetro -->
-                        <div>
-                            <label for="diametro" class="label">
-                                <span class="label-text font-semibold">Diámetro del pozo (metros)</span>
-                            </label>
-                            <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
-                                <input
-                                    type="number"
-                                    id="diametro"
-                                    name="diametro"
-                                    step="0.01"
-                                    min="0.1"
-                                    placeholder="Ej: 1.5"
-                                    class="input input-bordered input-primary w-full"
-                                    required
-                                />
-                                <div class="shrink-0 w-full sm:w-36">
-                                    <div class="bg-base-300 rounded-lg p-2">
-                                        <p class="text-xs font-medium opacity-70 mb-1 text-center">Diámetro</p>
-                                        <svg viewBox="0 0 200 100" class="w-full h-auto">
-                                            <circle cx="100" cy="50" r="35" fill="none" stroke="#1f8e43" stroke-width="2.5"/>
-                                            <line x1="65" y1="50" x2="135" y2="50" stroke="#FF4444" stroke-width="2" stroke-dasharray="4,4"/>
-                                            <text x="100" y="30" text-anchor="middle" font-size="10" fill="#9ca3af" font-weight="600">Diámetro</text>
-                                            <path d="M 65 50 L 60 45 M 65 50 L 60 55" stroke="#FF4444" stroke-width="2" fill="none"/>
-                                            <path d="M 135 50 L 140 45 M 135 50 L 140 55" stroke="#FF4444" stroke-width="2" fill="none"/>
-                                        </svg>
-                                        <p class="text-xs opacity-60 text-center mt-1">De lado a lado</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Profundidad -->
-                        <div>
-                            <label for="profundidad" class="label">
-                                <span class="label-text font-semibold">Profundidad del pozo (metros)</span>
-                            </label>
-                            <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
-                                <input
-                                    type="number"
-                                    id="profundidad"
-                                    name="profundidad"
-                                    step="0.01"
-                                    min="0.1"
-                                    placeholder="Ej: 2.5"
-                                    class="input input-bordered input-primary w-full"
-                                    required
-                                />
-                                <div class="shrink-0 w-full sm:w-36">
-                                    <div class="bg-base-300 rounded-lg p-2">
-                                        <p class="text-xs font-medium opacity-70 mb-1 text-center">Profundidad</p>
-                                        <svg viewBox="0 0 200 140" class="w-full h-auto">
-                                            <rect x="80" y="15" width="35" height="100" fill="none" stroke="#1f8e43" stroke-width="2.5"/>
-                                            <line x1="115" y1="15" x2="115" y2="115" stroke="#FF4444" stroke-width="2" stroke-dasharray="4,4"/>
-                                            <text x="148" y="65" text-anchor="middle" font-size="9" fill="#9ca3af" font-weight="600">Profundidad</text>
-                                            <path d="M 115 15 L 110 20 M 115 15 L 120 20" stroke="#FF4444" stroke-width="2" fill="none"/>
-                                            <path d="M 115 115 L 110 110 M 115 115 L 120 110" stroke="#FF4444" stroke-width="2" fill="none"/>
-                                            <line x1="70" y1="115" x2="130" y2="115" stroke="#8B4513" stroke-width="3"/>
-                                            <text x="100" y="130" text-anchor="middle" font-size="9" fill="#9ca3af">Suelo</text>
-                                        </svg>
-                                        <p class="text-xs opacity-60 text-center mt-1">Desde la superficie</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="card-actions justify-center pt-2">
-                            <button type="submit" class="btn btn-primary px-8 w-full sm:w-auto">
-                                <i class="fas fa-calculator mr-2"></i> Calcular capacidad
-                            </button>
-                        </div>
-                    </form>
-
-                    <!-- Resultado capacidad -->
-                    <section id="resultado" class="mt-6 hidden" aria-live="polite">
-                        <div class="divider">Resultado</div>
-                        <div class="grid grid-cols-2 gap-3 text-center">
-                            <div class="bg-base-300 rounded-xl p-4">
-                                <p class="text-xs opacity-60 mb-1">Volumen</p>
-                                <p id="capacidad" class="text-2xl font-bold text-primary"></p>
-                                <p class="text-xs opacity-50 mt-1">m³</p>
-                            </div>
-                            <div class="bg-base-300 rounded-xl p-4">
-                                <p class="text-xs opacity-60 mb-1">Capacidad</p>
-                                <p id="capacidadLitros" class="text-2xl font-bold text-primary"></p>
-                                <p class="text-xs opacity-50 mt-1">litros</p>
-                            </div>
-                        </div>
-                        <p class="text-xs opacity-50 text-center mt-3">
-                            Fórmula: V = π × (Diámetro ÷ 2)² × Profundidad
-                        </p>
-                    </section>
+            <div class="bg-white border border-base-300 rounded-[22px] p-6 sm:p-7 shadow-[0_8px_22px_rgba(30,60,30,.06)]">
+                <div class="flex items-center gap-3 mb-1">
+                    <span class="w-11 h-11 rounded-[14px] bg-band flex items-center justify-center flex-shrink-0"><i class="ph-fill ph-ruler text-primary text-2xl" aria-hidden="true"></i></span>
+                    <h2 class="font-display font-medium text-[22px] text-ink">Calcular capacidad</h2>
                 </div>
+                <p class="text-[14.5px] text-base-content/50 mb-4">Ingresa las medidas de tu pozo para conocer su volumen.</p>
+
+                <form id="calculaForm" class="space-y-5" aria-label="Formulario para calcular la capacidad del pozo séptico">
+                    <!-- Diámetro -->
+                    <div>
+                        <label for="diametro" class="label">
+                            <span class="label-text font-semibold">Diámetro del pozo (metros)</span>
+                        </label>
+                        <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+                            <input type="number" id="diametro" name="diametro" step="0.01" min="0.1" placeholder="Ej: 1.5" class="input input-bordered w-full focus:input-primary" required />
+                            <div class="shrink-0 w-full sm:w-36">
+                                <div class="bg-base-200 border border-base-300 rounded-[14px] p-2">
+                                    <p class="text-xs font-medium opacity-70 mb-1 text-center">Diámetro</p>
+                                    <svg viewBox="0 0 200 100" class="w-full h-auto">
+                                        <circle cx="100" cy="50" r="35" fill="none" stroke="#2FA24E" stroke-width="2.5"/>
+                                        <line x1="65" y1="50" x2="135" y2="50" stroke="#f59e0b" stroke-width="2" stroke-dasharray="4,4"/>
+                                        <text x="100" y="30" text-anchor="middle" font-size="10" fill="currentColor" font-weight="600">Diámetro</text>
+                                        <path d="M 65 50 L 60 45 M 65 50 L 60 55" stroke="#f59e0b" stroke-width="2" fill="none"/>
+                                        <path d="M 135 50 L 140 45 M 135 50 L 140 55" stroke="#f59e0b" stroke-width="2" fill="none"/>
+                                    </svg>
+                                    <p class="text-xs opacity-60 text-center mt-1">De lado a lado</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Profundidad -->
+                    <div>
+                        <label for="profundidad" class="label">
+                            <span class="label-text font-semibold">Profundidad del pozo (metros)</span>
+                        </label>
+                        <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+                            <input type="number" id="profundidad" name="profundidad" step="0.01" min="0.1" placeholder="Ej: 2.5" class="input input-bordered w-full focus:input-primary" required />
+                            <div class="shrink-0 w-full sm:w-36">
+                                <div class="bg-base-200 border border-base-300 rounded-[14px] p-2">
+                                    <p class="text-xs font-medium opacity-70 mb-1 text-center">Profundidad</p>
+                                    <svg viewBox="0 0 200 140" class="w-full h-auto">
+                                        <rect x="80" y="15" width="35" height="100" fill="none" stroke="#2FA24E" stroke-width="2.5"/>
+                                        <line x1="115" y1="15" x2="115" y2="115" stroke="#f59e0b" stroke-width="2" stroke-dasharray="4,4"/>
+                                        <text x="148" y="65" text-anchor="middle" font-size="9" fill="currentColor" font-weight="600">Profundidad</text>
+                                        <path d="M 115 15 L 110 20 M 115 15 L 120 20" stroke="#f59e0b" stroke-width="2" fill="none"/>
+                                        <path d="M 115 115 L 110 110 M 115 115 L 120 110" stroke="#f59e0b" stroke-width="2" fill="none"/>
+                                        <line x1="70" y1="115" x2="130" y2="115" stroke="#8B4513" stroke-width="3"/>
+                                        <text x="100" y="130" text-anchor="middle" font-size="9" fill="currentColor">Suelo</text>
+                                    </svg>
+                                    <p class="text-xs opacity-60 text-center mt-1">Desde la superficie</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-center pt-2">
+                        <button type="submit" class="inline-flex items-center justify-center gap-2.5 bg-primary text-primary-content px-7 py-3.5 rounded-full font-display font-semibold text-[16px] shadow-[0_9px_20px_rgba(47,162,78,.3)] hover:brightness-105 transition w-full sm:w-auto">
+                            <i class="ph-fill ph-calculator" aria-hidden="true"></i> Calcular capacidad
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Resultado capacidad -->
+                <section id="resultado" class="mt-6 hidden" aria-live="polite">
+                    <div class="divider text-base-content/40">Resultado</div>
+                    <div class="grid grid-cols-2 gap-3 text-center">
+                        <div class="bg-band rounded-[14px] p-4">
+                            <p class="text-xs text-base-content/50 mb-1">Volumen</p>
+                            <p id="capacidad" class="font-display text-[28px] text-accent"></p>
+                            <p class="text-xs text-base-content/40 mt-1">m³</p>
+                        </div>
+                        <div class="bg-band rounded-[14px] p-4">
+                            <p class="text-xs text-base-content/50 mb-1">Capacidad</p>
+                            <p id="capacidadLitros" class="font-display text-[28px] text-accent"></p>
+                            <p class="text-xs text-base-content/40 mt-1">litros</p>
+                        </div>
+                    </div>
+                    <p class="text-xs text-base-content/40 text-center mt-3">
+                        Fórmula: V = π × (Diámetro ÷ 2)² × Profundidad
+                    </p>
+                </section>
             </div>
 
             <!-- Calculadora de Dimensiones -->
-            <div class="card bg-base-200 shadow-xl">
-                <div class="card-body">
-                    <h2 class="card-title text-xl sm:text-2xl mb-1">
-                        <i class="fas fa-drafting-compass text-primary"></i>
-                        Dimensionar pozo
-                    </h2>
-                    <p class="text-sm opacity-70 mb-4">Calculá la profundidad necesaria según el número de personas.</p>
-
-                    <form id="dimensionaForm" class="space-y-5" aria-label="Formulario para calcular las dimensiones recomendadas del pozo séptico">
-                        <div>
-                            <label for="personas" class="label">
-                                <span class="label-text font-semibold">Número de personas</span>
-                            </label>
-                            <input
-                                type="number"
-                                id="personas"
-                                name="personas"
-                                step="1"
-                                min="1"
-                                max="50"
-                                placeholder="Ej: 5"
-                                class="input input-bordered input-primary w-full"
-                                required
-                            />
-                        </div>
-
-                        <div>
-                            <label for="diametroDimensiones" class="label">
-                                <span class="label-text font-semibold">Diámetro del pozo (metros)</span>
-                            </label>
-                            <input
-                                type="number"
-                                id="diametroDimensiones"
-                                name="diametroDimensiones"
-                                step="0.1"
-                                min="0.5"
-                                max="5"
-                                value="1"
-                                placeholder="Ej: 1"
-                                class="input input-bordered input-primary w-full"
-                                required
-                            />
-                        </div>
-
-                        <div>
-                            <label for="aniosLimpieza" class="label">
-                                <span class="label-text font-semibold">Años entre limpiezas</span>
-                            </label>
-                            <input
-                                type="number"
-                                id="aniosLimpieza"
-                                name="aniosLimpieza"
-                                step="0.5"
-                                min="1"
-                                max="10"
-                                value="4"
-                                placeholder="Ej: 4"
-                                class="input input-bordered input-primary w-full"
-                                required
-                            />
-                        </div>
-
-                        <div class="card-actions justify-center pt-2">
-                            <button type="submit" class="btn btn-primary px-8 w-full sm:w-auto">
-                                <i class="fas fa-calculator mr-2"></i> Calcular dimensiones
-                            </button>
-                        </div>
-                    </form>
-
-                    <!-- Resultado dimensiones -->
-                    <section id="resultadoDimensiones" class="mt-6 hidden" aria-live="polite">
-                        <div class="divider">Resultado</div>
-                        <div class="grid grid-cols-2 gap-3 text-center mb-3">
-                            <div class="bg-base-300 rounded-xl p-4">
-                                <p class="text-xs opacity-60 mb-1">Profundidad útil</p>
-                                <p id="profundidadUtil" class="text-2xl font-bold text-primary"></p>
-                                <p class="text-xs opacity-50 mt-1">metros</p>
-                            </div>
-                            <div class="bg-base-300 rounded-xl p-4">
-                                <p class="text-xs opacity-60 mb-1">Profundidad total</p>
-                                <p id="profundidadTotal" class="text-2xl font-bold text-primary"></p>
-                                <p class="text-xs opacity-50 mt-1">metros</p>
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-2 gap-3 text-center">
-                            <div class="bg-base-300 rounded-xl p-4">
-                                <p class="text-xs opacity-60 mb-1">Volumen total</p>
-                                <p id="volumenTotal" class="text-2xl font-bold text-primary"></p>
-                                <p class="text-xs opacity-50 mt-1">m³</p>
-                            </div>
-                            <div class="bg-base-300 rounded-xl p-4">
-                                <p class="text-xs opacity-60 mb-1">Capacidad</p>
-                                <p id="capacidadDimensiones" class="text-2xl font-bold text-primary"></p>
-                                <p class="text-xs opacity-50 mt-1">litros</p>
-                            </div>
-                        </div>
-                        <p class="text-xs opacity-50 text-center mt-3">
-                            Parámetros: 180 L/persona/día · 45 L/persona/año de lodo
-                        </p>
-                        <div class="alert alert-warning mt-4 text-sm">
-                            <i class="fas fa-triangle-exclamation shrink-0"></i>
-                            <span>Los resultados son <strong>teóricos</strong>. La profundidad también depende del tipo de suelo — es necesario llegar a un suelo arenoso filtrante para el correcto funcionamiento.</span>
-                        </div>
-                    </section>
+            <div class="bg-white border border-base-300 rounded-[22px] p-6 sm:p-7 shadow-[0_8px_22px_rgba(30,60,30,.06)]">
+                <div class="flex items-center gap-3 mb-1">
+                    <span class="w-11 h-11 rounded-[14px] bg-band flex items-center justify-center flex-shrink-0"><i class="ph-fill ph-compass-tool text-primary text-2xl" aria-hidden="true"></i></span>
+                    <h2 class="font-display font-medium text-[22px] text-ink">Dimensionar pozo</h2>
                 </div>
+                <p class="text-[14.5px] text-base-content/50 mb-4">Calcula la profundidad necesaria según el número de personas.</p>
+
+                <form id="dimensionaForm" class="space-y-5" aria-label="Formulario para calcular las dimensiones recomendadas del pozo séptico">
+                    <div>
+                        <label for="personas" class="label">
+                            <span class="label-text font-semibold">Número de personas</span>
+                        </label>
+                        <input type="number" id="personas" name="personas" step="1" min="1" max="50" placeholder="Ej: 5" class="input input-bordered w-full focus:input-primary" required />
+                    </div>
+
+                    <div>
+                        <label for="diametroDimensiones" class="label">
+                            <span class="label-text font-semibold">Diámetro del pozo (metros)</span>
+                        </label>
+                        <input type="number" id="diametroDimensiones" name="diametroDimensiones" step="0.1" min="0.5" max="5" value="1" placeholder="Ej: 1" class="input input-bordered w-full focus:input-primary" required />
+                    </div>
+
+                    <div>
+                        <label for="aniosLimpieza" class="label">
+                            <span class="label-text font-semibold">Años entre limpiezas</span>
+                        </label>
+                        <input type="number" id="aniosLimpieza" name="aniosLimpieza" step="0.5" min="1" max="10" value="4" placeholder="Ej: 4" class="input input-bordered w-full focus:input-primary" required />
+                    </div>
+
+                    <div class="flex justify-center pt-2">
+                        <button type="submit" class="inline-flex items-center justify-center gap-2.5 bg-primary text-primary-content px-7 py-3.5 rounded-full font-display font-semibold text-[16px] shadow-[0_9px_20px_rgba(47,162,78,.3)] hover:brightness-105 transition w-full sm:w-auto">
+                            <i class="ph-fill ph-calculator" aria-hidden="true"></i> Calcular dimensiones
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Resultado dimensiones -->
+                <section id="resultadoDimensiones" class="mt-6 hidden" aria-live="polite">
+                    <div class="divider text-base-content/40">Resultado</div>
+                    <div class="grid grid-cols-2 gap-3 text-center mb-3">
+                        <div class="bg-band rounded-[14px] p-4">
+                            <p class="text-xs text-base-content/50 mb-1">Profundidad útil</p>
+                            <p id="profundidadUtil" class="font-display text-[28px] text-accent"></p>
+                            <p class="text-xs text-base-content/40 mt-1">metros</p>
+                        </div>
+                        <div class="bg-band rounded-[14px] p-4">
+                            <p class="text-xs text-base-content/50 mb-1">Profundidad total</p>
+                            <p id="profundidadTotal" class="font-display text-[28px] text-accent"></p>
+                            <p class="text-xs text-base-content/40 mt-1">metros</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3 text-center">
+                        <div class="bg-band rounded-[14px] p-4">
+                            <p class="text-xs text-base-content/50 mb-1">Volumen total</p>
+                            <p id="volumenTotal" class="font-display text-[28px] text-accent"></p>
+                            <p class="text-xs text-base-content/40 mt-1">m³</p>
+                        </div>
+                        <div class="bg-band rounded-[14px] p-4">
+                            <p class="text-xs text-base-content/50 mb-1">Capacidad</p>
+                            <p id="capacidadDimensiones" class="font-display text-[28px] text-accent"></p>
+                            <p class="text-xs text-base-content/40 mt-1">litros</p>
+                        </div>
+                    </div>
+                    <p class="text-xs text-base-content/40 text-center mt-3">
+                        Parámetros: 180 L/persona/día · 45 L/persona/año de lodo
+                    </p>
+                    <div class="flex items-start gap-2.5 rounded-[14px] bg-sun text-[#5a4200] px-4 py-3 mt-4 text-[14px]">
+                        <i class="ph-fill ph-warning text-lg shrink-0 mt-0.5" aria-hidden="true"></i>
+                        <span>Los resultados son <strong>teóricos</strong>. La profundidad también depende del tipo de suelo — es necesario llegar a un suelo arenoso filtrante para el correcto funcionamiento.</span>
+                    </div>
+                </section>
             </div>
 
         </div>
 
-        <!-- CTA -->
-        <section class="py-10 px-6 text-center bg-primary rounded-2xl mt-10 mb-4">
-            <h2 class="text-xl sm:text-2xl font-bold text-primary-content mb-2">¿Ya sabés lo que necesitás?</h2>
-            <p class="text-primary-content/80 mb-6 text-sm sm:text-base">Cotizá el servicio de limpieza online en 30 segundos.</p>
-            <a href="{% url 'cotiza' %}" class="btn btn-lg bg-white text-primary hover:bg-base-200 shadow-xl w-full sm:w-auto">
-                Ver mi precio ahora
-            </a>
+        <!-- Nuestros servicios -->
+        <section class="mt-12">
+            <h2 class="font-display font-medium text-[28px] sm:text-[32px] text-ink text-center mb-8">Servicios de limpieza en Santa Cruz</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-5 items-start">
+                <a href="{% url 'servicio_pozo_ciego' %}" class="group bg-white border border-base-300 rounded-[22px] p-7 shadow-[0_8px_20px_rgba(30,60,30,.05)] hover:border-primary transition-colors">
+                    <span class="w-[54px] h-[54px] rounded-[16px] bg-band flex items-center justify-center mb-4"><i class="ph-fill ph-drop text-[28px] text-primary" aria-hidden="true"></i></span>
+                    <h3 class="font-display font-medium text-[20px] text-ink mb-2">Pozos ciegos</h3>
+                    <p class="text-[15px] leading-relaxed text-base-content/50 mb-4.5">Desagote y vaciado de pozos ciegos en Santa Cruz y alrededores.</p>
+                    <span class="inline-flex items-center gap-1.5 text-accent font-display font-semibold text-[15.5px]">Ver servicio <i class="ph-bold ph-arrow-right transition-transform group-hover:translate-x-1" aria-hidden="true"></i></span>
+                </a>
+                <a href="{% url 'servicio_pozos_septicos' %}" class="group relative bg-white border-2 border-primary rounded-[22px] p-7 shadow-[0_16px_34px_rgba(47,162,78,.16)] transition-colors">
+                    <span class="absolute -top-3 left-7 bg-[#FFC53D] text-[#5a4200] font-display font-semibold text-[12.5px] tracking-wide px-3 py-1.5 rounded-full shadow-[0_4px_10px_rgba(255,197,61,.4)]">★ MÁS PEDIDO</span>
+                    <span class="w-[54px] h-[54px] rounded-[16px] bg-primary flex items-center justify-center mb-4"><i class="ph-fill ph-house-line text-[28px] text-white" aria-hidden="true"></i></span>
+                    <h3 class="font-display font-medium text-[20px] text-ink mb-2">Pozos sépticos</h3>
+                    <p class="text-[15px] leading-relaxed text-base-content/60 mb-4.5">Limpieza de pozos sépticos para hogares, condominios y empresas.</p>
+                    <span class="inline-flex items-center gap-1.5 text-accent font-display font-semibold text-[15.5px]">Ver servicio <i class="ph-bold ph-arrow-right transition-transform group-hover:translate-x-1" aria-hidden="true"></i></span>
+                </a>
+                <a href="{% url 'servicio_camaras_septicas' %}" class="group bg-white border border-base-300 rounded-[22px] p-7 shadow-[0_8px_20px_rgba(30,60,30,.05)] hover:border-primary transition-colors">
+                    <span class="w-[54px] h-[54px] rounded-[16px] bg-band flex items-center justify-center mb-4"><i class="ph-fill ph-flow-arrow text-[28px] text-primary" aria-hidden="true"></i></span>
+                    <h3 class="font-display font-medium text-[20px] text-ink mb-2">Cámaras sépticas</h3>
+                    <p class="text-[15px] leading-relaxed text-base-content/50 mb-4.5">Desagote y limpieza de cámaras sépticas y destrancado de cañerías.</p>
+                    <span class="inline-flex items-center gap-1.5 text-accent font-display font-semibold text-[15.5px]">Ver servicio <i class="ph-bold ph-arrow-right transition-transform group-hover:translate-x-1" aria-hidden="true"></i></span>
+                </a>
+            </div>
+        </section>
+
+        <!-- CTA Final -->
+        <section class="mt-12">
+            <div class="rounded-[30px] p-10 sm:p-12 text-center relative overflow-hidden" style="background:linear-gradient(120deg,#2FA24E 0%,#1E7A3C 100%);">
+                <h2 class="font-display font-medium text-[28px] sm:text-[34px] text-white tracking-tight">¿Ya sabes lo que necesitas?</h2>
+                <p class="text-lg text-[#e3f5e7] mt-3 mb-6 max-w-[480px] mx-auto">Cotiza el servicio de limpieza online en 30 segundos.</p>
+                <a href="{% url 'cotiza' %}" class="inline-flex items-center gap-2.5 bg-white text-accent px-7 py-4 rounded-full font-display font-semibold text-[18px] shadow-[0_10px_22px_rgba(0,0,0,.16)] hover:bg-base-200 transition"><i class="ph-fill ph-calculator" aria-hidden="true"></i> Ver mi precio ahora</a>
+            </div>
         </section>
     </div>
 
@@ -286,13 +258,14 @@
 {% endblock %}
 
 {% block js %}
+<script src="{% vstatic 'js/main.js' %}"></script>
 <script>
 document.getElementById('calculaForm').addEventListener('submit', function(e) {
     e.preventDefault();
     const diametro = parseFloat(document.getElementById('diametro').value);
     const profundidad = parseFloat(document.getElementById('profundidad').value);
     if (isNaN(diametro) || isNaN(profundidad) || diametro <= 0 || profundidad <= 0) {
-        alert('Por favor, ingresá valores válidos mayores a cero.');
+        alert('Por favor, ingresa valores válidos mayores a cero.');
         return;
     }
     const radio = diametro / 2;
@@ -311,7 +284,7 @@ document.getElementById('dimensionaForm').addEventListener('submit', function(e)
     const diametro = parseFloat(document.getElementById('diametroDimensiones').value);
     const aniosLimpieza = parseFloat(document.getElementById('aniosLimpieza').value);
     if (isNaN(personas) || isNaN(diametro) || isNaN(aniosLimpieza) || personas <= 0 || diametro <= 0 || aniosLimpieza <= 0) {
-        alert('Por favor, ingresá valores válidos mayores a cero.');
+        alert('Por favor, ingresa valores válidos mayores a cero.');
         return;
     }
     const volumenAguasServidas = (personas * 180 * 1) / 1000;

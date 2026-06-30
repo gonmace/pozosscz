@@ -4,10 +4,23 @@ from datetime import datetime
 
 
 class DatosGenerales(SingletonModel):
+    HERO_VARIANT_CHOICES = [
+        ('A', 'A — Rediseño (card de cotización)'),
+        ('D', 'D — Banner animado (versión anterior)'),
+    ]
+
     celular = models.CharField(
         "Teléfono Celular", max_length=12, default="+59171011118"
     )
-    
+
+    hero_variant = models.CharField(
+        "Variante del inicio (hero)",
+        max_length=1,
+        choices=HERO_VARIANT_CHOICES,
+        default='A',
+        help_text="Versión del hero de la página de inicio que ve el público."
+    )
+
     correo = models.EmailField(
         "Correo Electrónico", max_length=100, default="info@pozosscz.com"
     )

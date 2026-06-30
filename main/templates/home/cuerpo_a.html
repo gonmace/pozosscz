@@ -1,0 +1,214 @@
+{% comment %}
+Cuerpo de la VARIANTE A (rediseño). Independiente de la D — editar acá no afecta a D.
+{% endcomment %}
+
+
+<!-- Hero A — split + card de cotización -->
+<section data-screen-label="Hero A" class="relative overflow-hidden">
+  <div class="max-w-[1140px] mx-auto px-6 pt-16 pb-14 grid grid-cols-1 lg:grid-cols-[1.05fr_.95fr] gap-12 items-center">
+    <div>
+      <span class="inline-flex items-center gap-2 bg-band text-accent font-bold text-[13.5px] px-3.5 py-1.5 rounded-full">
+        <i class="ph-fill ph-map-pin" aria-hidden="true"></i> Servicio local en Santa Cruz y alrededores
+      </span>
+      <h1 class="font-display font-medium text-[44px] sm:text-[55px] leading-[1.04] tracking-tight mt-4 text-ink">
+        Tu pozo limpio,<br><span class="text-primary">hoy mismo.</span>
+      </h1>
+      <p class="text-lg sm:text-xl leading-relaxed text-base-content/70 mt-4 mb-7 max-w-[480px]">
+        Limpieza de pozos sépticos rápida y prolija, al precio justo. Cotiza online en 30 segundos —
+        <strong class="text-base-content">sin llamadas ni regateo.</strong>
+      </p>
+      <div class="flex flex-wrap gap-x-5 gap-y-2.5 mt-2 text-[14.5px] font-semibold text-base-content/70">
+        <span class="inline-flex items-center gap-2"><i class="ph-fill ph-check-circle text-primary text-lg" aria-hidden="true"></i> Precio fijo, sin sorpresas</span>
+        <span class="inline-flex items-center gap-2"><i class="ph-fill ph-clock text-primary text-lg" aria-hidden="true"></i> El mismo día</span>
+        <span class="inline-flex items-center gap-2"><i class="ph-fill ph-leaf text-primary text-lg" aria-hidden="true"></i> Disposición ecológica</span>
+      </div>
+    </div>
+    {% include 'components/card_cotiza.html' %}
+  </div>
+</section>
+
+<!-- Prueba real: números de la empresa -->
+<section class="bg-band">
+  <div class="max-w-[1140px] mx-auto px-6 py-10">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4.5">
+    <div class="bg-white border border-base-300 rounded-[20px] p-6 flex items-center gap-4 shadow-[0_6px_18px_rgba(30,60,30,.05)]">
+      <span class="w-[54px] h-[54px] rounded-[16px] bg-band flex items-center justify-center shrink-0"><i class="ph-fill ph-users-three text-[28px] text-primary" aria-hidden="true"></i></span>
+      <span class="flex flex-col leading-tight"><strong class="font-display font-medium text-[30px] text-ink">{{ total_clientes }}</strong><span class="text-base-content/50 font-semibold text-[14.5px]">Clientes atendidos</span></span>
+    </div>
+    <div class="bg-white border border-base-300 rounded-[20px] p-6 flex items-center gap-4 shadow-[0_6px_18px_rgba(30,60,30,.05)]">
+      <span class="w-[54px] h-[54px] rounded-[16px] bg-sun flex items-center justify-center shrink-0"><i class="ph-fill ph-medal text-[28px] text-warning" aria-hidden="true"></i></span>
+      <span class="flex flex-col leading-tight"><strong class="font-display font-medium text-[30px] text-ink">{{ años_experiencia }}+</strong><span class="text-base-content/50 font-semibold text-[14.5px]">Años de experiencia</span></span>
+    </div>
+    <div class="bg-white border border-base-300 rounded-[20px] p-6 flex items-center gap-4 shadow-[0_6px_18px_rgba(30,60,30,.05)]">
+      <span class="w-[54px] h-[54px] rounded-[16px] bg-band flex items-center justify-center shrink-0"><i class="ph-fill ph-map-pin-area text-[28px] text-primary" aria-hidden="true"></i></span>
+      <span class="flex flex-col leading-tight"><strong class="font-display font-medium text-[30px] text-ink">100&nbsp;km</strong><span class="text-base-content/50 font-semibold text-[14.5px]">Radio de cobertura</span></span>
+    </div>
+    </div>
+
+    <!-- Banner pequeño (imagen + animación) — misma sección que las estadísticas -->
+    {% include 'components/banner_mini.html' %}
+  </div>
+</section>
+
+<!-- ¿Cómo funciona? -->
+<section id="funciona" class="max-w-[1140px] mx-auto px-6 py-12">
+  <div class="text-center mb-9">
+    <h2 class="font-display font-medium text-[34px] sm:text-[38px] text-ink">¿Cómo funciona?</h2>
+    <p class="text-lg text-base-content/50 mt-2.5">Tres pasos y listo. Más fácil imposible.</p>
+  </div>
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+    <div class="bg-white border border-base-300 rounded-[22px] p-7 text-center shadow-[0_8px_22px_rgba(30,60,30,.05)]">
+      <span class="w-[60px] h-[60px] rounded-[18px] bg-primary text-primary-content inline-flex items-center justify-center font-display text-[26px] font-semibold shadow-[0_8px_16px_rgba(47,162,78,.28)]">1</span>
+      <h3 class="font-display font-medium text-[21px] text-ink mt-4.5 mb-2">Cotiza en línea</h3>
+      <p class="text-[15.5px] leading-relaxed text-base-content/50">Ingresa tu dirección en el mapa y recibe tu precio al instante.</p>
+    </div>
+    <div class="bg-white border border-base-300 rounded-[22px] p-7 text-center shadow-[0_8px_22px_rgba(30,60,30,.05)]">
+      <span class="w-[60px] h-[60px] rounded-[18px] bg-primary text-primary-content inline-flex items-center justify-center font-display text-[26px] font-semibold shadow-[0_8px_16px_rgba(47,162,78,.28)]">2</span>
+      <h3 class="font-display font-medium text-[21px] text-ink mt-4.5 mb-2">Confirmas el servicio</h3>
+      <p class="text-[15.5px] leading-relaxed text-base-content/50">Eliges el día y horario que más te convenga. Sin compromiso.</p>
+    </div>
+    <div class="bg-white border border-base-300 rounded-[22px] p-7 text-center shadow-[0_8px_22px_rgba(30,60,30,.05)]">
+      <span class="w-[60px] h-[60px] rounded-[18px] bg-primary text-primary-content inline-flex items-center justify-center font-display text-[26px] font-semibold shadow-[0_8px_16px_rgba(47,162,78,.28)]">3</span>
+      <h3 class="font-display font-medium text-[21px] text-ink mt-4.5 mb-2">¡Listo!</h3>
+      <p class="text-[15.5px] leading-relaxed text-base-content/50">Nuestro equipo llega puntual y deja todo funcionando.</p>
+    </div>
+  </div>
+  <div class="text-center mt-8">
+    <a href="{% url 'cotiza' %}" class="inline-flex items-center gap-2.5 bg-primary text-primary-content px-7 py-3.5 rounded-full font-display font-semibold text-[17px] shadow-[0_9px_20px_rgba(47,162,78,.3)] hover:brightness-105 transition"><i class="ph-fill ph-calculator" aria-hidden="true"></i> Cotiza ahora — es gratis</a>
+  </div>
+</section>
+
+<!-- Querendones de nuestra tierra -->
+{% if alcances %}
+<section class="bg-band">
+  <div class="max-w-[1140px] mx-auto px-6 py-14">
+    <div class="text-center max-w-[640px] mx-auto mb-10">
+      <h2 class="font-display font-medium text-[32px] sm:text-[34px] text-ink">Querendones de nuestra tierra</h2>
+      <p class="text-lg leading-relaxed text-[#55695a] mt-3">Amamos a Santa Cruz y queremos verla limpia. Por eso hacemos las cosas bien: prolijo, puntual y al precio justo.</p>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4.5">
+      {% for alcance in alcances %}
+        {% include 'components/card_alcance.html' with titulo=alcance.titulo descripcion=alcance.descripcion svg=alcance.img_svg %}
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- Reaseguro: prevenir cuesta menos que reparar -->
+<section class="max-w-[1140px] mx-auto px-6 py-14">
+  <div class="rounded-[28px] p-10 sm:p-12 grid grid-cols-1 md:grid-cols-[1.4fr_1fr] gap-8 items-center overflow-hidden relative" style="background:linear-gradient(110deg,#2FA24E 0%,#1E7A3C 100%);">
+    <div>
+      <h2 class="font-display font-medium text-[28px] sm:text-[32px] text-white">Limpiar a tiempo te ahorra problemas</h2>
+      <p class="text-[17px] leading-relaxed text-[#e3f5e7] mt-3.5 mb-6 max-w-[480px]">
+        Un pozo con mantenimiento evita desbordes, malos olores y reparaciones caras. La limpieza preventiva cuesta una fracción de lo que sale arreglar un sistema dañado — y de paso cuida el suelo de tu zona.
+      </p>
+      <a href="{% url 'cotiza' %}" class="inline-flex items-center gap-2.5 bg-white text-accent px-6 py-3.5 rounded-full font-display font-semibold text-[17px] shadow-[0_8px_18px_rgba(0,0,0,.12)] hover:bg-base-200 transition"><i class="ph-fill ph-calculator" aria-hidden="true"></i> Ver mi precio ahora</a>
+    </div>
+    <div class="hidden md:flex justify-center"><i class="ph-fill ph-shield-check text-[150px] text-white/20" aria-hidden="true"></i></div>
+  </div>
+</section>
+
+<!-- Nuestros servicios -->
+<section id="servicios" class="bg-band">
+  <div class="max-w-[1140px] mx-auto px-6 py-14">
+  <div class="text-center mb-9">
+    <h2 class="font-display font-medium text-[34px] sm:text-[38px] text-ink">Limpieza de pozos sépticos y ciegos en Santa Cruz</h2>
+    <p class="text-lg text-base-content/50 mt-2.5">Elegí lo que necesitás. Te cotizamos al instante.</p>
+  </div>
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-5 items-start">
+    <a href="{% url 'servicio_pozo_ciego' %}" class="group bg-white border border-base-300 rounded-[22px] p-7 shadow-[0_8px_20px_rgba(30,60,30,.05)] hover:border-primary transition-colors">
+      <span class="w-[54px] h-[54px] rounded-[16px] bg-band flex items-center justify-center mb-4"><i class="ph-fill ph-drop text-[28px] text-primary" aria-hidden="true"></i></span>
+      <h3 class="font-display font-medium text-[22px] text-ink mb-2">Pozos ciegos</h3>
+      <p class="text-[15px] leading-relaxed text-base-content/50 mb-4.5">Desagote y vaciado de pozos ciegos en Santa Cruz y alrededores.</p>
+      <span class="inline-flex items-center gap-1.5 text-accent font-display font-semibold text-[15.5px]">Ver servicio <i class="ph-bold ph-arrow-right transition-transform group-hover:translate-x-1" aria-hidden="true"></i></span>
+    </a>
+    <a href="{% url 'servicio_pozos_septicos' %}" class="group relative bg-white border-2 border-primary rounded-[22px] p-7 shadow-[0_16px_34px_rgba(47,162,78,.16)] transition-colors">
+      <span class="absolute -top-3 left-7 bg-[#FFC53D] text-[#5a4200] font-display font-semibold text-[12.5px] tracking-wide px-3 py-1.5 rounded-full shadow-[0_4px_10px_rgba(255,197,61,.4)]">★ MÁS PEDIDO</span>
+      <span class="w-[54px] h-[54px] rounded-[16px] bg-primary flex items-center justify-center mb-4"><i class="ph-fill ph-house-line text-[28px] text-white" aria-hidden="true"></i></span>
+      <h3 class="font-display font-medium text-[22px] text-ink mb-2">Pozos sépticos</h3>
+      <p class="text-[15px] leading-relaxed text-base-content/60 mb-4.5">Limpieza de pozos sépticos para hogares, condominios y empresas.</p>
+      <span class="inline-flex items-center gap-1.5 text-accent font-display font-semibold text-[15.5px]">Ver servicio <i class="ph-bold ph-arrow-right transition-transform group-hover:translate-x-1" aria-hidden="true"></i></span>
+    </a>
+    <a href="{% url 'servicio_camaras_septicas' %}" class="group bg-white border border-base-300 rounded-[22px] p-7 shadow-[0_8px_20px_rgba(30,60,30,.05)] hover:border-primary transition-colors">
+      <span class="w-[54px] h-[54px] rounded-[16px] bg-band flex items-center justify-center mb-4"><i class="ph-fill ph-flow-arrow text-[28px] text-primary" aria-hidden="true"></i></span>
+      <h3 class="font-display font-medium text-[22px] text-ink mb-2">Cámaras sépticas</h3>
+      <p class="text-[15px] leading-relaxed text-base-content/50 mb-4.5">Desagote y limpieza de cámaras sépticas y destrancado de cañerías.</p>
+      <span class="inline-flex items-center gap-1.5 text-accent font-display font-semibold text-[15.5px]">Ver servicio <i class="ph-bold ph-arrow-right transition-transform group-hover:translate-x-1" aria-hidden="true"></i></span>
+    </a>
+  </div>
+  </div>
+</section>
+
+<!-- ¿A quiénes atendemos? -->
+{% if tipos_clientes %}
+<section class="max-w-[1140px] mx-auto px-6 pb-14">
+  <div class="text-center mb-9">
+    <h2 class="font-display font-medium text-[34px] sm:text-[38px] text-ink">¿A quiénes atendemos?</h2>
+    <p class="text-lg text-base-content/50 mt-2.5">Hogares y negocios de toda la ciudad confían en nosotros.</p>
+  </div>
+  <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+    {% for tipo_cliente in tipos_clientes %}
+      {% include 'components/tipo_clientes.html' with nombre=tipo_cliente.nombre svg=tipo_cliente.img_svg %}
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<!-- Testimonios -->
+{% if testimonios %}
+<section class="bg-band">
+  <div class="max-w-[1140px] mx-auto px-6 py-14">
+    <div class="text-center max-w-[640px] mx-auto mb-9">
+      <h2 class="font-display font-medium text-[34px] sm:text-[38px] text-ink">Lo que dicen nuestros clientes</h2>
+      <div class="inline-flex items-center gap-1.5 mt-3 text-warning text-xl" aria-label="Calificación 4.9 de 5">
+        <i class="ph-fill ph-star" aria-hidden="true"></i><i class="ph-fill ph-star" aria-hidden="true"></i><i class="ph-fill ph-star" aria-hidden="true"></i><i class="ph-fill ph-star" aria-hidden="true"></i><i class="ph-fill ph-star" aria-hidden="true"></i>
+        <span class="text-[#55695a] font-bold text-[15px] ml-1.5">4.9 · más de 2.000 servicios</span>
+      </div>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4.5">
+      {% for t in testimonios %}
+      <figure class="bg-white rounded-[20px] p-6.5 shadow-[0_8px_20px_rgba(30,60,30,.06)]">
+        <i class="ph-fill ph-quotes text-[28px] text-[#CFE8D5]" aria-hidden="true"></i>
+        <blockquote class="text-[16.5px] leading-relaxed text-base-content/80 mt-2.5 mb-4">{{ t.texto }}</blockquote>
+        <figcaption class="flex items-center gap-3">
+          <span class="w-10 h-10 rounded-full bg-band flex items-center justify-center font-display font-semibold text-primary">{{ t.nombre|first }}</span>
+          <span class="leading-tight"><strong class="text-[15px] text-ink">{{ t.nombre }}</strong>{% if t.lugar %}<span class="block text-[13px] text-base-content/40">{{ t.lugar }}</span>{% endif %}</span>
+        </figcaption>
+      </figure>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- FAQ -->
+{% if preguntas_frecuentes %}
+<section id="faq" class="max-w-[780px] mx-auto px-6 py-14">
+  <div class="text-center mb-8">
+    <h2 class="font-display font-medium text-[34px] sm:text-[38px] text-ink">Preguntas frecuentes</h2>
+    <p class="text-lg text-base-content/50 mt-2.5">Lo que más nos preguntan, respondido clarito.</p>
+  </div>
+  <div class="flex flex-col gap-3">
+    {% for faq in preguntas_frecuentes %}
+    <div class="collapse collapse-arrow bg-white border border-base-300 rounded-[16px] shadow-[0_4px_12px_rgba(30,60,30,.04)]">
+      <input type="checkbox" {% if forloop.first %}checked{% endif %} aria-label="{{ faq.pregunta }}" />
+      <div class="collapse-title font-display font-medium text-[17px] text-ink">{{ faq.pregunta }}</div>
+      <div class="collapse-content text-[15.5px] leading-relaxed text-base-content/50">{{ faq.respuesta }}</div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<!-- CTA Final -->
+<section class="max-w-[1140px] mx-auto px-6 pb-16">
+  <div class="rounded-[30px] p-12 sm:p-14 text-center relative overflow-hidden" style="background:linear-gradient(120deg,#2FA24E 0%,#1E7A3C 100%);">
+    <h2 class="font-display font-medium text-[34px] sm:text-[40px] text-white tracking-tight">¿Listo para tener tu pozo limpio?</h2>
+    <p class="text-lg text-[#e3f5e7] mt-3.5 mb-7 max-w-[480px] mx-auto">Cotiza online en 30 segundos. Sin compromiso, sin sorpresas.</p>
+    <div class="flex flex-wrap gap-3 justify-center">
+      <a href="{% url 'cotiza' %}" class="inline-flex items-center gap-2.5 bg-white text-accent px-7 py-4 rounded-full font-display font-semibold text-[18px] shadow-[0_10px_22px_rgba(0,0,0,.16)] hover:bg-base-200 transition"><i class="ph-fill ph-calculator" aria-hidden="true"></i> Ver mi precio ahora</a>
+      <a href="https://wa.me/{{ celular }}{% if mensaje_whatsapp %}?text={{ mensaje_whatsapp|urlencode }}{% endif %}" target="_blank" rel="noopener" class="inline-flex items-center gap-2.5 bg-white/15 text-white border-2 border-white/40 px-6 py-3.5 rounded-full font-display font-semibold text-[18px] hover:bg-white/25 transition"><i class="ph-fill ph-whatsapp-logo" aria-hidden="true"></i> WhatsApp</a>
+    </div>
+  </div>
+</section>

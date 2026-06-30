@@ -368,6 +368,15 @@ class ContratarAPIView(APIView):
         )
 
 
+class ContratarSaguapacAPIView(ContratarAPIView):
+    """Igual que ContratarAPIView pero usa SOLO Saguapac como única base/origen."""
+
+    def get_bases(self, basecamiones):
+        self._grupos = {'bases': 1, 'clientes': 0, 'camiones': 0}
+        # get_bases devuelve tuplas (lon, lat, nombre); SAGUAPAC_BASE es (lat, lon, nombre)
+        return [(SAGUAPAC_BASE[1], SAGUAPAC_BASE[0], SAGUAPAC_BASE[2])]
+
+
 class ContratarAdminAPIView(ContratarAPIView):
     """Igual que ContratarAPIView pero agrega camiones activos como bases adicionales."""
     permission_classes = [IsAuthenticated]
