@@ -13,10 +13,10 @@ Cuerpo de la VARIANTE A (rediseño). Independiente de la D — editar acá no af
       </span>
       {% if datos_generales.hero_imagen %}
       <img src="{{ datos_generales.hero_imagen.url }}" alt="{{ datos_generales.hero_imagen_alt }}"
-           class="w-full max-w-[322px] h-auto rounded-[22px] mt-5 mb-6" loading="eager" decoding="async">
+           class="w-full max-w-[322px] h-auto rounded-[22px] mt-5 mb-6 mx-auto" loading="eager" decoding="async">
       {% else %}
       <img src="{% static 'img/Camión_limpieza_pozo_ciego_verde_blanco.png' %}" alt="{{ datos_generales.hero_imagen_alt|default:'Camión de limpieza de pozos sépticos en Santa Cruz' }}"
-           class="w-full max-w-[322px] h-auto rounded-[22px] mt-5 mb-6" loading="eager" decoding="async">
+           class="w-full max-w-[322px] h-auto rounded-[22px] mt-5 mb-6 mx-auto" loading="eager" decoding="async">
       {% endif %}
       <h1 class="font-display font-medium text-[44px] sm:text-[55px] leading-[1.04] tracking-tight mt-4 text-ink">
         Tu pozo limpio,<br><span class="text-primary">hoy mismo.</span>
