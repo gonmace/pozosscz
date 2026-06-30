@@ -10,7 +10,7 @@ class DatosGenerales(SingletonModel):
     ]
 
     celular = models.CharField(
-        "Teléfono Celular", max_length=12, default="+59171011118"
+        "Teléfono Celular", max_length=12, default="+59176644033"
     )
 
     hero_variant = models.CharField(
