@@ -110,6 +110,7 @@ class StaticViewSitemap(Sitemap):
         return [
             'home_page', 'cotiza', 'calcula', 'contact',
             'servicio_pozo_ciego', 'servicio_pozos_septicos', 'servicio_camaras_septicas',
+            'medidas_pozo_septico',
         ]
 
     def location(self, item):
@@ -308,6 +309,11 @@ def servicio_pozos_septicos(request):
 def servicio_camaras_septicas(request):
     return render(request, 'servicios/camaras_septicas.html',
                   _get_base_context(request, 'limpieza-camaras-septicas'))
+
+
+def medidas_pozo_septico(request):
+    return render(request, 'guias/medidas_pozo_septico.html',
+                  _get_base_context(request, 'medidas-pozo-septico'))
 
 
 def zona_page(request, zona):

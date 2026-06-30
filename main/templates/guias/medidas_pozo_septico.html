@@ -1,0 +1,233 @@
+{% extends 'base.html' %}
+{% load static vstatic %}
+
+{% block head %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Medidas y dimensiones de un pozo séptico",
+  "description": "Guía con las medidas recomendadas de un pozo séptico según el número de personas: capacidad en litros, volumen en m³ y profundidad recomendada.",
+  "author": {"@id": "https://pozosscz.com/#business"},
+  "publisher": {"@id": "https://pozosscz.com/#business"},
+  "mainEntityOfPage": "https://pozosscz.com/medidas-pozo-septico/",
+  "url": "https://pozosscz.com/medidas-pozo-septico/"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "¿Qué medidas debe tener un pozo séptico?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Las medidas dependen del número de personas que usan la vivienda. Como referencia, para una familia de 5 personas se recomienda un volumen útil de unos 1.800 litros; con un pozo de 1,5 m de diámetro equivale a una profundidad útil de aproximadamente 1,20 m más 0,30 m de borde libre. A más personas, mayor volumen y profundidad."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Cuál es la profundidad mínima de un pozo séptico?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Como mínimo se recomienda 1,20 m de profundidad útil, más unos 0,30 m de borde libre por encima del nivel de agua. La profundidad real también depende del tipo de suelo: es necesario llegar a un estrato arenoso y filtrante para que el pozo funcione correctamente."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Cómo se calcula la capacidad de un pozo séptico?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Se suma el volumen de aguas residuales (alrededor de 180 litros por persona y por día) más la acumulación de lodos (unos 45 litros por persona y por año entre limpiezas). El total es el volumen útil necesario. Para un pozo cilíndrico, el volumen es π × (diámetro ÷ 2)² × profundidad."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿De qué depende el tamaño de un pozo séptico?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Del número de personas, del consumo de agua, de cada cuántos años se hace la limpieza y del tipo de suelo. A mayor número de personas y más tiempo entre limpiezas, mayor debe ser la capacidad del pozo."
+      }
+    }
+  ]
+}
+</script>
+{% endblock %}
+
+{% block body_class %}bg-band{% endblock %}
+
+{% block content %}
+<main>
+    {% include 'components/header_publico.html' %}
+
+    <!-- Hero -->
+    <section class="max-w-[1140px] mx-auto px-6 pt-14 pb-8 text-center">
+        <span class="inline-flex items-center gap-2 bg-white text-accent font-bold text-[13.5px] px-3.5 py-1.5 rounded-full shadow-sm">
+            <i class="ph-fill ph-ruler" aria-hidden="true"></i> Guía · Pozos sépticos
+        </span>
+        <h1 class="font-display font-medium text-[32px] sm:text-[42px] leading-tight tracking-tight mt-4 text-ink">Medidas y dimensiones de un pozo séptico</h1>
+        <p class="text-lg text-base-content/60 mt-3 max-w-2xl mx-auto">
+            Cuánta capacidad, qué volumen en litros y qué profundidad necesita tu pozo según el número de personas. Una guía simple, con tabla de referencia y calculadora.
+        </p>
+        <a href="{% url 'calcula' %}" class="inline-flex items-center gap-2.5 bg-primary text-primary-content px-7 py-3.5 rounded-full font-display font-semibold text-[16px] shadow-[0_9px_20px_rgba(47,162,78,.3)] hover:brightness-105 transition mt-6"><i class="ph-fill ph-calculator" aria-hidden="true"></i> Ir a la calculadora</a>
+    </section>
+
+    <div class="max-w-4xl mx-auto px-6 py-10 flex flex-col gap-8">
+
+        <!-- De qué depende -->
+        <section>
+            <h2 class="font-display font-medium text-[26px] sm:text-[30px] text-ink mb-4">¿De qué depende el tamaño de un pozo séptico?</h2>
+            <p class="text-base-content/60 leading-relaxed">
+                No existe una única medida válida para todos los pozos: el tamaño correcto depende de cuántas personas
+                viven en la propiedad, del consumo de agua, de cada cuántos años se hace la limpieza y del tipo de suelo.
+                Cuantas más personas y más tiempo entre limpiezas, mayor debe ser la capacidad. En Santa Cruz, "pozo séptico"
+                y "pozo ciego" se usan como sinónimos para el mismo sistema.
+            </p>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-5">
+                <div class="bg-white border border-base-300 rounded-[18px] p-5 shadow-[0_6px_16px_rgba(30,60,30,.05)]">
+                    <i class="ph-fill ph-users-three text-primary text-2xl" aria-hidden="true"></i>
+                    <h3 class="font-display font-medium text-[17px] text-ink mt-2 mb-1">Personas</h3>
+                    <p class="text-[14px] text-base-content/55 leading-relaxed">Más habitantes generan más aguas residuales y más lodo acumulado.</p>
+                </div>
+                <div class="bg-white border border-base-300 rounded-[18px] p-5 shadow-[0_6px_16px_rgba(30,60,30,.05)]">
+                    <i class="ph-fill ph-calendar-check text-primary text-2xl" aria-hidden="true"></i>
+                    <h3 class="font-display font-medium text-[17px] text-ink mt-2 mb-1">Años entre limpiezas</h3>
+                    <p class="text-[14px] text-base-content/55 leading-relaxed">Más tiempo entre vaciados exige más volumen para acumular lodos.</p>
+                </div>
+                <div class="bg-white border border-base-300 rounded-[18px] p-5 shadow-[0_6px_16px_rgba(30,60,30,.05)]">
+                    <i class="ph-fill ph-stack text-primary text-2xl" aria-hidden="true"></i>
+                    <h3 class="font-display font-medium text-[17px] text-ink mt-2 mb-1">Tipo de suelo</h3>
+                    <p class="text-[14px] text-base-content/55 leading-relaxed">Hay que llegar a un suelo arenoso y filtrante para el correcto funcionamiento.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tabla de medidas -->
+        <section>
+            <h2 class="font-display font-medium text-[26px] sm:text-[30px] text-ink mb-2">Tabla de medidas recomendadas según personas</h2>
+            <p class="text-base-content/60 mb-4 leading-relaxed">
+                Valores orientativos calculados con 180 litros por persona/día y 45 litros por persona/año de lodo,
+                considerando una limpieza cada 4 años y un pozo cilíndrico de 1,5 m de diámetro.
+            </p>
+            <div class="overflow-x-auto bg-white border border-base-300 rounded-[18px] shadow-[0_6px_16px_rgba(30,60,30,.05)]">
+                <table class="w-full text-left text-[14.5px]">
+                    <thead>
+                        <tr class="border-b border-base-300 text-base-content/70">
+                            <th class="px-4 py-3 font-display font-semibold">Personas</th>
+                            <th class="px-4 py-3 font-display font-semibold">Volumen útil</th>
+                            <th class="px-4 py-3 font-display font-semibold">Profundidad útil (Ø 1,5 m)</th>
+                            <th class="px-4 py-3 font-display font-semibold">Profundidad total</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-base-content/70">
+                        <tr class="border-b border-base-200"><td class="px-4 py-3">4</td><td class="px-4 py-3">1.440 L · 1,44 m³</td><td class="px-4 py-3">1,20 m <span class="text-base-content/40">(mínimo)</span></td><td class="px-4 py-3">1,50 m</td></tr>
+                        <tr class="border-b border-base-200"><td class="px-4 py-3">5</td><td class="px-4 py-3">1.800 L · 1,80 m³</td><td class="px-4 py-3">1,20 m <span class="text-base-content/40">(mínimo)</span></td><td class="px-4 py-3">1,50 m</td></tr>
+                        <tr class="border-b border-base-200"><td class="px-4 py-3">6</td><td class="px-4 py-3">2.160 L · 2,16 m³</td><td class="px-4 py-3">1,22 m</td><td class="px-4 py-3">1,52 m</td></tr>
+                        <tr class="border-b border-base-200"><td class="px-4 py-3">8</td><td class="px-4 py-3">2.880 L · 2,88 m³</td><td class="px-4 py-3">1,63 m</td><td class="px-4 py-3">1,93 m</td></tr>
+                        <tr class="border-b border-base-200"><td class="px-4 py-3">10</td><td class="px-4 py-3">3.600 L · 3,60 m³</td><td class="px-4 py-3">2,04 m</td><td class="px-4 py-3">2,34 m</td></tr>
+                        <tr><td class="px-4 py-3">12</td><td class="px-4 py-3">4.320 L · 4,32 m³</td><td class="px-4 py-3">2,45 m</td><td class="px-4 py-3">2,75 m</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="flex items-start gap-2.5 rounded-[14px] bg-sun text-[#5a4200] px-4 py-3 mt-4 text-[14px]">
+                <i class="ph-fill ph-warning text-lg shrink-0 mt-0.5" aria-hidden="true"></i>
+                <span>Los resultados son <strong>teóricos</strong>. La profundidad también depende del tipo de suelo — es necesario llegar a un suelo arenoso filtrante para el correcto funcionamiento.</span>
+            </div>
+        </section>
+
+        <!-- La fórmula -->
+        <section class="bg-white border border-base-300 rounded-[22px] p-6 sm:p-7 shadow-[0_8px_20px_rgba(30,60,30,.05)]">
+            <h2 class="font-display font-medium text-[22px] text-ink mb-4">Cómo se calcula la capacidad</h2>
+            <p class="text-base-content/65 leading-relaxed mb-4">
+                El volumen útil necesario se obtiene sumando dos partes:
+            </p>
+            <ul class="flex flex-col gap-3 mb-4">
+                <li class="flex items-start gap-3"><i class="ph-fill ph-drop text-primary text-lg mt-0.5 shrink-0" aria-hidden="true"></i><span class="text-base-content/70"><strong>Aguas residuales:</strong> ≈ 180 litros por persona y por día.</span></li>
+                <li class="flex items-start gap-3"><i class="ph-fill ph-stack text-primary text-lg mt-0.5 shrink-0" aria-hidden="true"></i><span class="text-base-content/70"><strong>Acumulación de lodos:</strong> ≈ 45 litros por persona y por año entre limpiezas.</span></li>
+            </ul>
+            <div class="bg-band rounded-[14px] px-4 py-3 text-center text-base-content/70 text-[15px]">
+                Volumen del pozo cilíndrico = <strong>π × (diámetro ÷ 2)² × profundidad</strong>
+            </div>
+            <p class="text-base-content/55 text-[14.5px] mt-4 leading-relaxed">
+                ¿No querés hacer las cuentas a mano? Usá nuestra
+                <a href="{% url 'calcula' %}" class="text-accent font-semibold underline underline-offset-2">calculadora de pozos sépticos</a>:
+                ingresás el número de personas, el diámetro y los años entre limpiezas, y te da la profundidad y la capacidad al instante.
+            </p>
+        </section>
+
+        <!-- Profundidad -->
+        <section>
+            <h2 class="font-display font-medium text-[26px] sm:text-[30px] text-ink mb-4">Profundidad recomendada</h2>
+            <p class="text-base-content/60 leading-relaxed">
+                Como referencia se recomienda una profundidad útil mínima de <strong>1,20 m</strong>, a la que se suma
+                un <strong>borde libre de unos 0,30 m</strong> por encima del nivel de agua. Para más personas, la
+                profundidad útil aumenta según el volumen necesario (ver la tabla). Recordá que el factor decisivo en
+                terreno es alcanzar un estrato de suelo arenoso y filtrante.
+            </p>
+        </section>
+
+        <!-- Otros servicios -->
+        <section>
+            <h2 class="font-display font-medium text-[26px] sm:text-[30px] text-ink mb-4">Servicios relacionados</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <a href="{% url 'servicio_pozos_septicos' %}" class="group bg-white border border-base-300 rounded-[22px] p-6 shadow-[0_8px_20px_rgba(30,60,30,.05)] hover:border-primary transition-colors">
+                    <span class="w-12 h-12 rounded-[14px] bg-band flex items-center justify-center mb-3"><i class="ph-fill ph-house-line text-primary text-2xl" aria-hidden="true"></i></span>
+                    <h3 class="font-display font-medium text-[17px] text-ink">Limpieza de pozos sépticos</h3>
+                    <p class="text-[14px] text-base-content/50 mt-0.5">Para hogares, condominios y empresas en Santa Cruz.</p>
+                </a>
+                <a href="{% url 'servicio_pozo_ciego' %}" class="group bg-white border border-base-300 rounded-[22px] p-6 shadow-[0_8px_20px_rgba(30,60,30,.05)] hover:border-primary transition-colors">
+                    <span class="w-12 h-12 rounded-[14px] bg-band flex items-center justify-center mb-3"><i class="ph-fill ph-drop text-primary text-2xl" aria-hidden="true"></i></span>
+                    <h3 class="font-display font-medium text-[17px] text-ink">Limpieza de pozos ciegos</h3>
+                    <p class="text-[14px] text-base-content/50 mt-0.5">Desagote y vaciado con camión cisterna.</p>
+                </a>
+                <a href="{% url 'calcula' %}" class="group bg-white border border-base-300 rounded-[22px] p-6 shadow-[0_8px_20px_rgba(30,60,30,.05)] hover:border-primary transition-colors">
+                    <span class="w-12 h-12 rounded-[14px] bg-band flex items-center justify-center mb-3"><i class="ph-fill ph-calculator text-primary text-2xl" aria-hidden="true"></i></span>
+                    <h3 class="font-display font-medium text-[17px] text-ink">Calculadora de pozos</h3>
+                    <p class="text-[14px] text-base-content/50 mt-0.5">Capacidad y dimensiones al instante.</p>
+                </a>
+            </div>
+        </section>
+
+        <!-- Preguntas frecuentes -->
+        <section>
+            <h2 class="font-display font-medium text-[26px] sm:text-[30px] text-ink mb-5">Preguntas frecuentes</h2>
+            <div class="flex flex-col gap-3">
+                <details class="group bg-white border border-base-300 rounded-[16px] px-5 py-4 shadow-[0_4px_12px_rgba(30,60,30,.04)]">
+                    <summary class="flex items-center justify-between cursor-pointer font-display font-medium text-[16.5px] text-ink list-none">¿Qué medidas debe tener un pozo séptico?<i class="ph-bold ph-caret-down transition-transform group-open:rotate-180" aria-hidden="true"></i></summary>
+                    <p class="text-base-content/60 leading-relaxed mt-3 text-[15px]">Dependen del número de personas. Para una familia de 5, se recomienda un volumen útil de unos 1.800 litros; con un pozo de 1,5 m de diámetro equivale a ≈ 1,20 m de profundidad útil más 0,30 m de borde libre. A más personas, mayor volumen y profundidad (ver la tabla).</p>
+                </details>
+                <details class="group bg-white border border-base-300 rounded-[16px] px-5 py-4 shadow-[0_4px_12px_rgba(30,60,30,.04)]">
+                    <summary class="flex items-center justify-between cursor-pointer font-display font-medium text-[16.5px] text-ink list-none">¿Cuál es la profundidad mínima de un pozo séptico?<i class="ph-bold ph-caret-down transition-transform group-open:rotate-180" aria-hidden="true"></i></summary>
+                    <p class="text-base-content/60 leading-relaxed mt-3 text-[15px]">Como mínimo, 1,20 m de profundidad útil más unos 0,30 m de borde libre. La profundidad real también depende del tipo de suelo: hay que llegar a un estrato arenoso y filtrante.</p>
+                </details>
+                <details class="group bg-white border border-base-300 rounded-[16px] px-5 py-4 shadow-[0_4px_12px_rgba(30,60,30,.04)]">
+                    <summary class="flex items-center justify-between cursor-pointer font-display font-medium text-[16.5px] text-ink list-none">¿Cómo se calcula la capacidad de un pozo séptico?<i class="ph-bold ph-caret-down transition-transform group-open:rotate-180" aria-hidden="true"></i></summary>
+                    <p class="text-base-content/60 leading-relaxed mt-3 text-[15px]">Se suma el volumen de aguas residuales (≈ 180 L por persona/día) más la acumulación de lodos (≈ 45 L por persona/año entre limpiezas). Para un pozo cilíndrico, el volumen es π × (diámetro ÷ 2)² × profundidad.</p>
+                </details>
+                <details class="group bg-white border border-base-300 rounded-[16px] px-5 py-4 shadow-[0_4px_12px_rgba(30,60,30,.04)]">
+                    <summary class="flex items-center justify-between cursor-pointer font-display font-medium text-[16.5px] text-ink list-none">¿De qué depende el tamaño de un pozo séptico?<i class="ph-bold ph-caret-down transition-transform group-open:rotate-180" aria-hidden="true"></i></summary>
+                    <p class="text-base-content/60 leading-relaxed mt-3 text-[15px]">Del número de personas, del consumo de agua, de cada cuántos años se hace la limpieza y del tipo de suelo. A más personas y más tiempo entre limpiezas, mayor debe ser la capacidad.</p>
+                </details>
+            </div>
+        </section>
+
+        <!-- CTA -->
+        <section class="rounded-[30px] p-10 sm:p-12 text-center relative overflow-hidden" style="background:linear-gradient(120deg,#2FA24E 0%,#1E7A3C 100%);">
+            <h2 class="font-display font-medium text-[26px] sm:text-[32px] text-white tracking-tight">¿Tu pozo necesita limpieza?</h2>
+            <p class="text-lg text-[#e3f5e7] mt-3 mb-6 max-w-[480px] mx-auto">Cotiza online en 30 segundos. Precio fijo según tu zona, sin sorpresas.</p>
+            <a href="{% url 'cotiza' %}" class="inline-flex items-center gap-2.5 bg-white text-accent px-7 py-4 rounded-full font-display font-semibold text-[18px] shadow-[0_10px_22px_rgba(0,0,0,.16)] hover:bg-base-200 transition"><i class="ph-fill ph-calculator" aria-hidden="true"></i> Ver mi precio ahora</a>
+        </section>
+
+    </div>
+
+    {% include 'components/whatsapp_bubble.html' %}
+</main>
+
+{% include 'components/footer.html' %}
+{% endblock %}
+
+{% block js %}
+<script src="{% vstatic 'js/main.js' %}"></script>
+{% endblock %}

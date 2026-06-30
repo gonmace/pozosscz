@@ -17,6 +17,8 @@ urlpatterns = [
     path('limpieza-pozo-ciego-santa-cruz/', views.servicio_pozo_ciego, name='servicio_pozo_ciego'),
     path('limpieza-pozos-septicos-santa-cruz/', views.servicio_pozos_septicos, name='servicio_pozos_septicos'),
     path('limpieza-camaras-septicas/', views.servicio_camaras_septicas, name='servicio_camaras_septicas'),
+    # Guías / contenido informativo
+    path('medidas-pozo-septico/', views.medidas_pozo_septico, name='medidas_pozo_septico'),
     # Páginas de zona
     path('limpieza-pozos-<slug:zona>/', views.zona_page, name='zona_page'),
     path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='django.contrib.sitemaps.views.sitemap'),
