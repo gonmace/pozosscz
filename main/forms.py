@@ -55,5 +55,5 @@ class ContactForm(forms.Form):
             Field('nombre', css_class='mb-4'),
             Field('telefono', css_class='mb-4'),
             Field('mensaje', css_class='mb-4'),
-            Submit('submit', 'Enviar Mensaje', css_class='btn btn-secondary w-full')
+            Submit('submit', 'Enviar Mensaje', css_class='btn btn-primary w-full')
         ) 

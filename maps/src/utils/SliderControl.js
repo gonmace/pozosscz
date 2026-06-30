@@ -3,11 +3,9 @@ L.Control.SliderControl = L.Control.extend({
         position: 'topright',
         layers: null,
         timeAttribute: 'time',
-        isEpoch: false,     
-        startTimeIdx: 0,    
-        timeStrLength: 19,  
-        maxValue: -1,
-        minValue: 0,
+        isEpoch: false,
+        startTimeIdx: 0,
+        timeStrLength: 19,
         showAllOnStart: false,
         markers: null,
         range: false,
@@ -15,342 +13,324 @@ L.Control.SliderControl = L.Control.extend({
         sameDate: false,
         alwaysShowDate: false,
         rezoom: null,
-        minGap: 1 // Mínima diferencia entre los rangos
+        minGapMs: 24 * 60 * 60 * 1000 // gap mínimo entre thumbs: 1 día
     },
 
     initialize: function (options) {
         L.Util.setOptions(this, options);
         this._layer = this.options.layer;
-        this._dates = []; // Array para almacenar fechas
+        this._currentMinTs = 0;
+        this._currentMaxTs = 0;
+        this._minTs = 0;
+        this._maxTs = 0;
     },
 
-    extractTimestamp: function(time, options) {
+    extractTimestamp: function (time, options) {
         if (options.isEpoch) {
             time = (new Date(parseInt(time))).toString();
         }
         return time.substr(options.startTimeIdx, options.startTimeIdx + options.timeStrLength);
     },
 
-    setPosition: function (position) {
-        var map = this._map;
-
-        if (map) {
-            map.removeControl(this);
+    _markerTs: function (marker) {
+        if (!marker) return NaN;
+        let timeValue;
+        if (marker.feature && marker.feature.properties[this.options.timeAttribute]) {
+            timeValue = marker.feature.properties[this.options.timeAttribute];
+        } else if (marker.options && marker.options[this.options.timeAttribute]) {
+            timeValue = marker.options[this.options.timeAttribute];
         }
+        if (!timeValue) return NaN;
+        const dateStr = this.extractTimestamp(timeValue, this.options).split(' ')[0];
+        return Date.parse(dateStr);
+    },
 
-        this.options.position = position;
-
-        if (map) {
-            map.addControl(this);
-        }
-        this.startSlider();
-        return this;
+    _fmtDate: function (ts) {
+        if (!isFinite(ts)) return '';
+        const d = new Date(ts);
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
     },
 
     onAdd: function (map) {
         this.options.map = map;
 
-        // Create a control sliderContainer with custom range input
-        var sliderContainer = L.DomUtil.create('div', 'slider', this._container);
-        var sliderContent = `
-            <div id="leaflet-slider" class="bg-gray-100 w-full max-w-md px-4 py-1 rounded-lg shadow-lg">
-                <div id="slider-timestamp" class="text-black font-bold mb-4 hidden"></div>
-                
-                <div class="relative mt-4 slider-container">
-                    <!-- Custom Range Inputs -->
-                    <input type="range" id="rangeMin" class="range-input">
-                    <input type="range" id="rangeMax" class="range-input">
-                    
-                    <!-- Custom Track -->
-                    <div class="relative w-full h-2 rounded-md bg-gray-300">
-                        <div id="rangeTrack" class="absolute h-2 bg-accent rounded-md"></div>
+        var container = L.DomUtil.create('div', 'slider', this._container);
+        container.innerHTML = `
+            <div id="leaflet-slider" style="background:rgba(255,255,255,0.95);padding:6px 10px;border-radius:6px;box-shadow:0 1px 4px rgba(0,0,0,0.3);font-size:12px;color:#333;">
+                <div id="sliderTrackArea" style="position:relative;height:16px;user-select:none;touch-action:none;cursor:pointer;">
+                    <div id="sliderTrackBg" style="position:absolute;top:50%;left:0;right:0;transform:translateY(-50%);height:3px;background:#d1d5db;border-radius:2px;pointer-events:none;">
+                        <div id="rangeTrack" style="position:absolute;height:100%;background:#2563eb;border-radius:2px;"></div>
                     </div>
+                    <div id="thumbMin" style="position:absolute;top:50%;transform:translate(-50%,-50%);width:12px;height:12px;background:#2563eb;border:none;border-radius:50%;cursor:grab;z-index:3;box-sizing:border-box;"></div>
+                    <div id="thumbMax" style="position:absolute;top:50%;transform:translate(-50%,-50%);width:12px;height:12px;background:#2563eb;border:none;border-radius:50%;cursor:grab;z-index:3;box-sizing:border-box;"></div>
                 </div>
-                
-                <div class="flex justify-between mt-1 text-black font-bold">
-                    <span id="startDate"></span>
-                    <span id="endDate"></span>
+                <div style="display:flex;justify-content:space-between;margin-top:3px;font-weight:600;font-size:11px;color:#333;">
+                    <span id="startDate" title="Click para editar fecha" style="cursor:pointer;text-decoration:underline dotted;"></span>
+                    <span id="endDate" title="Click para editar fecha" style="cursor:pointer;text-decoration:underline dotted;"></span>
                 </div>
             </div>`;
-        sliderContainer.innerHTML = sliderContent;
 
-        // Get elements
-        this._rangeMin = sliderContainer.querySelector('#rangeMin');
-        this._rangeMax = sliderContainer.querySelector('#rangeMax');
-        this._rangeTrack = sliderContainer.querySelector('#rangeTrack');
-        this._startDateSpan = sliderContainer.querySelector('#startDate');
-        this._endDateSpan = sliderContainer.querySelector('#endDate');
-        this._timestampDiv = sliderContainer.querySelector('#slider-timestamp');
-
-        // Prevent map panning/zooming while using the slider
-        sliderContainer.addEventListener('mousedown', () => {
-            map.dragging.disable();
-        });
-
-        document.addEventListener('mouseup', () => {
-            map.dragging.enable();
-        });
-
-        // Initialize markers array
-        var options = this.options;
-        this.options.markers = [];
-        this._dates = []; // Limpiar el array de fechas
-
-        if (this._layer) {
-            var index_temp = 0;
-            this._layer.eachLayer((layer) => {
-                options.markers[index_temp] = layer;
-                
-                // Extraer y guardar la fecha de cada marcador
-                let timeValue;
-                if (layer.feature !== undefined && layer.feature.properties[this.options.timeAttribute]) {
-                    timeValue = layer.feature.properties[this.options.timeAttribute];
-                } else if (layer.options[this.options.timeAttribute]) {
-                    timeValue = layer.options[this.options.timeAttribute];
-                }
-                
-                if (timeValue) {
-                    const dateStr = this.extractTimestamp(timeValue, this.options);
-                    const dateShort = dateStr.split(' ')[0];
-                    this._dates[index_temp] = dateShort;
-                } else {
-                    this._dates[index_temp] = `Fecha ${index_temp}`;
-                }
-                
-                ++index_temp;
-            });
-            options.maxValue = index_temp - 1;
-            this.options = options;
-        } else {
-            console.log("Error: You have to specify a layer via new SliderControl({layer: your_layer});");
-        }
-
-        // Add styles for the range inputs
         const style = document.createElement('style');
-        style.textContent = `
-            .slider {
-                margin: 0.5rem;
-                min-width: 392px; /* 280px + 40% */
-            }
-
-            @media (max-width: 640px) {
-                .slider {
-                    min-width: 60vw;
-                }
-            }
-
-            .slider-container {
-                position: relative;
-                height: 18px;
-            }
-
-            /* Hide default range styling */
-            .range-input {
-                -webkit-appearance: none;
-                appearance: none;
-                width: 100%;
-                position: absolute;
-                background: transparent;
-                pointer-events: none;
-                z-index: 2;
-                color: red; /* Hide the value */
-            }
-
-            /* Custom track (hidden default) */
-            .range-input::-webkit-slider-runnable-track {
-                height: 2px;
-            }
-
-            /* Custom thumb styling (Centered) */
-            .range-input::-webkit-slider-thumb {
-                -webkit-appearance: none;
-                appearance: none;
-                width: 18px;
-                height: 18px;
-                background: gray;
-                border: 3px solid hsl(var(--p));
-                border-radius: 50%;
-                cursor: pointer;
-                pointer-events: auto;
-                position: relative;
-                z-index: 3;
-                transform: translateY(-30%);
-            }
-
-            .range-input::-moz-range-thumb {
-                width: 18px;
-                height: 18px;
-                background: gray;
-                border: 3px solid hsl(var(--p));
-                border-radius: 50%;
-                cursor: pointer;
-                pointer-events: auto;
-                z-index: 3;
-                transform: translateY(-30%);
-            }
-        `;
+        style.textContent = `.slider { margin:0; width:clamp(180px,32vw,260px); }`;
         document.head.appendChild(style);
 
-        return sliderContainer;
+        this._trackArea     = container.querySelector('#sliderTrackArea');
+        this._rangeTrack    = container.querySelector('#rangeTrack');
+        this._thumbMin      = container.querySelector('#thumbMin');
+        this._thumbMax      = container.querySelector('#thumbMax');
+        this._startDateSpan = container.querySelector('#startDate');
+        this._endDateSpan   = container.querySelector('#endDate');
+
+        // Recolectar markers + timestamps
+        this.options.markers = [];
+        let minTs = Infinity, maxTs = -Infinity;
+        if (this._layer) {
+            this._layer.eachLayer((layer) => {
+                this.options.markers.push(layer);
+                const ts = this._markerTs(layer);
+                if (isFinite(ts)) {
+                    if (ts < minTs) minTs = ts;
+                    if (ts > maxTs) maxTs = ts;
+                }
+            });
+        }
+
+        // Si no hay fechas válidas, usar rango por defecto (hoy)
+        if (!isFinite(minTs) || !isFinite(maxTs)) {
+            minTs = maxTs = Date.now();
+        }
+        // Asegurar al menos 1 día de rango
+        if (maxTs - minTs < this.options.minGapMs) {
+            maxTs = minTs + this.options.minGapMs;
+        }
+        this._minTs = minTs;
+        this._maxTs = maxTs;
+
+        L.DomEvent.disableClickPropagation(container);
+        L.DomEvent.disableScrollPropagation(container);
+
+        return container;
     },
 
     onRemove: function (map) {
-        for (var i = this.options.minValue; i <= this.options.maxValue; i++) {
-            map.removeLayer(this.options.markers[i]);
-        }
-        
-        document.removeEventListener('mouseup', this._handleMouseUp);
-        this._rangeMin.removeEventListener('input', this._handleMinInput);
-        this._rangeMax.removeEventListener('input', this._handleMaxInput);
+        (this.options.markers || []).forEach((m) => {
+            if (!m) return;
+            if (m._parentGroup && typeof m._parentGroup.hasLayer === 'function' && m._parentGroup.hasLayer(m)) {
+                m._parentGroup.removeLayer(m);
+            } else if (map.hasLayer(m)) {
+                map.removeLayer(m);
+            }
+        });
     },
 
-    _updateRange: function(event) {
-        let min = parseInt(this._rangeMin.value);
-        let max = parseInt(this._rangeMax.value);
+    _pxToTs: function (clientX) {
+        const rect = this._trackArea.getBoundingClientRect();
+        const pct  = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+        return Math.round(this._minTs + pct * (this._maxTs - this._minTs));
+    },
 
-        // Ensure min & max have a gap of at least minGap
-        if (max - min < this.options.minGap) {
-            if (event && event.target === this._rangeMin) {
-                min = max - this.options.minGap;
-                this._rangeMin.value = min;
+    _applyValues: function (updateMarkers) {
+        const span = this._maxTs - this._minTs;
+        const minPct = span > 0 ? ((this._currentMinTs - this._minTs) / span) * 100 : 0;
+        const maxPct = span > 0 ? ((this._currentMaxTs - this._minTs) / span) * 100 : 100;
+
+        this._thumbMin.style.left  = minPct + '%';
+        this._thumbMax.style.left  = maxPct + '%';
+        this._rangeTrack.style.left  = minPct + '%';
+        this._rangeTrack.style.right = (100 - maxPct) + '%';
+
+        localStorage.setItem('sliderRangeMinTs', this._currentMinTs);
+        localStorage.setItem('sliderRangeMaxTs', this._currentMaxTs);
+
+        this._startDateSpan.textContent = this._fmtDate(this._currentMinTs);
+        this._endDateSpan.textContent   = this._fmtDate(this._currentMaxTs);
+
+        if (updateMarkers) this._updateMarkers();
+    },
+
+    _setupThumbDrag: function (thumb, isMin) {
+        const gap = this.options.minGapMs;
+
+        const onMove = (e) => {
+            e.preventDefault();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const ts = this._pxToTs(clientX);
+            if (isMin) {
+                this._currentMinTs = Math.max(this._minTs, Math.min(ts, this._currentMaxTs - gap));
             } else {
-                max = min + this.options.minGap;
-                this._rangeMax.value = max;
+                this._currentMaxTs = Math.min(this._maxTs, Math.max(ts, this._currentMinTs + gap));
             }
-        }
+            this._applyValues(false);
+        };
 
-        // Save range values to localStorage
-        localStorage.setItem('sliderRangeMin', min);
-        localStorage.setItem('sliderRangeMax', max);
+        const onEnd = () => {
+            thumb.style.cursor = 'grab';
+            this.options.map.dragging.enable();
+            this._applyValues(true);
+            document.removeEventListener('mousemove', onMove);
+            document.removeEventListener('mouseup', onEnd);
+            document.removeEventListener('touchmove', onMove);
+            document.removeEventListener('touchend', onEnd);
+        };
 
-        // Update visual track
-        const range = this.options.maxValue - this.options.minValue;
-        const minPercent = ((min - this.options.minValue) / range) * 100;
-        const maxPercent = ((max - this.options.minValue) / range) * 100;
-        
-        requestAnimationFrame(() => {
-            this._rangeTrack.style.left = minPercent + "%";
-            this._rangeTrack.style.right = (100 - maxPercent) + "%";
+        const onStart = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            thumb.style.cursor = 'grabbing';
+            this.options.map.dragging.disable();
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('mouseup', onEnd);
+            document.addEventListener('touchmove', onMove, { passive: false });
+            document.addEventListener('touchend', onEnd);
+        };
+
+        thumb.addEventListener('mousedown', onStart);
+        thumb.addEventListener('touchstart', onStart, { passive: false });
+    },
+
+    _setupTrackClick: function () {
+        this._trackArea.addEventListener('click', (e) => {
+            if (e.target === this._thumbMin || e.target === this._thumbMax) return;
+
+            const gap = this.options.minGapMs;
+            const ts  = this._pxToTs(e.clientX);
+
+            const distMin = Math.abs(ts - this._currentMinTs);
+            const distMax = Math.abs(ts - this._currentMaxTs);
+
+            if (ts <= this._currentMinTs) {
+                this._currentMinTs = Math.max(this._minTs, ts);
+            } else if (ts >= this._currentMaxTs) {
+                this._currentMaxTs = Math.min(this._maxTs, ts);
+            } else if (distMin <= distMax) {
+                this._currentMinTs = Math.max(this._minTs, Math.min(ts, this._currentMaxTs - gap));
+            } else {
+                this._currentMaxTs = Math.min(this._maxTs, Math.max(ts, this._currentMinTs + gap));
+            }
+            this._applyValues(true);
+        });
+    },
+
+    _setupDateEdit: function () {
+        const edit = (span, isMin) => {
+            span.addEventListener('click', () => {
+                if (span.querySelector('input')) return;
+                const current = span.textContent || '';
+                const isoDate = current.length === 10 ? current : '';
+
+                const input = document.createElement('input');
+                input.type = 'date';
+                input.value = isoDate;
+                input.style.cssText = 'font-size:0.75rem;font-weight:700;color:#000;border:none;background:transparent;outline:1px solid hsl(var(--p,262 80% 50%));border-radius:3px;padding:0 2px;width:100px;cursor:pointer;';
+
+                span.textContent = '';
+                span.appendChild(input);
+                input.focus();
+                try { input.showPicker(); } catch (_) {}
+
+                const commit = () => {
+                    const val = input.value;
+                    if (val) {
+                        const ts = Date.parse(val);
+                        if (!isNaN(ts)) {
+                            const gap = this.options.minGapMs;
+                            if (isMin) {
+                                this._currentMinTs = Math.min(ts, this._currentMaxTs - gap);
+                                if (this._currentMinTs < this._minTs) this._minTs = this._currentMinTs;
+                            } else {
+                                this._currentMaxTs = Math.max(ts, this._currentMinTs + gap);
+                                if (this._currentMaxTs > this._maxTs) this._maxTs = this._currentMaxTs;
+                            }
+                        }
+                    }
+                    this._applyValues(true);
+                };
+
+                input.addEventListener('change', commit);
+                input.addEventListener('blur', commit);
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') input.blur();
+                    if (e.key === 'Escape') this._applyValues(false);
+                });
+            });
+        };
+        edit(this._startDateSpan, true);
+        edit(this._endDateSpan, false);
+    },
+
+    _updateMarkers: function () {
+        const map = this.options.map;
+        const minTs = this._currentMinTs;
+        const maxTs = this._currentMaxTs;
+        const fg = this.options.rezoom ? L.featureGroup() : null;
+
+        const hide = (m) => {
+            const pg = m._parentGroup;
+            if (pg && typeof pg.removeLayer === 'function') {
+                pg.removeLayer(m);
+            } else if (map.hasLayer(m)) {
+                map.removeLayer(m);
+            }
+        };
+        const show = (m) => {
+            const pg = m._parentGroup;
+            if (pg && typeof pg.addLayer === 'function') {
+                pg.addLayer(m);
+            } else if (!map.hasLayer(m)) {
+                map.addLayer(m);
+            }
+        };
+
+        (this.options.markers || []).forEach((m) => {
+            if (!m) return;
+            const ts = this._markerTs(m);
+            if (!isFinite(ts) || ts < minTs || ts > maxTs) {
+                hide(m);
+            } else {
+                show(m);
+                if (fg) fg.addLayer(m);
+            }
         });
 
-        // Update dates and markers
-        const startDate = this._updateTimestamp(this.options.markers[min]);
-        const endDate = this._updateTimestamp(this.options.markers[max]);
-        
-        if (startDate && endDate) {
-            const startDateShort = startDate.split(' ')[0];
-            const endDateShort = endDate.split(' ')[0];
-            
-            // Update the timestamp div with min-max values
-            this._timestampDiv.innerHTML = `${startDate} - ${endDate}`;
-            
-            // Update the bottom spans with date values
-            this._startDateSpan.textContent = this._dates[min] || startDateShort;
-            this._endDateSpan.textContent = this._dates[max] || endDateShort;
-        }
-
-        // Only update markers on mouseup for better performance
-        if (!event || event.type === 'mouseup') {
-            this._updateMarkers(min, max);
-        }
-    },
-
-    _updateTimestamp: function(marker) {
-        if (!marker) return;
-        
-        let timeValue;
-        if (marker.feature !== undefined && marker.feature.properties[this.options.timeAttribute]) {
-            timeValue = marker.feature.properties[this.options.timeAttribute];
-        } else if (marker.options[this.options.timeAttribute]) {
-            timeValue = marker.options[this.options.timeAttribute];
-        } else {
-            console.error("Time property " + this.options.timeAttribute + " not found in data");
-            return;
-        }
-        
-        return this.extractTimestamp(timeValue, this.options);
-    },
-
-    _updateMarkers: function(startValue, endValue) {
-        var map = this.options.map;
-        var fg = L.featureGroup();
-        
-        // Clear existing markers
-        for (var i = this.options.minValue; i <= this.options.maxValue; i++) {
-            if(this.options.markers[i]) map.removeLayer(this.options.markers[i]);
-        }
-
-        // Add markers based on range
-        for (i = startValue; i <= endValue; i++) {
-            if(this.options.markers[i]) {
-                map.addLayer(this.options.markers[i]);
-                fg.addLayer(this.options.markers[i]);
-            }
-        }
-
-        if(this.options.rezoom) {
-            map.fitBounds(fg.getBounds(), {
-                maxZoom: this.options.rezoom
-            });
+        if (fg && this.options.rezoom) {
+            map.fitBounds(fg.getBounds(), { maxZoom: this.options.rezoom });
         }
     },
 
     startSlider: function () {
-        // Setup initial values
-        this._rangeMin.min = this.options.minValue;
-        this._rangeMin.max = this.options.maxValue;
-        this._rangeMax.min = this.options.minValue;
-        this._rangeMax.max = this.options.maxValue;
+        const gap = this.options.minGapMs;
+        const savedMin = localStorage.getItem('sliderRangeMinTs');
+        const savedMax = localStorage.getItem('sliderRangeMaxTs');
 
-        // Try to get saved values from localStorage
-        const savedMin = localStorage.getItem('sliderRangeMin');
-        const savedMax = localStorage.getItem('sliderRangeMax');
-
-        if(savedMin !== null && savedMax !== null) {
-            // Use saved values if they exist and are within valid range
-            const minValue = parseInt(savedMin);
-            const maxValue = parseInt(savedMax);
-            
-            if (minValue >= this.options.minValue && 
-                maxValue <= this.options.maxValue && 
-                maxValue - minValue >= this.options.minGap) {
-                this._rangeMin.value = minValue;
-                this._rangeMax.value = maxValue;
-            } else {
-                // If saved values are invalid, use default values
-                if(this.options.showAllOnStart) {
-                    this._rangeMin.value = this.options.minValue;
-                    this._rangeMax.value = this.options.maxValue;
-                } else {
-                    this._rangeMin.value = this.options.minValue;
-                    this._rangeMax.value = Math.floor((this.options.maxValue - this.options.minValue) / 2);
-                }
+        if (savedMin !== null && savedMax !== null) {
+            let rMin = parseInt(savedMin);
+            let rMax = parseInt(savedMax);
+            if (isNaN(rMin) || isNaN(rMax) || rMax - rMin < gap) {
+                rMin = this._minTs;
+                rMax = this._maxTs;
             }
+            // Extender el rango total si las fechas guardadas lo superan
+            if (rMin < this._minTs) this._minTs = rMin;
+            if (rMax > this._maxTs) this._maxTs = rMax;
+            this._currentMinTs = rMin;
+            this._currentMaxTs = rMax;
+        } else if (this.options.showAllOnStart) {
+            this._currentMinTs = this._minTs;
+            this._currentMaxTs = this._maxTs;
         } else {
-            // If no saved values exist, use default values
-            if(this.options.showAllOnStart) {
-                this._rangeMin.value = this.options.minValue;
-                this._rangeMax.value = this.options.maxValue;
-            } else {
-                this._rangeMin.value = this.options.minValue;
-                this._rangeMax.value = Math.floor((this.options.maxValue - this.options.minValue) / 2);
-            }
+            this._currentMinTs = this._minTs;
+            this._currentMaxTs = Math.floor((this._maxTs - this._minTs) / 2) + this._minTs;
         }
 
-        // Bind event handlers to update UI in real-time
-        this._rangeMin.addEventListener('input', (e) => this._updateRange(e));
-        this._rangeMax.addEventListener('input', (e) => this._updateRange(e));
-        
-        // Also update markers on mouseup for better performance
-        this._rangeMin.addEventListener('mouseup', (e) => this._updateRange(e));
-        this._rangeMax.addEventListener('mouseup', (e) => this._updateRange(e));
-        
-        // Touch events support for mobile
-        this._rangeMin.addEventListener('touchend', (e) => this._updateRange(e));
-        this._rangeMax.addEventListener('touchend', (e) => this._updateRange(e));
+        this._setupThumbDrag(this._thumbMin, true);
+        this._setupThumbDrag(this._thumbMax, false);
+        this._setupTrackClick();
+        this._setupDateEdit();
 
-        // Initial update
-        this._updateRange();
+        this._applyValues(true);
     }
 });
 

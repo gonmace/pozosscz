@@ -1,4 +1,5 @@
 from django.db import models
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from meta.views import Meta as MetaObject
 
@@ -22,8 +23,10 @@ class MetaTag(models.Model):
             "use_twitter": False,
             "use_facebook": True,
         }
-        if self.image and request:
-            kwargs["image"] = request.build_absolute_uri(self.image.url)
+        # og:image: usa la imagen propia si existe; si no, la default del sitio.
+        image_url = self.image.url if self.image else settings.DEFAULT_META.get("IMAGE")
+        if image_url and request:
+            kwargs["image"] = request.build_absolute_uri(image_url)
         return MetaObject(request=request, **kwargs)
 
     def __str__(self):

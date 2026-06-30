@@ -1,18 +1,16 @@
-{% load static inline_svg  %}
+{% load static inline_svg zona_links %}
 
-<div class="mx-auto flex flex-col text-center w-full md:w-3/12">
-    <div class="sombra w-20 h-20 p-4 mx-auto inline-flex text-white items-center justify-center rounded-full bg-accent mb-5 flex-shrink-0">
+<!-- Tarjeta "Querendones de nuestra tierra" (rediseño). Ancho controlado por el grid contenedor. -->
+<div class="bg-white border border-base-300 rounded-[20px] p-6 shadow-[0_8px_20px_rgba(30,60,30,.06)]">
+    <span class="w-[52px] h-[52px] rounded-[15px] bg-band flex items-center justify-center mb-3.5 text-primary">
         {% if svg %}
-            {% inline_svg_from_media svg.url %}
+            <span class="w-7 h-7 flex items-center justify-center">{% inline_svg_from_media svg.url %}</span>
         {% endif %}
-    </div>
-    <div>
-        <h2 class="text-xl lg:text-2xl mb-3 text-base-content">
-            {{ titulo }}
-        </h2>
-        <h3 class="text-base-content/70 leading-relaxed text-lg sm:text-lg lg:text-xl ">
-            {{ descripcion }}
-        </h3>
-    </div>
-        <div class="mx-auto w-16 h-1 rounded-full bg-primary mt-4 mb-7"></div>
-</div>  
+    </span>
+    <h3 class="font-display font-semibold text-lg text-base-content mb-1.5">
+        {{ titulo }}
+    </h3>
+    <p class="text-[14.5px] leading-relaxed text-base-content/60">
+        {% if 'cerca' in titulo|lower %}{{ descripcion|link_zonas }}{% else %}{{ descripcion }}{% endif %}
+    </p>
+</div>

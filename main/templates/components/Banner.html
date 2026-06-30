@@ -1,17 +1,34 @@
-<section id="bgBanner" class="relative w-full mx-auto h-96 sm:h-screen overflow-x-clip">
-    <div id="banner" class="bg-center bg-no-repeat h-full z-10" >
+<style>
+  /* El banner anima #titulo, #camion y el CTA desde estado oculto vía JS (anime.js).
+     Si el usuario pide menos movimiento o el JS no corre, el contenido debe verse igual. */
+  @media (prefers-reduced-motion: reduce) {
+    #titulo,
+    #contratanos a { opacity: 1 !important; }
+    #camion { transform: none !important; }
+  }
+</style>
+<noscript>
+  <style>
+    #titulo,
+    #contratanos a { opacity: 1 !important; }
+    #camion { transform: none !important; }
+  </style>
+</noscript>
+
+<section id="bgBanner" class="relative w-full mx-auto h-96 sm:h-[600px] overflow-clip">
+    <div id="banner" class="bg-center bg-cover bg-no-repeat h-full z-10" >
       
       <!-- Las imagenes son 1200x600 -->
 
       <div class="absolute inset-0 top-2/3">
         {% if messages %}
         {% for message in messages %}
-        <h2 id="titulo" class="py-1 md:py-2 bg-white bg-opacity-65 uppercase tracking-wide md:tracking-wider xl:tracking-widest text-center text-xl sm:text-4xl lg:text-5xl {% if message.tags == 'success' %}text-green-700 {% else %}text-red-500 {% endif %}" style="opacity: 0;">
+        <h1 id="titulo" class="py-1 md:py-2 bg-black/50 uppercase tracking-wide md:tracking-wider xl:tracking-widest text-center text-xl sm:text-4xl lg:text-5xl {% if message.tags == 'success' %}text-green-300 {% else %}text-red-300 {% endif %}" style="opacity: 0;">
           {{ message }}
         </h1>
         {% endfor %}
         {% else %}
-        <h1 id="titulo" class="py-1 md:py-2 bg-white bg-opacity-65 uppercase tracking-wide md:tracking-wider xl:tracking-widest text-center text-xl sm:text-4xl lg:text-5xl text-primary" style="opacity: 0;">
+        <h1 id="titulo" class="py-1 md:py-2 bg-black/50 uppercase tracking-wide md:tracking-wider xl:tracking-widest text-center text-xl sm:text-4xl lg:text-5xl text-white" style="opacity: 0;">
           TU POZO LIMPIO. HOY MISMO.
         </h1>
         {% endif %}
@@ -68,14 +85,17 @@
       </svg>
     </div>
   
-    <div id="contratanos" class="absolute left-1/2 bottom-0 transform -translate-x-1/2 text-center pb-2 w-full px-4">
-      <p class="text-base sm:text-lg lg:text-xl sombra">¿ya nos conoces?</p>
+    <!-- Scrim: degradado oscuro al pie para que el texto sobre la imagen tenga contraste -->
+    <div class="absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-black/75 via-black/35 to-transparent pointer-events-none z-10"></div>
+
+    <div id="contratanos" class="absolute left-1/2 bottom-0 z-20 transform -translate-x-1/2 text-center pb-6 w-full px-4 flex flex-col items-center gap-2.5">
+      <p class="text-base sm:text-lg lg:text-xl font-semibold text-white drop-shadow-lg">¿Ya nos conoces?</p>
       <a
         type="button"
         href="{% url 'cotiza' %}"
-        class="btn btn-primary shadow opacity-0 w-full sm:w-auto">
+        class="btn btn-primary shadow-lg opacity-0 w-full sm:w-auto">
         Ver precio y contratar
       </a>
-      <p class="text-xs sombra text-white mt-1">Servicio profesional · Sin sorpresas en el precio</p>
+      <p class="text-sm font-medium text-white drop-shadow-md">Servicio profesional · Sin sorpresas en el precio</p>
     </div>
   </section>

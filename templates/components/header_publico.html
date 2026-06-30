@@ -1,0 +1,119 @@
+{% load static inline_svg %}
+
+<!-- Header del sitio público rediseñado (Pozos Santa Cruz).
+     Sticky, fondo crema con blur. Usa menu_data (context processor),
+     is_authenticated, celular y mensaje_whatsapp. -->
+<header class="sticky top-0 z-[500] bg-base-100/95 backdrop-blur-md border-b border-base-300 shadow-[0_4px_20px_rgba(30,60,30,.10)]">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center gap-4 sm:gap-6">
+
+    <!-- Marca -->
+    <a href="/" class="flex items-center gap-2.5 shrink-0" aria-label="Inicio — Pozos Santa Cruz">
+      <span class="text-primary flex items-center">
+        {% include 'components/logo_camion.html' with logo_class='h-9 sm:h-10 w-auto' %}
+      </span>
+      <span class="flex flex-col leading-none">
+        <span class="font-script text-2xl text-accent">Santa Cruz</span>
+        <span class="font-bold text-[10px] tracking-[1.5px] text-base-content/50 uppercase mt-1">Limpieza de pozos</span>
+      </span>
+    </a>
+
+    <!-- Navegación (desktop) -->
+    <nav class="ml-auto hidden md:flex items-center gap-1 font-display text-[15px] text-base-content/80">
+      {% for item in menu_data %}
+        {% if is_authenticated or not item.protected %}{% if not hide_inicio or item.link != '/' %}
+          <a href="{{ item.link }}"{% if request.path == item.link or request.path == item.link|add:'/' %} aria-current="page"{% endif %}
+             class="px-3 py-2 rounded-xl font-medium transition-colors {% if request.path == item.link or request.path == item.link|add:'/' %}bg-band{% else %}hover:bg-base-200{% endif %}">{{ item.name }}</a>
+        {% endif %}{% endif %}
+      {% endfor %}
+    </nav>
+
+    <!-- WhatsApp (desktop) -->
+    <a href="https://wa.me/{{ celular }}{% if mensaje_whatsapp %}?text={{ mensaje_whatsapp|urlencode }}{% endif %}"
+       target="_blank" rel="noopener noreferrer"
+       class="hidden md:inline-flex items-center gap-2 bg-success text-success-content px-4 py-2.5 rounded-full font-display font-semibold text-[15px] shadow-[0_6px_14px_rgba(37,211,102,.32)] hover:brightness-105 transition">
+      <i class="ph-fill ph-whatsapp-logo text-lg" aria-hidden="true"></i>WhatsApp
+    </a>
+
+    <!-- Acceso administradores (discreto, solo ícono) -->
+    {% if is_authenticated %}
+      <a href="{% url 'logout' %}" id="logout-link-desktop"
+         class="hidden md:inline-flex items-center justify-center w-8 h-8 rounded-full text-base-content/30 hover:text-base-content/70 hover:bg-base-200 transition"
+         title="Cerrar sesión" aria-label="Cerrar sesión">
+        <i class="ph ph-sign-out text-lg" aria-hidden="true"></i>
+      </a>
+    {% else %}
+      <a href="{% url 'login' %}"
+         class="hidden md:inline-flex items-center justify-center w-8 h-8 rounded-full text-base-content/25 hover:text-base-content/60 hover:bg-base-200 transition"
+         title="Acceso administradores" aria-label="Acceso administradores">
+        <i class="ph ph-sign-in text-lg" aria-hidden="true"></i>
+      </a>
+    {% endif %}
+
+    <!-- Menú móvil -->
+    <div class="dropdown dropdown-end ml-auto md:hidden">
+      <div tabindex="0" role="button" class="btn btn-ghost btn-circle" aria-label="Abrir menú">
+        <i class="ph-bold ph-list text-2xl" aria-hidden="true"></i>
+      </div>
+      <ul tabindex="0" class="menu menu-lg dropdown-content bg-base-100 border border-base-300 rounded-2xl z-[60] mt-3 w-56 p-2 shadow-xl">
+        {% for item in menu_data %}
+          {% if is_authenticated or not item.protected %}{% if not hide_inicio or item.link != '/' %}
+            <li><a href="{{ item.link }}"{% if request.path == item.link or request.path == item.link|add:'/' %} aria-current="page" class="font-display bg-band"{% else %} class="font-display"{% endif %}>{{ item.name }}</a></li>
+          {% endif %}{% endif %}
+        {% endfor %}
+        <li>
+          <a href="https://wa.me/{{ celular }}{% if mensaje_whatsapp %}?text={{ mensaje_whatsapp|urlencode }}{% endif %}"
+             target="_blank" rel="noopener noreferrer" class="font-display text-success">
+            <i class="ph-fill ph-whatsapp-logo" aria-hidden="true"></i> WhatsApp
+          </a>
+        </li>
+        <li class="mt-1 border-t border-base-300 pt-1">
+          {% if is_authenticated %}
+            <a href="{% url 'logout' %}" id="logout-link" class="font-display text-sm text-base-content/50"><i class="ph ph-sign-out" aria-hidden="true"></i> Cerrar sesión</a>
+          {% else %}
+            <a href="{% url 'login' %}" class="font-display text-sm text-base-content/50"><i class="ph ph-sign-in" aria-hidden="true"></i> Acceso admin</a>
+          {% endif %}
+        </li>
+      </ul>
+    </div>
+  </div>
+</header>
+
+<script>
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+
+  async function logoutPublico() {
+    const csrftoken = getCookie('csrftoken');
+    const response = await fetch('/logout/', {
+      method: 'POST',
+      headers: { 'X-CSRFToken': csrftoken }
+    });
+    if (response.ok) {
+      window.location.href = '/?message=Successfully logged out';
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    ["logout-link", "logout-link-desktop"].forEach(function (id) {
+      const el = document.getElementById(id);
+      if (el) {
+        el.addEventListener("click", function (e) {
+          e.preventDefault();
+          logoutPublico();
+        });
+      }
+    });
+  });
+</script>

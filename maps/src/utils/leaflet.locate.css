@@ -47,13 +47,3 @@
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
-
-/* Opción 2: Para usar con una imagen personalizada */
-.custom-locate-icon {
-  width: 22px;
-  height: 22px;
-  background-image: url('/static/img/locate-icon.png'); /* Reemplaza con la ruta a tu imagen */
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-} 

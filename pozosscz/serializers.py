@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import PreciosPozosSCZ, AreasFactor, BaseCamion
+from flota.models import Camion, RegistroCamion, DispositivoFCM
 
 
 class PreciosPozosSCZSerializer(serializers.ModelSerializer):
@@ -20,3 +21,22 @@ class BaseCamionSerializer(serializers.ModelSerializer):
     class Meta:
         model = BaseCamion
         fields = ('id', 'name', 'coordinates', 'available', 'deleted')
+
+
+class CamionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Camion
+        fields = ('id', 'operador', 'marca', 'capacidad', 'created_at')
+
+
+class RegistroCamionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RegistroCamion
+        fields = ('id', 'camion', 'activo', 'lat', 'lon', 'velocidad', 'direccion', 'comentario', 'registrado_at')
+        read_only_fields = ('registrado_at',)
+
+
+class DispositivoFCMSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DispositivoFCM
+        fields = ('fcm_token',)

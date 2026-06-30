@@ -1,5 +1,32 @@
 @import "tailwindcss";
 @theme {
+  /* Tipografías del rediseño (sitio público):
+     - font-display → títulos (Fredoka)
+     - font-script  → wordmark "Santa Cruz" (Pacifico)
+     El cuerpo sigue en Nunito (ver @layer base). */
+  --font-display: "Fredoka", "Nunito", system-ui, sans-serif;
+  --font-script: "Pacifico", cursive;
+
+  /* ── Paleta del rediseño "Pozos Santa Cruz" (sitio público) ───────────────
+     El tema DaisyUI "claro" ya define base/primary/accent/etc. Estos son los
+     colores de apoyo recurrentes, disponibles como utilidades:
+       bg-band / text-ink / bg-sun / text-whatsapp, etc. */
+  --color-cream: #FBF6EC;      /* fondo crema (= base-100) */
+  --color-band: #EAF6EC;       /* banda suave de sección (verde muy claro) */
+  --color-ink: #1C2A1F;        /* texto de títulos (verde casi negro) */
+  --color-sun: #FFF3D6;        /* tiles / acentos cálidos (amarillo claro) */
+  --color-brand: #2FA24E;      /* verde de marca (= primary) */
+  --color-brand-dark: #1E7A3C; /* verde oscuro (= accent) */
+  --color-whatsapp: #25D366;   /* verde WhatsApp */
+  --color-night: #16271B;      /* verde noche del footer (= neutral) */
+
+  /* Colores de estado de clientes */
+  --color-status-prg: #2196F3;
+  --color-status-eje: #43A047;
+  --color-status-can: #E53935;
+  --color-status-cot: #FF9800;
+  --color-status-neg: #E53935;
+
   --color-precio300: #ffff00;
   --color-precio350: #fba657;
   --color-precio400: #4ade80;
@@ -15,15 +42,53 @@
 @import "tailwindcss-animated";
 
 @source "../../**/*.{html,py,js,ts}";
+@source "../../maps/src/index-maps-admin.ts";
+@source "../../maps/src/clientesActivosModal.ts";
+@source "../../maps/src/clientesResultadosModal.ts";
+@source "../../maps/src/utils/findClients.ts";
 /* @source "../../../pozosscz/maps/src/utils/SliderControl.js"; */
 /* @source "../../main/src/index-main.ts";
 @source "../../maps/src/index-maps-admin.ts"; */
 
 @plugin "daisyui";
+
+/* ── Tema CLARO: sitio público (cálido, amigable, accesible) ───────────────
+   Paleta del rediseño "Pozos Santa Cruz": fondo crema (#FBF6EC) + verde de
+   marca (#2FA24E). Las tarjetas usan bg-white explícito y las bandas suaves
+   bg-[#EAF6EC] directamente en las plantillas. */
+@plugin "daisyui/theme" {
+  name: "claro";
+  default: true;
+  prefersdark: false;
+  color-scheme: "light";
+  /* Crema cálido del diseño */
+  --color-base-100: #FBF6EC;
+  --color-base-200: #F3EDDF;
+  --color-base-300: #ECE7DA;
+  --color-base-content: #2A2A24;
+  --color-primary: #2FA24E;
+  --color-primary-content: #ffffff;
+  --color-secondary: #FF4444;
+  --color-secondary-content: oklch(99% 0.01 20);
+  --color-accent: #1E7A3C;
+  --color-accent-content: #ffffff;
+  --color-neutral: #16271b;
+  --color-neutral-content: oklch(98% 0.01 160);
+  --color-info: oklch(55% 0.13 233);
+  --color-info-content: oklch(98% 0.01 233);
+  --color-success: #2FA24E;
+  --color-success-content: #ffffff;
+  --color-warning: #E0A100;
+  --color-warning-content: #ffffff;
+  --color-error: oklch(58% 0.20 25);
+  --color-error-content: oklch(99% 0.01 25);
+}
+
+/* ── Tema OSCURO: panel admin / flota (herramienta operativa) ──────────── */
 @plugin "daisyui/theme" {
   name: "dark";
-  default: true;
-  prefersdark: true;
+  default: false;
+  prefersdark: false;
   color-scheme: "dark";
   --color-base-100: oklch(25.33% 0.016 252.42);
   --color-base-200: oklch(23.26% 0.014 253.1);
@@ -58,6 +123,52 @@
 }
 
 @layer components {
+  /* ── Clases de estado de clientes ────────────────────────────────────── */
+
+  /* Inyecta la variable local --st según el estado */
+  .st-prg { --st: var(--color-status-prg); }
+  .st-eje { --st: var(--color-status-eje); }
+  .st-can { --st: var(--color-status-can); }
+  .st-cot { --st: var(--color-status-cot); }
+  .st-neg { --st: var(--color-status-neg); }
+
+  /* Card con borde izquierdo y fondo tintado */
+  .status-card {
+    background: color-mix(in srgb, var(--st, #9E9E9E) 16%, transparent);
+    border: 1px solid color-mix(in srgb, var(--st, #9E9E9E) 30%, transparent);
+    border-left: 4px solid var(--st, #9E9E9E);
+  }
+
+  /* Badge / chip de estado (span o button) */
+  .status-badge {
+    color: var(--st, #9E9E9E);
+    background: color-mix(in srgb, var(--st, #9E9E9E) 15%, transparent);
+    border: 1px solid color-mix(in srgb, var(--st, #9E9E9E) 40%, transparent);
+  }
+
+  /* Select de estado en activos */
+  .status-select {
+    color: var(--st, #9E9E9E);
+    background: color-mix(in srgb, var(--st, #9E9E9E) 20%, transparent);
+    border-color: color-mix(in srgb, var(--st, #9E9E9E) 60%, transparent);
+  }
+
+  /* Separador inferior de card */
+  .status-sep {
+    border-top: 1px solid color-mix(in srgb, var(--st, #9E9E9E) 20%, transparent);
+  }
+
+  /* Borde izquierdo de fila en tabla */
+  .status-row {
+    background: color-mix(in srgb, var(--st, #9E9E9E) 28%, transparent);
+    border-left: 3px solid color-mix(in srgb, var(--st, #9E9E9E) 75%, transparent);
+  }
+
+  /* Botón "ver en mapa" hereda el color del estado */
+  .status-fly-btn { color: var(--st, #9E9E9E); opacity: 0.75; }
+
+  /* ──────────────────────────────────────────────────────────────────── */
+
   .centrear-w-absolute {
     @apply left-1/2 transform -translate-x-1/2;
   }
@@ -73,14 +184,21 @@
   }
   
   .item {
-    @apply text-accent inline-flex items-center h-20 w-20 justify-center mb-5 flex-shrink-0;
+    @apply text-accent inline-flex items-center h-20 w-20 justify-center mb-5 shrink-0;
   }
   
   .scrolled {
-    @apply md:bg-primary 
+    @apply md:bg-primary;
+  }
+  /* Al hacer scroll el nav se vuelve verde → texto y logo pasan a color claro (solo desktop) */
+  @media (min-width: 768px) {
+    .scrolled,
+    .scrolled a {
+      color: var(--color-primary-content);
+    }
   }
   .puntos {
-    @apply ml-2 inline-block border-black border-1 w-4 h-4 text-center rounded-full;
+    @apply ml-2 inline-block border-black border w-4 h-4 text-center rounded-full;
   }
   #map {
     @apply h-screen;

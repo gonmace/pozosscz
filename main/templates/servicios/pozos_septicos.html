@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+{% load static vstatic %}
+
+{% block head %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Service",
+  "name": "Limpieza de Pozos Sépticos en Santa Cruz",
+  "provider": {"@id": "https://pozosscz.com/#business"},
+  "areaServed": "Santa Cruz de la Sierra, Bolivia",
+  "description": "Servicio profesional de desagote y limpieza de pozos sépticos en Santa Cruz de la Sierra. Precio online al instante.",
+  "url": "https://pozosscz.com/limpieza-pozos-septicos-santa-cruz/"
+}
+</script>
+{% endblock %}
+
+{% block body_class %}bg-band{% endblock %}
+
+{% block content %}
+<main>
+    {% include 'components/header_publico.html' %}
+
+    <!-- Hero -->
+    <section class="max-w-[1140px] mx-auto px-6 pt-14 pb-8 text-center">
+        <span class="inline-flex items-center gap-2 bg-white text-accent font-bold text-[13.5px] px-3.5 py-1.5 rounded-full shadow-sm">
+            <i class="ph-fill ph-house-line" aria-hidden="true"></i> Pozos sépticos · Santa Cruz
+        </span>
+        <h1 class="font-display font-medium text-[32px] sm:text-[42px] leading-tight tracking-tight mt-4 text-ink">Limpieza de Pozos Sépticos en Santa Cruz</h1>
+        <p class="text-lg text-base-content/60 mt-3 max-w-2xl mx-auto">
+            Desagote y mantenimiento de pozos sépticos para hogares, condominios y empresas. Precio al instante.
+        </p>
+        <a href="{% url 'cotiza' %}" class="inline-flex items-center gap-2.5 bg-primary text-primary-content px-7 py-3.5 rounded-full font-display font-semibold text-[16px] shadow-[0_9px_20px_rgba(47,162,78,.3)] hover:brightness-105 transition mt-6"><i class="ph-fill ph-calculator" aria-hidden="true"></i> Ver mi precio ahora</a>
+    </section>
+
+    <div class="max-w-4xl mx-auto px-6 py-10 flex flex-col gap-8">
+
+        <!-- Qué es un pozo séptico -->
+        <section>
+            <h2 class="font-display font-medium text-[26px] sm:text-[30px] text-ink mb-4">¿Qué es un pozo séptico?</h2>
+            <p class="text-base-content/60 leading-relaxed">
+                En Santa Cruz, "pozo séptico" y "pozo ciego" son términos que se usan indistintamente para el mismo
+                sistema: una excavación subterránea sellada que recibe las aguas negras del hogar. Con el tiempo, los
+                lodos se acumulan y el pozo necesita vaciarse para que el sistema vuelva a funcionar correctamente
+                y evitar desbordes o malos olores.
+            </p>
+        </section>
+
+        <!-- Cada cuánto limpiar -->
+        <section class="bg-white border border-base-300 rounded-[22px] p-6 sm:p-7 shadow-[0_8px_20px_rgba(30,60,30,.05)]">
+            <h2 class="font-display font-medium text-[22px] text-ink mb-2">¿Cada cuánto hay que limpiar el pozo séptico?</h2>
+            <p class="text-base-content/60 mb-4">Depende de la cantidad de personas y el tamaño del pozo. Como referencia:</p>
+            <div class="overflow-x-auto">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Habitantes</th>
+                            <th>Frecuencia recomendada</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>1 – 2 personas</td><td>Cada 3 años</td></tr>
+                        <tr><td>3 – 5 personas</td><td>Cada 1 – 2 años</td></tr>
+                        <tr><td>6 o más personas</td><td>Cada año</td></tr>
+                        <tr><td>Comercio / empresa</td><td>Cada 6 – 12 meses</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <p class="text-sm text-base-content/50 mt-3">
+                ¿No sabes qué tamaño tiene tu pozo? Usa nuestra
+                <a href="{% url 'calcula' %}" class="text-accent font-semibold hover:underline">calculadora de capacidad</a>.
+            </p>
+        </section>
+
+        <!-- Cómo funciona el servicio -->
+        <section>
+            <h2 class="font-display font-medium text-[26px] sm:text-[30px] text-ink text-center mb-8">Cómo funciona nuestro servicio</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                <div class="bg-white border border-base-300 rounded-[22px] p-7 text-center shadow-[0_8px_22px_rgba(30,60,30,.05)]">
+                    <span class="w-[56px] h-[56px] rounded-[18px] bg-primary text-primary-content inline-flex items-center justify-center font-display text-[24px] font-semibold shadow-[0_8px_16px_rgba(47,162,78,.28)]">1</span>
+                    <h3 class="font-display font-medium text-[19px] text-ink mt-4 mb-1.5">Cotizas online</h3>
+                    <p class="text-[14.5px] leading-relaxed text-base-content/50">Precio al instante según tu dirección y tipo de pozo.</p>
+                </div>
+                <div class="bg-white border border-base-300 rounded-[22px] p-7 text-center shadow-[0_8px_22px_rgba(30,60,30,.05)]">
+                    <span class="w-[56px] h-[56px] rounded-[18px] bg-primary text-primary-content inline-flex items-center justify-center font-display text-[24px] font-semibold shadow-[0_8px_16px_rgba(47,162,78,.28)]">2</span>
+                    <h3 class="font-display font-medium text-[19px] text-ink mt-4 mb-1.5">Coordinamos el día</h3>
+                    <p class="text-[14.5px] leading-relaxed text-base-content/50">Eliges el horario que más te convenga.</p>
+                </div>
+                <div class="bg-white border border-base-300 rounded-[22px] p-7 text-center shadow-[0_8px_22px_rgba(30,60,30,.05)]">
+                    <span class="w-[56px] h-[56px] rounded-[18px] bg-primary text-primary-content inline-flex items-center justify-center font-display text-[24px] font-semibold shadow-[0_8px_16px_rgba(47,162,78,.28)]">3</span>
+                    <h3 class="font-display font-medium text-[19px] text-ink mt-4 mb-1.5">Limpieza completa ✓</h3>
+                    <p class="text-[14.5px] leading-relaxed text-base-content/50">Vaciamos todas las cámaras y disponemos los residuos con certificación ambiental.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Garantías -->
+        <section class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div class="flex items-center gap-2.5 bg-white border border-base-300 rounded-[16px] px-4 py-3 shadow-[0_4px_12px_rgba(30,60,30,.04)]"><i class="ph-fill ph-shield-check text-primary text-xl shrink-0" aria-hidden="true"></i><span class="text-[14px] font-medium text-base-content/80">Precio fijo sin sorpresas</span></div>
+            <div class="flex items-center gap-2.5 bg-white border border-base-300 rounded-[16px] px-4 py-3 shadow-[0_4px_12px_rgba(30,60,30,.04)]"><i class="ph-fill ph-clock text-primary text-xl shrink-0" aria-hidden="true"></i><span class="text-[14px] font-medium text-base-content/80">Servicio el mismo día</span></div>
+            <div class="flex items-center gap-2.5 bg-white border border-base-300 rounded-[16px] px-4 py-3 shadow-[0_4px_12px_rgba(30,60,30,.04)]"><i class="ph-fill ph-leaf text-primary text-xl shrink-0" aria-hidden="true"></i><span class="text-[14px] font-medium text-base-content/80">Disposición ecológica</span></div>
+            <div class="flex items-center gap-2.5 bg-white border border-base-300 rounded-[16px] px-4 py-3 shadow-[0_4px_12px_rgba(30,60,30,.04)]"><i class="ph-fill ph-star text-primary text-xl shrink-0" aria-hidden="true"></i><span class="text-[14px] font-medium text-base-content/80">+10 años de experiencia</span></div>
+        </section>
+
+        <!-- Zonas -->
+        <section>
+            <h2 class="font-display font-medium text-[26px] sm:text-[30px] text-ink mb-4">Zonas que atendemos</h2>
+            <p class="text-base-content/60 mb-4">Cubrimos Santa Cruz de la Sierra y un radio de 100 km:</p>
+            <div class="flex flex-wrap gap-2">
+                {% for zona_slug, zona_data in zonas.items %}
+                <a href="{% url 'zona_page' zona_slug %}" class="inline-flex items-center bg-white border border-base-300 text-accent font-display font-medium text-[14px] px-3.5 py-1.5 rounded-full hover:border-primary hover:bg-band transition">{{ zona_data.nombre }}</a>
+                {% endfor %}
+                <span class="inline-flex items-center bg-white/60 border border-base-300 text-base-content/50 text-[14px] px-3.5 py-1.5 rounded-full">San Jorge</span>
+                <span class="inline-flex items-center bg-white/60 border border-base-300 text-base-content/50 text-[14px] px-3.5 py-1.5 rounded-full">Villa 1ro de Mayo</span>
+                <span class="inline-flex items-center bg-white/60 border border-base-300 text-base-content/50 text-[14px] px-3.5 py-1.5 rounded-full">Parque Industrial</span>
+                <span class="inline-flex items-center bg-white/60 border border-base-300 text-base-content/50 text-[14px] px-3.5 py-1.5 rounded-full">Zona Norte</span>
+            </div>
+        </section>
+
+        <!-- Otros servicios -->
+        <section>
+            <h2 class="font-display font-medium text-[26px] sm:text-[30px] text-ink mb-4">Otros servicios</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <a href="{% url 'servicio_pozo_ciego' %}" class="group bg-white border border-base-300 rounded-[22px] p-6 shadow-[0_8px_20px_rgba(30,60,30,.05)] hover:border-primary transition-colors flex items-start gap-4">
+                    <span class="w-12 h-12 rounded-[14px] bg-band flex items-center justify-center shrink-0"><i class="ph-fill ph-drop text-primary text-2xl" aria-hidden="true"></i></span>
+                    <span><h3 class="font-display font-medium text-[17px] text-ink">Limpieza de Pozos Ciegos</h3><p class="text-[14px] text-base-content/50 mt-0.5">En Santa Cruz, "pozo ciego" y "pozo séptico" son el mismo sistema. El servicio es idéntico.</p></span>
+                </a>
+                <a href="{% url 'servicio_camaras_septicas' %}" class="group bg-white border border-base-300 rounded-[22px] p-6 shadow-[0_8px_20px_rgba(30,60,30,.05)] hover:border-primary transition-colors flex items-start gap-4">
+                    <span class="w-12 h-12 rounded-[14px] bg-band flex items-center justify-center shrink-0"><i class="ph-fill ph-flow-arrow text-primary text-2xl" aria-hidden="true"></i></span>
+                    <span><h3 class="font-display font-medium text-[17px] text-ink">Limpieza de Cámaras Sépticas</h3><p class="text-[14px] text-base-content/50 mt-0.5">Servicio de limpieza de cámaras sépticas para hogares y empresas.</p></span>
+                </a>
+            </div>
+        </section>
+
+        <!-- CTA -->
+        <section class="rounded-[30px] p-10 sm:p-12 text-center relative overflow-hidden" style="background:linear-gradient(120deg,#2FA24E 0%,#1E7A3C 100%);">
+            <h2 class="font-display font-medium text-[26px] sm:text-[32px] text-white tracking-tight">¿Cuánto cuesta limpiar tu pozo séptico?</h2>
+            <p class="text-lg text-[#e3f5e7] mt-3 mb-6 max-w-[480px] mx-auto">Cotiza online en 30 segundos. Precio fijo según tu zona.</p>
+            <a href="{% url 'cotiza' %}" class="inline-flex items-center gap-2.5 bg-white text-accent px-7 py-4 rounded-full font-display font-semibold text-[18px] shadow-[0_10px_22px_rgba(0,0,0,.16)] hover:bg-base-200 transition"><i class="ph-fill ph-calculator" aria-hidden="true"></i> Ver mi precio ahora</a>
+        </section>
+
+    </div>
+
+    {% include 'components/whatsapp_bubble.html' %}
+</main>
+
+{% include 'components/footer.html' %}
+{% endblock %}
+
+{% block js %}
+<script src="{% vstatic 'js/main.js' %}"></script>
+{% endblock %}

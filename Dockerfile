@@ -7,6 +7,7 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends \
     netcat-openbsd \
     libpq-dev \
+    curl \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -24,8 +25,8 @@ RUN chmod +x ./entrypoint.sh
 
 RUN python manage.py collectstatic --noinput
 
-RUN useradd --no-create-home --shell /bin/false appuser \
-    && chown -R appuser:appuser /app
+RUN useradd --create-home --shell /bin/false appuser \
+    && chown -R appuser:appuser /home/appuser /app
 
 USER appuser
 

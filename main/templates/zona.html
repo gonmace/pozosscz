@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+{% load static vstatic %}
+
+{% block head %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Service",
+  "name": "Limpieza de Pozos en {{ zona.nombre }}, Santa Cruz",
+  "provider": {"@id": "https://pozosscz.com/#business"},
+  "areaServed": "{{ zona.nombre }}, Santa Cruz de la Sierra, Bolivia",
+  "description": "{{ zona.intro|escapejs }}",
+  "url": "https://pozosscz.com{{ request.path }}"
+}
+</script>
+{% if zona.faqs %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {% for f in zona.faqs %}{
+      "@type": "Question",
+      "name": "{{ f.q|escapejs }}",
+      "acceptedAnswer": { "@type": "Answer", "text": "{{ f.a|escapejs }}" }
+    }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+  ]
+}
+</script>
+{% endif %}
+{% endblock %}
+
+{% block body_class %}bg-band{% endblock %}
+
+{% block content %}
+<main>
+    {% include 'components/header_publico.html' with hide_inicio=True %}
+
+    <!-- Hero: título + imagen del barrio a la izquierda, card de cotización a la derecha -->
+    <section class="max-w-[1140px] mx-auto px-6 pt-12 pb-6">
+        <div class="grid grid-cols-1 lg:grid-cols-[1.05fr_.95fr] gap-10 items-start">
+            <div>
+                <span class="inline-flex items-center gap-2 bg-white text-accent font-bold text-[13.5px] px-3.5 py-1.5 rounded-full shadow-sm">
+                    <i class="ph-fill ph-map-pin" aria-hidden="true"></i> {{ zona.nombre }} · Santa Cruz
+                </span>
+                <h1 class="font-display font-medium text-[32px] sm:text-[42px] leading-tight tracking-tight mt-4 text-ink">
+                    Limpieza de Pozos en {{ zona.nombre }}, Santa Cruz
+                </h1>
+                <p class="text-lg text-base-content/60 mt-3 max-w-xl">
+                    {{ zona.intro }}
+                </p>
+                {% if zona.imagen %}
+                <figure class="relative rounded-[22px] overflow-hidden shadow-[0_12px_28px_rgba(30,60,30,.10)] mt-6">
+                    <img src="{{ zona.imagen }}" alt="Vista de {{ zona.nombre }}, Santa Cruz" loading="lazy" decoding="async" class="w-full h-[220px] sm:h-[300px] object-cover" />
+                    {% if zona.categoria %}
+                    <span class="absolute top-4 left-4 bg-white/90 backdrop-blur-sm text-accent font-display font-semibold text-[13px] px-3.5 py-1.5 rounded-full shadow">{{ zona.categoria }}</span>
+                    {% endif %}
+                    {% if zona.credito_texto %}
+                    <figcaption class="absolute bottom-0 right-0 bg-black/50 text-white/90 text-[11px] px-2.5 py-1 rounded-tl-xl">Foto: {% if zona.credito_url %}<a href="{{ zona.credito_url }}" target="_blank" rel="noopener" class="underline underline-offset-2">{{ zona.credito_texto }}</a>{% else %}{{ zona.credito_texto }}{% endif %}</figcaption>
+                    {% endif %}
+                </figure>
+                {% endif %}
+            </div>
+            <div class="lg:pt-2">
+                {% include 'components/card_cotiza.html' with centro_lat=zona.centro_lat centro_lon=zona.centro_lon centro_zoom=zona.centro_zoom %}
+            </div>
+        </div>
+    </section>
+
+    <div class="max-w-4xl mx-auto px-6 py-10 flex flex-col gap-8">
+
+        <!-- Contenido único del barrio (SEO local) -->
+        {% if zona.cuerpo %}
+        <section class="bg-white border border-base-300 rounded-[22px] p-6 sm:p-8 shadow-[0_8px_20px_rgba(30,60,30,.05)]">
+            <h2 class="font-display font-medium text-[24px] sm:text-[28px] text-ink mb-4">Limpieza de pozos sépticos y ciegos en {{ zona.nombre }}</h2>
+            <div class="flex flex-col gap-4 text-base-content/70 leading-relaxed text-[15.5px]">
+                {% for parrafo in zona.cuerpo %}<p>{{ parrafo }}</p>{% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- Servicios en esta zona -->
+        <section>
+            <h2 class="font-display font-medium text-[26px] sm:text-[30px] text-ink text-center mb-8">Servicios disponibles en {{ zona.nombre }}</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                <a href="{% url 'servicio_pozo_ciego' %}" class="group bg-white border border-base-300 rounded-[22px] p-7 text-center shadow-[0_8px_22px_rgba(30,60,30,.05)] hover:border-primary transition-colors">
+                    <span class="w-[54px] h-[54px] rounded-[16px] bg-band flex items-center justify-center mx-auto mb-3"><i class="ph-fill ph-drop text-[28px] text-primary" aria-hidden="true"></i></span>
+                    <h3 class="font-display font-medium text-[18px] text-ink mb-1.5">Pozos Ciegos</h3>
+                    <p class="text-[14px] text-base-content/50 leading-relaxed">Desagote y vaciado de pozos ciegos en {{ zona.nombre }} y alrededores.</p>
+                </a>
+                <a href="{% url 'servicio_pozos_septicos' %}" class="group bg-white border border-base-300 rounded-[22px] p-7 text-center shadow-[0_8px_22px_rgba(30,60,30,.05)] hover:border-primary transition-colors">
+                    <span class="w-[54px] h-[54px] rounded-[16px] bg-band flex items-center justify-center mx-auto mb-3"><i class="ph-fill ph-house-line text-[28px] text-primary" aria-hidden="true"></i></span>
+                    <h3 class="font-display font-medium text-[18px] text-ink mb-1.5">Pozos Sépticos</h3>
+                    <p class="text-[14px] text-base-content/50 leading-relaxed">Limpieza de pozos sépticos (también llamados pozos ciegos) en {{ zona.nombre }}.</p>
+                </a>
+                <a href="{% url 'servicio_camaras_septicas' %}" class="group bg-white border border-base-300 rounded-[22px] p-7 text-center shadow-[0_8px_22px_rgba(30,60,30,.05)] hover:border-primary transition-colors">
+                    <span class="w-[54px] h-[54px] rounded-[16px] bg-band flex items-center justify-center mx-auto mb-3"><i class="ph-fill ph-flow-arrow text-[28px] text-primary" aria-hidden="true"></i></span>
+                    <h3 class="font-display font-medium text-[18px] text-ink mb-1.5">Cámaras Sépticas</h3>
+                    <p class="text-[14px] text-base-content/50 leading-relaxed">Limpieza y vaciado de cámaras sépticas residenciales y comerciales.</p>
+                </a>
+            </div>
+        </section>
+
+        <!-- Cómo funciona -->
+        <section>
+            <h2 class="font-display font-medium text-[26px] sm:text-[30px] text-ink text-center mb-8">Cómo pedimos el servicio</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                <div class="bg-white border border-base-300 rounded-[22px] p-7 text-center shadow-[0_8px_22px_rgba(30,60,30,.05)]">
+                    <span class="w-[56px] h-[56px] rounded-[18px] bg-primary text-primary-content inline-flex items-center justify-center font-display text-[24px] font-semibold shadow-[0_8px_16px_rgba(47,162,78,.28)]">1</span>
+                    <h3 class="font-display font-medium text-[19px] text-ink mt-4 mb-1.5">Cotizas online</h3>
+                    <p class="text-[14.5px] leading-relaxed text-base-content/50">Ingresa tu dirección en {{ zona.nombre }} y recibes el precio al instante.</p>
+                </div>
+                <div class="bg-white border border-base-300 rounded-[22px] p-7 text-center shadow-[0_8px_22px_rgba(30,60,30,.05)]">
+                    <span class="w-[56px] h-[56px] rounded-[18px] bg-primary text-primary-content inline-flex items-center justify-center font-display text-[24px] font-semibold shadow-[0_8px_16px_rgba(47,162,78,.28)]">2</span>
+                    <h3 class="font-display font-medium text-[19px] text-ink mt-4 mb-1.5">Confirmas el día</h3>
+                    <p class="text-[14.5px] leading-relaxed text-base-content/50">Eliges el horario que más te convenga.</p>
+                </div>
+                <div class="bg-white border border-base-300 rounded-[22px] p-7 text-center shadow-[0_8px_22px_rgba(30,60,30,.05)]">
+                    <span class="w-[56px] h-[56px] rounded-[18px] bg-primary text-primary-content inline-flex items-center justify-center font-display text-[24px] font-semibold shadow-[0_8px_16px_rgba(47,162,78,.28)]">3</span>
+                    <h3 class="font-display font-medium text-[19px] text-ink mt-4 mb-1.5">Listo ✓</h3>
+                    <p class="text-[14.5px] leading-relaxed text-base-content/50">Llegamos puntual y dejamos tu pozo limpio.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Garantías -->
+        <section class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div class="flex items-center gap-2.5 bg-white border border-base-300 rounded-[16px] px-4 py-3 shadow-[0_4px_12px_rgba(30,60,30,.04)]"><i class="ph-fill ph-shield-check text-primary text-xl shrink-0" aria-hidden="true"></i><span class="text-[14px] font-medium text-base-content/80">Precio fijo sin sorpresas</span></div>
+            <div class="flex items-center gap-2.5 bg-white border border-base-300 rounded-[16px] px-4 py-3 shadow-[0_4px_12px_rgba(30,60,30,.04)]"><i class="ph-fill ph-clock text-primary text-xl shrink-0" aria-hidden="true"></i><span class="text-[14px] font-medium text-base-content/80">Servicio el mismo día</span></div>
+            <div class="flex items-center gap-2.5 bg-white border border-base-300 rounded-[16px] px-4 py-3 shadow-[0_4px_12px_rgba(30,60,30,.04)]"><i class="ph-fill ph-leaf text-primary text-xl shrink-0" aria-hidden="true"></i><span class="text-[14px] font-medium text-base-content/80">Disposición ecológica</span></div>
+            <div class="flex items-center gap-2.5 bg-white border border-base-300 rounded-[16px] px-4 py-3 shadow-[0_4px_12px_rgba(30,60,30,.04)]"><i class="ph-fill ph-star text-primary text-xl shrink-0" aria-hidden="true"></i><span class="text-[14px] font-medium text-base-content/80">+10 años de experiencia</span></div>
+        </section>
+
+        <!-- Zonas cercanas -->
+        <section class="bg-white border border-base-300 rounded-[22px] p-6 sm:p-7 shadow-[0_8px_20px_rgba(30,60,30,.05)]">
+            <h2 class="font-display font-medium text-[22px] text-ink mb-2">También atendemos zonas cercanas a {{ zona.nombre }}</h2>
+            <p class="text-base-content/60 mb-4">{{ zona.zonas_cercanas }} y toda Santa Cruz de la Sierra en un radio de 100 km.</p>
+            <div class="flex flex-wrap gap-2">
+                {% for zona_slug, zona_data in zonas.items %}
+                <a href="{% url 'zona_page' zona_slug %}" class="inline-flex items-center bg-band border border-base-300 text-accent font-display font-medium text-[14px] px-3.5 py-1.5 rounded-full hover:border-primary transition">{{ zona_data.nombre }}</a>
+                {% endfor %}
+            </div>
+        </section>
+
+        <!-- Preguntas frecuentes (locales) -->
+        {% if zona.faqs %}
+        <section>
+            <h2 class="font-display font-medium text-[26px] sm:text-[30px] text-ink text-center mb-6">Preguntas frecuentes en {{ zona.nombre }}</h2>
+            <div class="flex flex-col gap-3 max-w-2xl mx-auto">
+                {% for f in zona.faqs %}
+                <div class="collapse collapse-arrow bg-white border border-base-300 rounded-[16px] shadow-[0_4px_12px_rgba(30,60,30,.04)]">
+                    <input type="checkbox" {% if forloop.first %}checked{% endif %} aria-label="{{ f.q }}" />
+                    <div class="collapse-title font-display font-medium text-[16px] text-ink">{{ f.q }}</div>
+                    <div class="collapse-content text-[14.5px] leading-relaxed text-base-content/50">{{ f.a }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- CTA -->
+        <section class="rounded-[30px] p-10 sm:p-12 text-center relative overflow-hidden" style="background:linear-gradient(120deg,#2FA24E 0%,#1E7A3C 100%);">
+            <h2 class="font-display font-medium text-[26px] sm:text-[32px] text-white tracking-tight">¿Necesitas limpiar tu pozo en {{ zona.nombre }}?</h2>
+            <p class="text-lg text-[#e3f5e7] mt-3 mb-6 max-w-[480px] mx-auto">Cotiza online en 30 segundos. Precio fijo, sin sorpresas.</p>
+            <a href="{% url 'cotiza' %}" class="inline-flex items-center gap-2.5 bg-white text-accent px-7 py-4 rounded-full font-display font-semibold text-[18px] shadow-[0_10px_22px_rgba(0,0,0,.16)] hover:bg-base-200 transition"><i class="ph-fill ph-calculator" aria-hidden="true"></i> Ver mi precio ahora</a>
+        </section>
+
+    </div>
+
+    {% include 'components/whatsapp_bubble.html' %}
+</main>
+
+{% include 'components/footer.html' %}
+{% endblock %}
+
+{% block js %}
+<script src="{% vstatic 'js/main.js' %}"></script>
+{% endblock %}

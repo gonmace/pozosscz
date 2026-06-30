@@ -13,7 +13,7 @@ function getCsrfToken(): string {
     return '';
 }
 
-export const cotizando = async (marker: Marker): Promise<DataPrice> => {
+export const cotizando = async (marker: Marker, url = '/api/v1/contratar/'): Promise<DataPrice> => {
     let data: DataPrice = {
         error: null,
         distances: [],
@@ -25,6 +25,14 @@ export const cotizando = async (marker: Marker): Promise<DataPrice> => {
         origin_saguapac: [],
         path_saguapac: [],
         costo_combustible: 0,
+        costo_combustible_ida: 0,
+        costo_combustible_retorno: 0,
+        costo_combustible_trabajo: 0,
+        costos_combustible_bases: [],
+        utilidades_bases: [],
+        chofer_bases: [],
+        otros_bases: [],
+        precios_bases: [],
         costo_otros: 0,
         detalle_otros: { mantenimiento: 0, saguapac: 0, retorno_saguapac: 0 },
         costo_adicional_retorno: 0,
@@ -37,6 +45,7 @@ export const cotizando = async (marker: Marker): Promise<DataPrice> => {
         origen: 0,
         distance_scz: 0,
         distancia_maxima_cotizar: 60,
+        tiempo_trabajo_min: 0,
         tiempo_real_min: 0,
         tiempo_cobro_min: 0,
         factor_camion: 1.25,
@@ -44,7 +53,7 @@ export const cotizando = async (marker: Marker): Promise<DataPrice> => {
     };
 
     try {
-        const response = await fetch(`/api/v1/contratar/`, {
+        const response = await fetch(url, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

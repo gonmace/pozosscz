@@ -1,0 +1,61 @@
+/* Admin listado Clientes: barra de búsqueda + object-tools sin desplazar la tabla */
+
+body.app-clientes.model-cliente.change-list #content-main #changelist {
+    clear: both;
+}
+
+body.app-clientes.model-cliente.change-list #toolbar {
+    box-sizing: border-box;
+    max-width: 100%;
+}
+
+body.app-clientes.model-cliente.change-list #changelist-search > div {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+body.app-clientes.model-cliente.change-list #toolbar #searchbar {
+    box-sizing: border-box;
+    min-width: 0;
+    flex: 1 1 12rem;
+    max-width: 100%;
+    width: auto;
+}
+
+body.app-clientes.model-cliente.change-list #changelist .changelist-form-container {
+    min-width: 0;
+    max-width: 100%;
+}
+
+/* Filtros encima de la tabla en vez de sidebar lateral */
+body.app-clientes.model-cliente.change-list #changelist-filter {
+    float: none;
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.5rem;
+    align-items: baseline;
+    margin-bottom: 1rem;
+}
+
+body.app-clientes.model-cliente.change-list #changelist-filter h2 {
+    width: 100%;
+    margin: 0;
+}
+
+body.app-clientes.model-cliente.change-list #changelist-filter h3 {
+    margin: 0;
+}
+
+body.app-clientes.model-cliente.change-list #changelist-filter ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.75rem;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}

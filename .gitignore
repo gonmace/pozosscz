@@ -11,12 +11,41 @@ staticfiles
 ArchivosBase
 .vscode/
 .env
+.env.*
+!.env.sample
 db.sqlite3
 node_modules/
 main/src/node_modules/
 maps/src/node_modules/
 
+# Credenciales Firebase (Service Account)
+*firebase*.json
+firebase-service-account.json
+pozosscz-firebase-adminsdk-*.json
+
+# Secretos montados como volumen en el contenedor (./secrets:/app/secrets:ro)
+# El directorio se conserva con .gitkeep; su contenido real queda fuera del repo.
+secrets/*
+!secrets/.gitkeep
+!secrets/README.md
+
 # Backups de base de datos
 backups/
 *.sql
 *.sql.gz
+
+# Exports de datos de clientes (PII)
+Cliente-*.csv
+Cliente-*.xlsx
+*:Zone.Identifier
+
+# Logs
+*.log
+logs/
+
+# Tooling local de Claude Code / agentes (no es source del proyecto)
+.claude/
+.agents/
+.impeccable/
+skills-lock.json
+PRODUCT.md

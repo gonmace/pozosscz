@@ -4,10 +4,23 @@ from datetime import datetime
 
 
 class DatosGenerales(SingletonModel):
+    HERO_VARIANT_CHOICES = [
+        ('A', 'A — Rediseño (card de cotización)'),
+        ('D', 'D — Banner animado (versión anterior)'),
+    ]
+
     celular = models.CharField(
         "Teléfono Celular", max_length=12, default="+59171011118"
     )
-    
+
+    hero_variant = models.CharField(
+        "Variante del inicio (hero)",
+        max_length=1,
+        choices=HERO_VARIANT_CHOICES,
+        default='A',
+        help_text="Versión del hero de la página de inicio que ve el público."
+    )
+
     correo = models.EmailField(
         "Correo Electrónico", max_length=100, default="info@pozosscz.com"
     )
@@ -147,6 +160,35 @@ class AreasFactor(models.Model):
         ]
 
 
+class PerfilUsuario(models.Model):
+    ROL_ADMINISTRADOR = 'ADM'
+    ROL_OPERADOR = 'OPR'
+    ROLES = [
+        (ROL_ADMINISTRADOR, 'Administrador'),
+        (ROL_OPERADOR, 'Operador'),
+    ]
+
+    user = models.OneToOneField(
+        'auth.User',
+        on_delete=models.CASCADE,
+        related_name='perfil',
+        verbose_name='Usuario',
+    )
+    rol = models.CharField(
+        'Rol',
+        max_length=3,
+        choices=ROLES,
+        default=ROL_OPERADOR,
+    )
+
+    def __str__(self):
+        return f'{self.user.username} — {self.get_rol_display()}'
+
+    class Meta:
+        verbose_name = 'Perfil de Usuario'
+        verbose_name_plural = 'Perfiles de Usuario'
+
+
 def default_img_alt():
     return datetime.now().strftime('%d-%m-%Y')
 
@@ -167,3 +209,5 @@ class BaseCamion(models.Model):
         indexes = [
             models.Index(fields=['available', 'deleted']),
         ]
+
+
