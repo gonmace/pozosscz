@@ -1,4 +1,4 @@
-{% load static tailwind_tags meta %}
+{% load static tailwind_tags meta vstatic %}
 
 <!DOCTYPE html>
 <html lang="es" data-theme="{% block theme %}claro{% endblock %}" {% meta_namespaces %}>
@@ -28,7 +28,10 @@
     <!-- Phosphor Icons (regular + fill) — usados en el rediseño del sitio público -->
     <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
     <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
-    {% tailwind_css %}
+    {# CSS de Tailwind con cache-busting (?v=<mtime>): compatible con
+       Cache-Control: immutable porque la URL cambia en cada collectstatic #}
+    <link rel="stylesheet" type="text/css" href="{% vstatic 'css/tailwind.css' %}">
+
     
     {% block css %}
     {% endblock %}
