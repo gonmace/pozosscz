@@ -42,3 +42,10 @@ Cliente-*.xlsx
 # Logs
 *.log
 logs/
+
+# Tooling local de Claude Code / agentes (no es source del proyecto)
+.claude/
+.agents/
+.impeccable/
+skills-lock.json
+PRODUCT.md
